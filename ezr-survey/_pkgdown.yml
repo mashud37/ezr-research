@@ -1,0 +1,69 @@
+url: ~
+
+template:
+  bootstrap: 5
+
+reference:
+- title: Import data
+  desc: Load and shape raw survey exports.
+  contents:
+  - has_concept("import")
+- title: Clean & recode
+  desc: Turn messy survey columns into tidy, analysis-ready variables.
+  contents:
+  - has_concept("recode")
+- title: Summarise
+  desc: Percentages, summaries and cross-tabulations in one line.
+  contents:
+  - has_concept("summaries")
+- title: Model
+  desc: NPS and importance/performance modelling.
+  contents:
+  - has_concept("modelling")
+- title: Compare
+  desc: Differences between events, waves or segments.
+  contents:
+  - has_concept("compare")
+- title: Diagnostics
+  desc: Sampling precision and standard errors.
+  contents:
+  - has_concept("diagnostics")
+- title: Comments
+  desc: Select illustrative open-text comments.
+  contents:
+  - has_concept("comments")
+- title: Currency
+  desc: Convert monetary amounts between currencies.
+  contents:
+  - has_concept("currency")
+- title: Plots
+  desc: Presentation-ready charts.
+  contents:
+  - has_concept("plots")
+- title: Themes, palettes & decisions
+  desc: Visual identity and decision-band annotations.
+  contents:
+  - has_concept("themes")
+  - has_concept("decisions")
+  - has_concept("scales")
+- title: Save & report
+  desc: Export tables, charts, decks and Quarto reports.
+  contents:
+  - has_concept("save")
+  - has_concept("reporting")
+- title: AI summaries
+  desc: Summarise tables with a commercial LLM.
+  contents:
+  - has_concept("ai")
+- title: Configuration
+  desc: Options, reusable orders and profiles.
+  contents:
+  - has_concept("config")
+- title: Datasets
+  contents:
+  - has_concept("data")
+
+articles:
+- title: Get started
+  contents:
+  - ezrsurvey

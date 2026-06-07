@@ -1,0 +1,34 @@
+# R session / history
+.Rhistory
+.RData
+.Rapp.history
+.Ruserdata
+
+# RStudio
+.Rproj.user/
+*.Rproj
+
+# R package build / check artifacts
+*.Rcheck/
+*.tar.gz
+*.Rout
+*.Rout.fail
+00LOCK*/
+src/*.o
+src/*.so
+src/*.dll
+
+# pkgdown site
+docs/
+
+# bookdown output
+ezr-learning/book/_book/
+ezr-learning/book/_bookdown_files/
+ezr-learning/book/*.rds
+ezr-learning/book/libs/
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*~
+.vscode/

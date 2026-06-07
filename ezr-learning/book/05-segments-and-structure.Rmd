@@ -1,0 +1,105 @@
+# Segments and structure {#segments-and-structure}
+
+Sometimes you are not predicting an outcome — you want to find the *groups* and
+the *hidden dimensions* in your data. Segmentation and structure are what this
+chapter is about.
+
+We recode the worded ratings to numbers but keep the rest of the survey, so we
+can read the segments against demographics later. The rating columns are renamed
+(`rating_rides` becomes `rides`):
+
+```{r}
+parks <- theme_park %>%
+  dplyr::mutate(dplyr::across(dplyr::starts_with("rating_"), recode_likert)) %>%
+  dplyr::rename_with(~ sub("^rating_", "", .x), dplyr::starts_with("rating_"))
+rating_items <- c("rides", "food", "staff", "cleanliness", "value", "queue")
+```
+
+## Clustering with diagnostics
+
+`cluster()` groups respondents by how similarly they rated the park (we point it
+at the rating columns with `vars =`). Crucially it returns the *whole* picture in
+one object: the assignments, the group sizes, the profiles, **and** the quality
+diagnostics. Leave `k` out and it picks the number of clusters for you (by
+silhouette width):
+
+```{r}
+cl <- cluster(parks, k = 3, vars = c(rides, food, staff, cleanliness, value, queue))
+cl
+```
+
+The print-out shows how many respondents fell into each segment and how
+well-separated they are. A picture places the segments in two dimensions:
+
+```{r}
+plot(cl)
+```
+
+To read a segment, look at its profile — the average rating per group — which the
+object already carries; `cluster_profile()` composes the clusters against another
+variable in the data, e.g. visitor type:
+
+```{r}
+cluster_profile(cl, visitor_type)
+```
+
+## Reducing dimensions
+
+Six rating columns may really be two or three underlying ideas. `reduce_dims()`
+runs a principal component analysis and returns the scores, the loadings and the
+variance explained:
+
+```{r}
+r <- reduce_dims(parks, vars = c(rides, food, staff, cleanliness, value, queue))
+r
+```
+
+```{r}
+plot(r)
+```
+
+The scree plot shows how few components capture most of the variation — useful
+both to simplify and to sanity-check that your rating battery isn't just noise.
+
+## Do the items hang together?
+
+Before you average a set of items into a scale, check they belong together.
+`reliability()` reports Cronbach's alpha:
+
+```{r}
+reliability(parks, items = c(rides, food, staff, cleanliness, value, queue))
+```
+
+And `factors()` finds the latent dimensions behind the items — which questions
+group into the same underlying theme:
+
+```{r}
+f <- factors(parks, vars = c(rides, food, staff, cleanliness, value, queue), n = 2)
+f
+```
+
+```{r}
+plot(f)
+```
+
+<div class="turn">
+**Your turn.** Practise clustering and reliability:
+
+```{r eval=FALSE}
+library(ezrlearning)
+x <- draw_exercise(chapter = 5, seed = 8)
+x
+reveal(x)
+```
+</div>
+
+<div class="recap">
+**In a nutshell.**
+
+- `cluster()` segments respondents and returns sizes, profiles and quality
+  diagnostics together; it can choose `k` for you.
+- `cluster_profile()` reads a segmentation against another variable.
+- `reduce_dims()` (PCA) finds the few dimensions behind many columns.
+- `reliability()` checks a scale holds together; `factors()` uncovers the latent
+  themes in a battery of items.
+</div>

@@ -1,0 +1,67 @@
+Package: ezrmodel
+Type: Package
+Title: Single-Line Modelling and Clustering for Consumer Data
+Version: 0.3.0
+Authors@R:
+    person("Andreas", "Schellewald", email = "aschellewald@acm.org",
+           role = c("aut", "cre"))
+Description: Turns the advanced-analytics tasks that research and insights
+    professionals reach for into single-line helpers that return a complete,
+    diagnosable result. Find what drives a target variable (a consensus of
+    correlation, regression, relative-weights, random-forest and factor
+    importance), segment data with clustering and read off the diagnostics and
+    cluster profiles, reduce dimensions, fit and tidy regressions, and run
+    grouped hypothesis tests. Designed around a session 'default dataset' so the
+    same pattern works across surveys, social and ecommerce data. Also turns open
+    text into tidy term frequencies, tf-idf, topic models and extractive
+    summaries, and checks latent structure with scale reliability, exploratory
+    factor analysis and confirmatory models. Selects predictors with stepwise or
+    penalised regression, compares fitted models on common metrics, and embeds
+    data in two dimensions with UMAP or t-SNE.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Depends:
+    R (>= 4.1.0)
+Imports:
+    dplyr (>= 1.1.0),
+    tidyr (>= 1.2.0),
+    purrr,
+    rlang (>= 1.0.0),
+    tibble,
+    stringr,
+    readr,
+    generics,
+    ggplot2
+Suggests:
+    cluster,
+    rwa,
+    randomForest,
+    glmnet,
+    uwot,
+    Rtsne,
+    psych,
+    lavaan,
+    stopwords,
+    quanteda,
+    stm,
+    lexRankr,
+    broom,
+    ggrepel,
+    scales,
+    writexl,
+    svglite,
+    yaml,
+    keyring,
+    ellmer,
+    officer,
+    flextable,
+    quarto,
+    knitr,
+    rmarkdown,
+    withr,
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+Roxygen: list(markdown = TRUE)
+VignetteBuilder: knitr
+Config/roxygen2/version: 8.0.0

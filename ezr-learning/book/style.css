@@ -1,0 +1,19 @@
+/* Light, readable styling for the ezr learning book. */
+.book .book-body .page-inner section.normal {
+  max-width: 820px;
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+h1, h2, h3 { font-weight: 700; }
+pre, code { font-size: 0.92em; }
+
+/* Little callout boxes used for "Your turn" and "In a nutshell". */
+.turn, .recap {
+  border-left: 4px solid #3182BD;
+  background: #f3f8fc;
+  padding: 0.6em 1em;
+  margin: 1.2em 0;
+  border-radius: 4px;
+}
+.recap { border-left-color: #86A33B; background: #f4f8ee; }
+.turn strong, .recap strong { display: block; margin-bottom: 0.2em; }

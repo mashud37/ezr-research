@@ -1,0 +1,47 @@
+---
+title: "{{TITLE}}"
+author: "Your name"
+date: today
+format:
+  docx:
+    # reference-doc: template.docx   # uncomment to use your brand template
+    toc: true
+editor: visual
+---
+
+```{r setup, include=FALSE}
+library(ezrsurvey)
+library(ggplot2)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE,
+                      fig.width = 6.5, fig.height = 3.8, dpi = 150)
+
+# Replace with your own data, e.g.:
+# d <- read_folder("data/") |> select_prefix(c("demo_", "ratings_"),
+#                                            keep = "respondent_id")
+d <- consumer_survey
+```
+
+## Net Promoter Score
+
+```{r}
+plot_nps_gauge(calc_nps(d, nps_value)$nps)
+```
+
+## Importance / Performance
+
+```{r}
+ipm_model(d, nps_value, "ratings_") |> plot_ipm()
+```
+
+## Gender
+
+```{r}
+calc_percentage(d, demo_gender, sort = "desc") |> plot_bars()
+```
+
+## Data precision
+
+```{r}
+diagnose(d, demo_gender, dplyr::starts_with("ratings_")) |>
+  knitr::kable()
+```

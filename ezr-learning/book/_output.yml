@@ -1,0 +1,10 @@
+bookdown::gitbook:
+  css: style.css
+  config:
+    toc:
+      collapse: section
+      before: |
+        <li><a href="./">Learn the ezr family</a></li>
+    sharing: no
+    fontsettings:
+      theme: white

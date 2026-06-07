@@ -1,0 +1,137 @@
+# R fundamentals {#fundamentals}
+
+Before the ezr shortcuts, a little groundwork. This chapter is the "what even is
+R" chapter. If you have coded before, skim it; if not, take it slowly and type
+everything out.
+
+## R and RStudio
+
+**R** is the language. **RStudio** is the comfortable workshop you write it in —
+a script editor, a console, a pane showing your data, and a help pane. You will
+practically always open RStudio and never touch R directly.
+
+The console is a calculator you talk to in R:
+
+```{r}
+1 + 1
+10 * 5
+seq(0, 100, 25)
+```
+
+You can also ask it yes/no questions, which come back as `TRUE`/`FALSE`:
+
+```{r}
+10 > 5
+5 == 10
+```
+
+Anything after a `#` is a **comment** — a note to yourself that R ignores. Use
+them generously.
+
+## Values and vectors
+
+You store things in **objects** with `<-` (or `=`). A name must start with a
+letter:
+
+```{r}
+a <- 5
+b <- 10
+a + b
+```
+
+A **vector** is a sequence of values of the same type, built with `c()`:
+
+```{r}
+ratings <- c(4, 5, 3, 5, 2)
+mean(ratings)
+ratings[1]      # the first element, with square brackets
+```
+
+A **factor** is how R stores categories with a defined order — useful for Likert
+scales:
+
+```{r}
+answers <- c("Disagree", "Agree", "Neutral", "Agree")
+factor(answers, levels = c("Disagree", "Neutral", "Agree"))
+```
+
+## Data frames
+
+A **data frame** is a table: columns of (possibly different) types, all the same
+length. This is what a survey looks like in R. The `theme_park` data is a data
+frame:
+
+```{r}
+class(theme_park)
+nrow(theme_park)
+names(theme_park)
+```
+
+A handful of functions tell you what you are holding:
+
+```{r}
+str(theme_park[, 1:7])     # structure: column types and a peek
+summary(theme_park$nps)    # a numeric summary of one column
+unique(theme_park$region)  # the distinct values of a column
+```
+
+Pull out a column with `$`, and slice rows/columns with `[rows, columns]`:
+
+```{r}
+theme_park$nps[1:5]              # first five NPS scores
+theme_park[1:3, c("region", "nps")]
+```
+
+## A first taste of analysis
+
+Base R already does real statistics. Counts and proportions of a category:
+
+```{r}
+table(theme_park$visitor_type)
+round(prop.table(table(theme_park$visitor_type)) * 100)
+```
+
+Averages, spread, and a quick correlation between two numbers:
+
+```{r}
+mean(theme_park$spend)
+sd(theme_park$spend)
+cor(theme_park$age, theme_park$spend)
+```
+
+This is genuinely useful — and also a little clunky. Look at that nested
+`round(prop.table(table(...)))` just to get percentages. Hold that thought.
+
+## Why ezr
+
+Here is the same "percentage of each visitor type" in the style we will use for
+the rest of the book:
+
+```{r}
+calc_percentage(theme_park, visitor_type)
+```
+
+One line, a tidy table, the percentages already computed. That is the whole
+promise of the ezr family: the analysis you do every day, without the
+boilerplate. The next chapter sets it up properly.
+
+<div class="turn">
+**Your turn.** Warm up on the fundamentals and first ezr moves:
+
+```{r eval=FALSE}
+library(ezrlearning)
+x <- draw_exercise(chapter = 2)   # percentages, NPS, the pipe
+x
+check_answer(x, "your answer")
+```
+</div>
+
+<div class="recap">
+**In a nutshell.**
+
+- RStudio is where you write R; the console is a calculator you instruct.
+- Objects hold values; `c()` builds vectors; factors store ordered categories.
+- A **data frame** is your survey: `$` grabs a column, `[rows, cols]` slices.
+- `table()`, `mean()`, `cor()` already do statistics — but the ezr helpers do the
+  everyday ones in a single, readable line.
+</div>

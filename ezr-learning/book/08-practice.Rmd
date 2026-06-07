@@ -1,0 +1,112 @@
+# Practice {#practice}
+
+Reading is not the same as remembering. This last chapter is about the practice
+engine built into `ezrlearning` — a way to drill what you have learned, generate
+revision sets, and (for tutors) hand out reproducible worksheets.
+
+## Draw an exercise
+
+`draw_exercise()` hands you one question. With a `seed`, it is reproducible — the
+same seed always gives the same question, so a class all gets the identical task:
+
+```{r}
+x <- draw_exercise(topic = "nps", seed = 1)
+x
+```
+
+Answer it with `check_answer()` — a letter for multiple choice, or your **actual
+ezr code** for a code task (it runs your code and compares the result):
+
+```{r}
+check_answer(x, "B")
+```
+
+Stuck? `hint(x)` nudges you; `reveal(x)` shows the worked solution:
+
+```{r}
+reveal(x)
+```
+
+A code task is graded by running what you write:
+
+```{r}
+y <- draw_exercise(topic = "nps", type = "code", seed = 2)
+y
+check_answer(y, "calc_nps(theme_park, nps, by = region)")
+```
+
+## Build a quiz
+
+`quiz()` assembles several questions; `grade()` scores them all at once:
+
+```{r}
+q <- quiz(4, chapter = 2, seed = 7)
+q
+```
+
+```{r}
+grade(q, list(
+  q$exercises[[1]]$answer,            # pretend we answered correctly
+  q$exercises[[2]]$answer,
+  q$exercises[[3]]$answer,
+  q$exercises[[4]]$answer
+))
+```
+
+## Hand out a worksheet
+
+`export_worksheet()` writes a self-contained R Markdown worksheet that *rebuilds
+the identical quiz from its seed* — so every question, with its exact data, is
+live inside the document. Add `answer_key = TRUE` for the tutor's copy:
+
+```{r}
+path <- export_worksheet(q, file.path(tempdir(), "worksheet.Rmd"),
+                         answer_key = TRUE)
+basename(path)
+```
+
+## Fresh exercises from an LLM
+
+When you want endless variety, `generate_exercise()` drafts new questions with a
+language model, pinned to the real ezr functions and the `theme_park` dataset:
+
+```{r eval=FALSE}
+set_llm_key("openai")
+generate_exercise("NPS by region", type = "mcq")
+generate_quiz(5, topic = "clustering")
+```
+
+Generated multiple-choice questions are auto-graded; generated code tasks are
+self-graded (use `reveal()`), and you should always skim AI output before handing
+it to learners.
+
+## What to practise where
+
+Every exercise is tagged with the chapter it belongs to, so you can drill exactly
+what you just read. The map:
+
+```{r}
+book_chapters()
+```
+
+So after Chapter 4 you might run `quiz(5, chapter = 4)`; to revise everything,
+`quiz(10)`. Keep a seed if you want to come back to the same set.
+
+<div class="recap">
+**In a nutshell.**
+
+- `draw_exercise()` gives one reproducible question; `check_answer()` grades a
+  letter or your real ezr code; `hint()` and `reveal()` help.
+- `quiz()` + `grade()` handle a whole set; `export_worksheet()` makes a
+  self-rebuilding worksheet (with an optional answer key).
+- `generate_exercise()` / `generate_quiz()` add AI-authored variety.
+- `book_chapters()` connects every topic back to the reading — so practice and
+  book stay in step.
+</div>
+
+## Where to go next {-}
+
+You now have the whole loop: read a chapter, practise it, and re-run your
+analysis whenever the data refreshes. From here, explore each package's own help
+and reference site, and keep the family's motto in mind — the analysis you do
+every day should take one readable line. Happy analysing.

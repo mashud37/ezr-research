@@ -1,0 +1,119 @@
+# Data and graphs {#data-and-graphs}
+
+Real survey data arrives messy. Rating questions come back as words, ages as free
+text, "Prefer not to say" sprinkled through. This chapter is about getting data
+into shape and then into a chart you can put in a report.
+
+## Cleaning worded ratings
+
+Look at the rating columns in `theme_park`:
+
+```{r}
+unique(theme_park$rating_rides)
+```
+
+They are words, not numbers — you cannot average "Very good". `recode_likert()`
+turns a worded 5-point scale into the numbers 1–5:
+
+```{r}
+recode_likert(theme_park$rating_rides)[1:8]
+```
+
+If a column has numbers hidden inside text (like `"7 out of 10"`),
+`ensure_numeric()` salvages them:
+
+```{r}
+ensure_numeric(c("7 out of 10", "rated 9", "8"))
+```
+
+And `na_blank()` turns non-answers (blanks, "Prefer not to answer") into proper
+missing values so they do not pollute your averages:
+
+```{r}
+na_blank(c("Good", "", "Prefer not to answer", "Bad"))
+```
+
+Cleaning all six rating columns at once is a tidy one-liner with `mutate()` and
+`across()`:
+
+```{r}
+parks <- theme_park %>%
+  dplyr::mutate(dplyr::across(dplyr::starts_with("rating_"), recode_likert))
+parks[, c("rating_rides", "rating_food", "rating_value")] %>% head(4)
+```
+
+Now they are numbers, ready to average, correlate or model.
+
+## Ages into generations
+
+Insights work loves a generational cut. `recode_generation()` maps an age (or a
+birth year) to its cohort:
+
+```{r}
+theme_park$generation <- recode_generation(theme_park$age, input = "age")
+calc_percentage(data.frame(generation = theme_park$generation), generation)
+```
+
+(There is `recode_age()` too, for fixed age bands.)
+
+## A first chart
+
+Charts in ezr follow the same one-line spirit. Take a percentage table and pipe
+it into `plot_bars()`:
+
+```{r}
+calc_percentage(theme_park, region, sort = "desc") %>%
+  plot_bars(label = region, title = "Where our visitors come from")
+```
+
+For NPS there is a purpose-built gauge-style chart:
+
+```{r}
+plot_nps(theme_park, nps, title = "Overall NPS")
+```
+
+## Importance vs performance
+
+Here is the chart that earns its keep in a satisfaction study. Which aspects of
+the visit matter most for recommending the park (**importance**), and how well do
+we score on them (**performance**)? `ipm_model()` works it out — and because the
+ratings are still worded, we let it recode them for us:
+
+```{r}
+ipm <- ipm_model(theme_park, nps, "rating_")
+ipm
+```
+
+Each rating gets an *importance* (how strongly it correlates with NPS) and a
+*performance* (its average), plus a BAD / OK / GOOD band. Plot it:
+
+```{r, fig.height=4.5}
+plot_ipm(ipm, title = "What drives recommendation at the park")
+```
+
+Items that are important **and** weak are your priorities; important and strong
+are your strengths to protect. That single chart often *is* the headline of a
+satisfaction report.
+
+<div class="turn">
+**Your turn.** Practise cleaning, generations and the importance model:
+
+```{r eval=FALSE}
+library(ezrlearning)
+x <- draw_exercise(chapter = 3, type = "code", seed = 4)
+x
+check_answer(x, "recode_likert(theme_park$rating_value)")
+```
+</div>
+
+<div class="recap">
+**In a nutshell.**
+
+- `recode_likert()` turns worded scales into 1–5; `ensure_numeric()` rescues
+  numbers from text; `na_blank()` removes non-answers.
+- `across()` inside `mutate()` cleans many columns at once.
+- `recode_generation()` cuts age into cohorts.
+- `plot_bars()`, `plot_nps()` and `plot_ipm()` turn tidy tables into
+  report-ready charts; `ipm_model()` + `plot_ipm()` is the importance–performance
+  workhorse.
+</div>

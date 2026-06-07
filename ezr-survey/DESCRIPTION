@@ -1,0 +1,54 @@
+Package: ezrsurvey
+Type: Package
+Title: Single-Line Helpers for Consumer Survey Analysis
+Version: 0.1.0
+Authors@R:
+    person("Andreas", "Schellewald", email = "aschellewald@acm.org",
+           role = c("aut", "cre"))
+Description: Simplifies the day-to-day work of research and insights
+    professionals who analyse consumer and customer survey data but have limited
+    coding experience. Wraps common 'tidyverse' patterns into single-line
+    functions for the tasks these teams repeat constantly: loading and combining
+    survey exports, turning questions into percentages and summaries, recoding
+    rating and Net Promoter scales, deriving demographics such as age cohorts
+    and regions, modelling the drivers of satisfaction, checking sampling
+    precision, selecting illustrative open-text comments, and producing
+    presentation-ready charts and reports. A simulated consumer-survey dataset
+    is included for learning and examples.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Depends:
+    R (>= 4.1.0)
+Imports:
+    dplyr (>= 1.1.0),
+    tidyr (>= 1.2.0),
+    stringr,
+    purrr,
+    ggplot2,
+    rlang (>= 1.0.0),
+    tibble,
+    readr
+Suggests:
+    rwa,
+    treemapify,
+    ggrepel,
+    ggstats,
+    scales,
+    ellmer,
+    keyring,
+    officer,
+    flextable,
+    quarto,
+    knitr,
+    rmarkdown,
+    svglite,
+    writexl,
+    yaml,
+    stopwords,
+    withr,
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+Roxygen: list(markdown = TRUE)
+Config/roxygen2/version: 8.0.0
+VignetteBuilder: knitr

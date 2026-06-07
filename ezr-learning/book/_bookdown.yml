@@ -1,0 +1,16 @@
+book_filename: "ezrlearning"
+output_dir: "_book"
+delete_merged_file: true
+language:
+  ui:
+    chapter_name: "Chapter "
+rmd_files:
+  - "index.Rmd"
+  - "01-fundamentals.Rmd"
+  - "02-the-ezr-way.Rmd"
+  - "03-data-and-graphs.Rmd"
+  - "04-finding-patterns.Rmd"
+  - "05-segments-and-structure.Rmd"
+  - "06-text.Rmd"
+  - "07-automation-and-reporting.Rmd"
+  - "08-practice.Rmd"

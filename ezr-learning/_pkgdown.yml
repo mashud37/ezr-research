@@ -1,0 +1,30 @@
+url: ~
+
+template:
+  bootstrap: 5
+
+reference:
+- title: Practice
+  desc: Draw, answer and reveal exercises.
+  contents:
+  - has_concept("exercises")
+- title: The exercise bank
+  desc: The catalogue of built-in, randomised exercises.
+  contents:
+  - has_concept("bank")
+- title: Quizzes & worksheets
+  contents:
+  - has_concept("quiz")
+- title: AI exercise generation
+  contents:
+  - has_concept("ai")
+- title: The book
+  desc: Link practice to the reading.
+  contents:
+  - has_concept("book")
+- title: Configuration
+  contents:
+  - has_concept("config")
+- title: Data
+  contents:
+  - has_concept("data")

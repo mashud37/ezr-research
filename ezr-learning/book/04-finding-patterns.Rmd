@@ -1,0 +1,93 @@
+# Finding patterns {#finding-patterns}
+
+So far we have described the data. Now we ask *why*: what explains a respondent's
+recommendation? This is where `ezrmodel` comes in, and where the family's
+**target-variable** mentality pays off — point a helper at an outcome and let it
+tell you what relates to it.
+
+First, a numeric table to model on. We recode the worded ratings to 1–5 and keep
+the outcome and a couple of numeric extras:
+
+```{r}
+parks <- theme_park %>%
+  dplyr::mutate(dplyr::across(dplyr::starts_with("rating_"), recode_likert)) %>%
+  dplyr::rename_with(~ sub("^rating_", "", .x), dplyr::starts_with("rating_")) %>%
+  dplyr::select(nps, rides, food, staff, cleanliness, value, queue)
+head(parks)
+```
+
+## What drives the target?
+
+`drivers()` is the signature move. Point it at a target and it ranks every
+predictor by **several methods at once** — plain correlation, a regression
+coefficient, relative weights, random forest, a common factor — then combines
+them into a consensus. Agreement across methods is a robust signal.
+
+```{r}
+d <- drivers(parks, nps)
+d
+```
+
+The consensus tells you which ratings matter most for recommendation. A picture:
+
+```{r}
+plot(d)
+```
+
+## Correlations, target-focused
+
+If you just want the correlations with the outcome, `correlations()` gives a
+tidy, ranked table:
+
+```{r}
+correlations(parks, nps)
+```
+
+## A regression you can read
+
+`model_lm()` fits an ordinary regression and hands back a tidy result — tidy
+coefficients, fit statistics, the model itself — instead of the wall of text
+`summary()` prints:
+
+```{r}
+fit <- model_lm(parks, nps ~ rides + food + staff + value)
+fit
+```
+
+Want the model to choose its own predictors? `model_select()` does stepwise or
+penalised selection:
+
+```{r}
+step <- model_select(parks, nps ~ rides + food + staff + cleanliness + value + queue,
+                     method = "stepwise")
+step
+```
+
+And `compare_models()` lines candidates up so you can pick between them at a
+glance:
+
+```{r}
+compare_models(simple = fit, stepwise = step)
+```
+
+<div class="turn">
+**Your turn.** Practise drivers, correlations and model selection:
+
+```{r eval=FALSE}
+library(ezrlearning)
+q <- quiz(3, chapter = 4, seed = 6)
+q
+grade(q, list("A", "correlations(parks, nps)", "A"))
+```
+</div>
+
+<div class="recap">
+**In a nutshell.**
+
+- Recode worded ratings to numbers, then point helpers at the **target**.
+- `drivers()` ranks predictors by a consensus of several methods — the robust
+  answer to "what matters most".
+- `correlations()` gives a target-focused ranking; `model_lm()` fits a readable
+  regression; `model_select()` picks predictors for you; `compare_models()`
+  chooses between fits.
+</div>
