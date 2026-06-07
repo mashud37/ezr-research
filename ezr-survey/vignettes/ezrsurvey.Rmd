@@ -1,0 +1,176 @@
+---
+title: "Getting started with ezrsurvey"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting started with ezrsurvey}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 4
+)
+```
+
+`ezrsurvey` turns the things consumer-survey analysts do over and over into
+single-line helpers. This vignette walks through a typical analysis of the
+bundled `consumer_survey` dataset: from raw answers to percentages, models,
+diagnostics and a chart you could drop on a slide.
+
+```{r setup}
+library(ezrsurvey)
+```
+
+## The data
+
+`consumer_survey` is 1,000 simulated respondents with demographics, a 0--10 NPS
+question, worded feature ratings, multi-select motivations, brand questions and
+open-text comments.
+
+```{r}
+consumer_survey[, c("respondent_id", "demo_gender", "demo_age", "nps_value")]
+```
+
+## Percentages without the `count`/`mutate`/`pivot_wider` dance
+
+`calc_percentage()` is the workhorse: counts, percentages and ordering in one
+call.
+
+```{r}
+calc_percentage(consumer_survey, demo_gender, sort = "desc")
+```
+
+Group with `by`, and pivot to a wide cross-tab with `wide = TRUE`:
+
+```{r}
+calc_percentage(consumer_survey, satis_return, by = region, wide = TRUE)
+```
+
+Check-all-that-apply questions live in a block of columns sharing a prefix;
+`calc_percentage_multi()` handles the per-respondent denominator for you:
+
+```{r}
+calc_percentage_multi(consumer_survey, "motivations_",
+                      id = respondent_id, sort = "desc")
+```
+
+## Reusable level orders
+
+Rather than retyping `levels = c(...)`, register an order once and link it to a
+variable; `calc_percentage()` then applies it automatically.
+
+```{r}
+register_order(
+  "education",
+  levels = c("Less than high school", "High school or equivalent",
+             "Some college but no degree", "Associate degree",
+             "Bachelor degree", "Masters degree or higher"),
+  vars = "demo_edu"
+)
+
+calc_percentage(consumer_survey, demo_edu)
+```
+
+## Net Promoter Score
+
+```{r}
+calc_nps(consumer_survey, nps_value)
+```
+
+```{r}
+plot_nps(consumer_survey, nps_value)
+```
+
+## Importance / performance
+
+`ipm_model()` combines driver importance (relative weights against the NPS
+score) with feature performance; `plot_ipm()` draws the matrix.
+
+```{r}
+model <- ipm_model(consumer_survey, nps_value, "ratings_")
+model
+```
+
+## Comparing two events
+
+For event surveys you often compare this wave with the last. `compare_values()`
+computes the differences and `plot_diff()` draws the change chart.
+
+```{r}
+previous <- transform(model, performance = performance - c(.3, -.1, .2, 0, .1))
+compare_values(model, previous) |>
+  plot_diff()
+```
+
+## How precise is it?
+
+`diagnose()` reports the standard error, relative standard error and margin of
+error for any column -- numeric (point) or categorical (proportion).
+
+```{r}
+diagnose(consumer_survey, demo_gender, nps_value)
+```
+
+For a one-shot, plain-language read on the whole study, `precision_summary()`
+picks the point-scale and proportion variables for you and writes the bullet
+points you would otherwise hand-craft for a report appendix:
+
+```{r}
+precision_summary(consumer_survey)
+```
+
+### Why relative standard error?
+
+A standard error on its own is hard to judge -- is `±0.05` good? It depends on
+the scale. The **relative standard error** (RSE) divides the standard error by
+the estimate, so precision becomes comparable across a 1--5 rating and a
+percentage alike. Rating estimates by their RSE is the approach national
+statistical agencies use to decide whether a number is solid enough to publish;
+the Australian Bureau of Statistics, for example, flags estimates by their RSE
+before release. ezrsurvey uses a five-band scheme tuned for consumer surveys:
+
+| RSE | Rating |
+|---|---|
+| under 5% | high precision |
+| under 10% | precise |
+| under 15% | satisfactory |
+| under 25% | use with caution |
+| 25% or more | likely reliability issues |
+
+For proportions, the margin of error is widest at a 50/50 split
+(`sqrt(0.5 * 0.5 / n)`), so a single worst-case `±` percentage-point figure at
+your achieved sample size bounds every percentage in the study -- which is why
+`precision_summary()` reports it.
+
+## Saving and exporting
+
+Every table and plot has a one-line, pipe-friendly save:
+
+```{r, eval = FALSE}
+calc_percentage(consumer_survey, demo_gender) |> save_data("gender.xlsx")
+plot_nps(consumer_survey, nps_value) |> save_plot("nps.png")
+
+# several tables, one tab each
+export_xlsx(
+  gender = calc_percentage(consumer_survey, demo_gender),
+  job    = calc_percentage(consumer_survey, demo_job),
+  path   = "summary.xlsx"
+)
+```
+
+## Where to next
+
+* Set persistent defaults with `ezrsurvey_options()` and a profile
+  (`use_ezrsurvey_profile()`).
+* Draft narrative summaries with `ai_summarise()` (needs an API key via
+  `set_llm_key()`).
+* Build a deck with `report_deck()` or scaffold a Quarto report with
+  `scaffold_report()`.
+
+```{r, include = FALSE}
+remove_order("education")
+```

@@ -1,0 +1,95 @@
+# Automation and reporting {#automation-and-reporting}
+
+The real payoff of R is doing a thing **once** and then re-running it forever.
+This chapter is about writing your own small functions, saving outputs, checking
+how trustworthy your numbers are, and drafting narrative.
+
+## Writing your own function
+
+When you find yourself repeating an analysis, wrap it in a function. A function
+takes inputs, does something, and returns a result:
+
+```{r}
+nps_by <- function(data, group) {
+  calc_nps(data, nps, by = {{ group }})
+}
+
+nps_by(theme_park, region)
+nps_by(theme_park, visitor_type)
+```
+
+The `{{ group }}` is how you pass an unquoted column name through to an ezr
+helper. Now your house-standard breakdown is one named call you can reuse and
+share.
+
+## Saving outputs
+
+The `save_*()` helpers write whatever you have to disk, picking the format from
+the file extension:
+
+```{r}
+tab <- calc_percentage(theme_park, region)
+save_data(tab, file.path(tempdir(), "region.csv"))
+
+p <- plot_nps(theme_park, nps)
+save_plot(p, file.path(tempdir(), "nps.png"))
+```
+
+To drop several tables into one Excel workbook — a tab each — use `export_xlsx()`:
+
+```{r}
+export_xlsx(
+  regions = calc_percentage(theme_park, region),
+  nps     = calc_nps(theme_park, nps, by = region),
+  path    = file.path(tempdir(), "report.xlsx")
+)
+```
+
+## How precise are these numbers?
+
+Before you put a number in front of a stakeholder, it helps to know how solid it
+is. `precision_summary()` gives a plain-language read on sampling precision:
+
+```{r}
+precision_summary(theme_park, nps)
+```
+
+This is the difference between "NPS is 19" and "NPS is 19, and with this sample
+that is a precise estimate" — the second is what earns trust.
+
+## Drafting the narrative
+
+Finally, the family can help you *write*. `ai_summarise()` sends a summary table
+(never the raw rows) to a language model and returns a tight paragraph or
+bullets. It needs an API key, stored once and kept out of your scripts:
+
+```{r eval=FALSE}
+set_llm_key("openai")                       # stored in your OS keyring
+
+ipm_model(theme_park, nps, "rating_") %>%
+  ai_summarise(template = "drivers_barriers", provider = "openai")
+```
+
+Treat the draft as a *first* draft — you still own the numbers and the judgement.
+
+<div class="turn">
+**Your turn.** Practise the reporting verbs:
+
+```{r eval=FALSE}
+library(ezrlearning)
+x <- draw_exercise(chapter = 7, seed = 10)
+x
+check_answer(x, "A")
+```
+</div>
+
+<div class="recap">
+**In a nutshell.**
+
+- Wrap repeated analysis in a function; pass columns through with `{{ }}`.
+- `save_data()` / `save_plot()` write outputs by file extension; `export_xlsx()`
+  puts many tables on their own tabs.
+- `precision_summary()` tells you how trustworthy an estimate is.
+- `ai_summarise()` drafts the narrative from a summary table (with your key kept
+  safe) — a starting point, not the final word.
+</div>

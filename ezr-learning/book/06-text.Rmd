@@ -1,0 +1,83 @@
+# Text {#text}
+
+Open-ended comments are where the *why* often hides. `ezrmodel` brings the same
+one-line spirit to text: tokenise, weigh, find themes, summarise.
+
+Our survey has a free-text `comment` column:
+
+```{r}
+theme_park$comment[1:3]
+```
+
+## Tokenising
+
+`tokenize_text()` turns the comments into one tidy row per word, lower-cased and
+cleaned, with stop-words removed:
+
+```{r}
+tk <- tokenize_text(theme_park, comment, respondent_id)
+tk
+```
+
+A quick count of the most frequent terms:
+
+```{r}
+plot(tk)
+```
+
+## Distinctive words by group
+
+Raw counts are dominated by words everyone uses. The more interesting question is
+which words are *distinctive* to a group. `term_freq()` with a `by` grouping
+weights terms by tf-idf — here, the words that set promoters apart from
+detractors:
+
+```{r}
+tp <- theme_park %>%
+  dplyr::mutate(group = nps_group(nps, labels = TRUE))
+term_freq(tp, comment, by = group, top = 6)
+```
+
+## Finding themes
+
+`topics()` fits a topic model and returns the defining terms of each theme plus
+each comment's topic mix — a fast way to see what people talk about without
+reading every line:
+
+```{r}
+tm <- topics(theme_park, comment, respondent_id, k = 3)
+tm
+```
+
+```{r, fig.height=4.5}
+plot(tm)
+```
+
+## An extractive summary
+
+Need a quick, faithful summary in respondents' *own* words? `summarise_text()`
+picks the most central sentences (no API key, nothing invented):
+
+```{r}
+summarise_text(theme_park, comment, n = 3)
+```
+
+<div class="turn">
+**Your turn.** Practise the text verbs:
+
+```{r eval=FALSE}
+library(ezrlearning)
+x <- draw_exercise(chapter = 6, seed = 9)
+x
+check_answer(x, "term_freq(theme_park, comment)")
+```
+</div>
+
+<div class="recap">
+**In a nutshell.**
+
+- `tokenize_text()` makes a tidy word table; `term_freq(..., by =)` surfaces each
+  group's *distinctive* words via tf-idf.
+- `topics()` discovers themes and each comment's mix of them.
+- `summarise_text()` extracts the most representative sentences verbatim.
+</div>

@@ -1,0 +1,59 @@
+url: ~
+
+template:
+  bootstrap: 5
+
+reference:
+- title: Drivers
+  desc: Find what relates to a target variable.
+  contents:
+  - has_concept("drivers")
+- title: Clustering
+  desc: Segment data and read off diagnostics and profiles.
+  contents:
+  - has_concept("clustering")
+- title: Dimensionality reduction
+  contents:
+  - has_concept("reduction")
+- title: Regression
+  contents:
+  - has_concept("regression")
+- title: Model comparison
+  contents:
+  - has_concept("compare")
+- title: Correlation & tests
+  contents:
+  - has_concept("correlation")
+  - has_concept("tests")
+- title: Latent variables
+  desc: Reliability, factor analysis and structural models.
+  contents:
+  - has_concept("factors")
+- title: Text mining
+  desc: Tokens, tf-idf, topic models and extractive summaries.
+  contents:
+  - has_concept("text")
+- title: Data preparation
+  contents:
+  - has_concept("prep")
+- title: Save & report
+  contents:
+  - has_concept("save")
+- title: AI summaries
+  contents:
+  - has_concept("ai")
+- title: Configuration
+  desc: Default dataset, options and profiles.
+  contents:
+  - has_concept("config")
+- title: Themes & palettes
+  contents:
+  - has_concept("themes")
+- title: Datasets
+  contents:
+  - has_concept("data")
+
+articles:
+- title: Get started
+  contents:
+  - ezrmodel

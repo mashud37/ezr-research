@@ -1,0 +1,86 @@
+---
+title: "Learn the ezr family"
+subtitle: "Everyday survey analysis and modelling in R, the easy way"
+author: "Andreas Schellewald"
+date: "`r format(Sys.Date(), '%B %Y')`"
+site: bookdown::bookdown_site
+documentclass: book
+github-repo: aschellewald/ezr
+description: "A hands-on introduction to R for research and insights work, taught with the ezr family of packages."
+---
+
+# Welcome {-}
+
+```{r setup, include=FALSE}
+source("_common.R")
+```
+
+This is a friendly, hands-on introduction to using **R** for everyday research
+and insights work — the kind of survey analysis, charting and modelling that
+fills a research manager's week. It grew out of a series of in-house workshops,
+and it keeps that workshop spirit: slow, plain-spoken, lots of small examples,
+and no assumption that you have coded before.
+
+What makes this book a little different is the toolkit. Instead of wrestling with
+long chains of base-R and tidyverse code, we lean on the **`ezr` family** of
+packages, which turn the things you do over and over into single, readable lines:
+
+- [**`ezrsurvey`**](https://github.com/aschellewald/ezr) — load survey exports,
+  compute percentages and NPS, clean Likert scales, recode ages into
+  generations, build importance–performance charts, and save tidy outputs.
+- [**`ezrmodel`**](https://github.com/aschellewald/ezr) — find what drives a
+  target variable, cluster customers, reduce dimensions, fit and compare
+  regressions, and mine open text.
+- [**`ezrlearning`**](https://github.com/aschellewald/ezr) — *this* package: the
+  book you are reading plus a practice engine that hands you reproducible
+  exercises and grades your answers.
+
+## Who this is for {-}
+
+You are a research, insights or analytics person who works with survey and
+customer data, you may live in Excel or a BI tool today, and you would like R to
+take the repetitive grind out of your reporting. You do **not** need a maths or
+programming background.
+
+## How to read it {-}
+
+Work through it in order — each chapter builds on the last. Type the code out
+yourself rather than copying; the muscle memory matters. Every chapter ends with
+two things:
+
+- a **Your turn** box pointing you at live practice exercises, and
+- an **In a nutshell** recap of the key moves.
+
+The practice exercises come from `ezrlearning` itself. Whenever you see a box
+like this:
+
+<div class="turn">
+**Your turn.** Try a couple of warm-ups:
+
+```{r eval=FALSE}
+library(ezrlearning)
+x <- draw_exercise(chapter = 1)   # a random exercise for this chapter
+x                                 # read the question
+check_answer(x, "B")             # check an answer
+reveal(x)                         # see the worked solution
+```
+</div>
+
+...you can run it straight away. Same `seed`, same question — so a tutor can hand
+out `draw_exercise(seed = 42)` and everyone gets the identical task.
+
+## The dataset {-}
+
+Almost every example uses one fictional dataset that ships with the package: a
+**theme-park satisfaction survey**, `theme_park`.
+
+```{r}
+library(ezrlearning)
+head(theme_park)
+```
+
+It has the texture of a real survey — a 0–10 recommendation score (`nps`), some
+worded rating questions that need cleaning, demographics, spend, and a free-text
+comment. We will get to know it well.
+
+Let's begin.

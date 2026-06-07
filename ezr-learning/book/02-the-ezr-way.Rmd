@@ -1,0 +1,118 @@
+# The ezr way {#the-ezr-way}
+
+R's real power comes from **packages** — bundles of ready-made functions. You
+install a package once and load it each session.
+
+```{r eval=FALSE}
+# install once (from the family repository)
+# install.packages(c("ezrsurvey", "ezrmodel", "ezrlearning"))
+
+# load every session
+library(ezrsurvey)
+library(ezrmodel)
+library(ezrlearning)
+```
+
+The single most useful idea you will borrow from the wider tidyverse is the
+**pipe**, `%>%` (shortcut: Ctrl/Cmd + Shift + M). It takes the thing on the left
+and feeds it into the function on the right, so code reads top-to-bottom like a
+sentence:
+
+```{r}
+theme_park$visitor_type %>%
+  table() %>%
+  prop.table()
+```
+
+Read it as: *take visitor_type, tabulate it, then turn that into proportions.*
+
+## A default dataset
+
+Most of the time you work with one survey for a while. `ezrsurvey` lets you set
+it once with `use_dataset()`, and then the helpers know what you mean without you
+repeating the data every time:
+
+```{r}
+use_dataset(theme_park)
+```
+
+From here on, `calc_percentage(visitor_type)` and
+`calc_percentage(theme_park, visitor_type)` mean the same thing. We will mostly
+write the data out in full so the examples stand alone, but the shortcut is there
+when you want it.
+
+## Percentages without the fuss
+
+The everyday question — *what share of respondents is each category?* — is one
+call:
+
+```{r}
+calc_percentage(theme_park, region)
+```
+
+You get the count (`n`) and the rounded percentage (`pct`). Add `by =` to split
+by another variable, and `sort =` to order the result:
+
+```{r}
+calc_percentage(theme_park, visitor_type, by = region, sort = "desc")
+```
+
+Compare that to the base-R version (`prop.table(table(...))`, rounding,
+reshaping) and you can see why we bother.
+
+## NPS in one line
+
+Net Promoter Score is everywhere in insights work: the percentage of *promoters*
+(9–10) minus the percentage of *detractors* (0–6). Doing it by hand is fiddly;
+`calc_nps()` just does it:
+
+```{r}
+calc_nps(theme_park, nps)
+```
+
+And, like the percentage helper, it splits by a group when you ask:
+
+```{r}
+calc_nps(theme_park, nps, by = region)
+```
+
+If you ever need the promoter/passive/detractor label for each respondent,
+`nps_group()` gives it:
+
+```{r}
+table(nps_group(theme_park$nps, labels = TRUE))
+```
+
+## Crosstabs
+
+Two categories at once — a classic contingency table — is `crosstab()`:
+
+```{r}
+crosstab(theme_park, visitor_type, region)
+```
+
+By default it counts; ask for row or column percentages with `cell = "row_pct"`
+or `"col_pct"`, or summarise a third numeric variable with `value =` and `fn =`.
+
+<div class="turn">
+**Your turn.** Practise the core verbs — `calc_percentage()`, `calc_nps()`,
+`crosstab()`:
+
+```{r eval=FALSE}
+library(ezrlearning)
+q <- quiz(4, chapter = 2, seed = 2)
+q                       # four questions
+# work through them, then:
+grade(q, list("A", "calc_nps(theme_park, nps, by = region)", "B", "A"))
+```
+</div>
+
+<div class="recap">
+**In a nutshell.**
+
+- `library()` loads a package; `%>%` pipes data left-to-right through functions.
+- `use_dataset()` sets a working survey so you stop repeating it.
+- `calc_percentage()`, `calc_nps()` and `crosstab()` replace whole chains of
+  `count()` / `prop.table()` / `pivot_wider()` with one readable line — and they
+  all take a `by =` grouping.
+</div>

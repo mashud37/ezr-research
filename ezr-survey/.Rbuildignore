@@ -1,0 +1,14 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^data-raw$
+^LICENSE\.md$
+^README\.Rmd$
+^\.github$
+^viewer demographics\.R$
+^report template viewer\.qmd$
+^country_region\.csv$
+^\.git$
+^PHASE-3-PLAN\.md$
+^_pkgdown\.yml$
+^\.github$
+^docs$

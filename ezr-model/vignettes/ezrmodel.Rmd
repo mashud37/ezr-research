@@ -1,0 +1,186 @@
+---
+title: "Getting started with ezrmodel"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting started with ezrmodel}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 4
+)
+```
+
+`ezrmodel` makes the advanced-analytics moves a research or insights analyst
+reaches for into single-line helpers that return a *complete* result -- the
+answer **and** its diagnostics. This tour uses the bundled datasets.
+
+```{r setup}
+library(ezrmodel)
+```
+
+## A default dataset
+
+Set the working dataset once and call helpers without repeating it (or pipe it
+in / name the argument).
+
+```{r}
+use_dataset(nps_drivers)
+```
+
+## What drives the target?
+
+`drivers()` ranks every predictor against a target by several methods at once
+(correlation, regression, relative weights, random forest, single-factor
+loading) and combines them into a consensus. Methods whose package isn't
+installed are simply skipped.
+
+```{r}
+d <- drivers(nps_drivers, nps)
+d
+```
+
+```{r}
+tidy(d)
+```
+
+```{r}
+plot(d)
+```
+
+## Correlations
+
+```{r}
+correlations(nps_drivers, nps)
+```
+
+## Regression, tidily
+
+```{r}
+fit <- model_lm(nps_drivers, nps ~ quality + value + service + trust)
+fit
+```
+
+```{r}
+tidy(fit)
+```
+
+## Choosing and comparing models
+
+`model_select()` lets the model pick its own predictors -- stepwise by AIC, or a
+penalised lasso/ridge/elastic-net fit (via `glmnet`) that shrinks weak terms.
+
+```{r}
+step <- model_select(nps_drivers,
+  nps ~ value + quality + service + ease + support + trust + price + innovation,
+  method = "stepwise")
+step
+```
+
+`compare_models()` lines candidates up on common metrics, best first.
+
+```{r}
+compare_models(simple = fit, stepwise = step)
+```
+
+## Clustering with diagnostics
+
+`cluster()` returns the assignments, the sizes, the cluster profiles and the
+quality diagnostics (silhouette, within-sum-of-squares) in one object.
+
+```{r}
+cl <- cluster(ecommerce, k = 4,
+              vars = c(recency_days, frequency, monetary, tenure_months, returns))
+cl
+```
+
+```{r}
+plot(cl)
+```
+
+Read the clusters against a known variable:
+
+```{r}
+cluster_profile(cl, region)
+```
+
+## Dimensionality reduction
+
+```{r}
+r <- reduce_dims(ecommerce,
+                 vars = c(recency_days, frequency, monetary, tenure_months, returns))
+r
+```
+
+```{r}
+plot(r)
+```
+
+For *seeing* structure rather than interpreting it, `reduce_dims()` also offers
+non-linear embeddings -- `method = "umap"` (via `uwot`) or `"tsne"` (via
+`Rtsne`) -- which place similar rows together in two dimensions, handy to plot
+coloured by a `cluster()` assignment.
+
+## Group tests
+
+`test_groups()` runs a test per group -- against a benchmark or a reference
+group -- and returns a tidy significance table.
+
+```{r}
+test_groups(nps_drivers, nps, region, mu = 6)
+```
+
+## Latent structure
+
+Do the rated attributes hang together, and what dimensions sit behind them?
+`reliability()` reports Cronbach's alpha; `factors()` runs an exploratory factor
+analysis (choosing the number of factors for you when you don't say). Both need
+the `psych` package.
+
+```{r, eval = requireNamespace("psych", quietly = TRUE)}
+reliability(nps_drivers, items = c(value, quality, service, ease,
+                                   support, trust, price, innovation))
+```
+
+```{r, eval = requireNamespace("psych", quietly = TRUE)}
+f <- factors(nps_drivers, vars = c(value, quality, service, ease,
+                                   support, trust, price, innovation), n = 2)
+f
+tidy(f)
+```
+
+`sem()` confirms a structure you specify in lavaan syntax (needs `lavaan`).
+
+## Text mining
+
+Turn an open-text column into tidy terms, then read off the words that
+distinguish groups with tf-idf. These need no extra packages.
+
+```{r}
+tokenize_text(reviews, text, review_id)
+```
+
+```{r}
+term_freq(reviews, text, by = rating, top = 6)
+```
+
+For latent themes, `topics()` fits a Structural Topic Model (via `quanteda` and
+`stm`); `summarise_text()` returns the most central sentences (via `lexRankr`).
+
+```{r, include = FALSE}
+clear_dataset()
+```
+
+## Where to next
+
+* Set persistent defaults (e.g. a `seed`) with `ezrmodel_options()` and a
+  profile (`use_ezrmodel_profile()`).
+* Save any result table or plot with `save_data()` / `save_plot()` /
+  `export_xlsx()`.
+* Draft a narrative with `ai_summarise()` (needs an API key via
+  `set_llm_key()`).

@@ -1,0 +1,40 @@
+Package: ezrlearning
+Type: Package
+Title: Learn the 'ezr' Family with a Book and Practice Exercises
+Version: 0.1.0
+Authors@R:
+    person("Andreas", "Schellewald", email = "aschellewald@acm.org",
+           role = c("aut", "cre"))
+Description: A teaching companion for the 'ezr' family of survey and modelling
+    packages, built from hands-on workshop material. Generates practice and
+    revision exercises -- multiple choice and "write the 'ezr' code" tasks --
+    that are reproducible from a seed yet randomised across draws, grades a
+    learner's answer by running real 'ezrsurvey' and 'ezrmodel' code, assembles
+    quizzes and exports them as self-contained worksheets, and can draft fresh
+    exercises from a language model. Each exercise links to a chapter of the
+    accompanying book so reading and practice stay in step.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Depends:
+    R (>= 4.1.0)
+Imports:
+    ezrsurvey,
+    ezrmodel,
+    dplyr (>= 1.1.0),
+    rlang (>= 1.0.0),
+    tibble
+Suggests:
+    rwa,
+    psych,
+    ggplot2,
+    keyring,
+    ellmer,
+    jsonlite,
+    rmarkdown,
+    knitr,
+    withr,
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+Roxygen: list(markdown = TRUE)
+Config/roxygen2/version: 8.0.0
