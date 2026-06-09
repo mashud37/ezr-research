@@ -6,6 +6,16 @@ summarise_cell <- function(x, fn, na_rm) {
   fn(x)
 }
 
+# Internal: na.rm-aware weighted mean of a numeric cell.
+summarise_cell_wtd <- function(x, w, na_rm) {
+  x <- ensure_numeric(x, quiet = TRUE)
+  if (na_rm) {
+    ok <- !is.na(x); x <- x[ok]; w <- w[ok]
+  }
+  if (length(x) == 0L) return(NA_real_)
+  stats::weighted.mean(x, w)
+}
+
 #' Cross-tabulate two survey questions
 #'
 #' Builds a crosstab from two categorical columns: `x` forms the rows and `y` the
@@ -28,6 +38,10 @@ summarise_cell <- function(x, fn, na_rm) {
 #'   for percentages, `2` when `value` is supplied.
 #' @param na_rm Drop blanks / non-answers in `x`, `y` (and `NA` in `value`).
 #'   Default `TRUE`.
+#' @param weights Survey weighting: `NULL` (default) uses the session scheme from
+#'   [set_weights()] if set; `FALSE` forces unweighted; or pass an ad-hoc scheme.
+#'   When weighting is active the cells default to weighted values -- weighted
+#'   counts, weighted percentages, or (for a numeric `value`) the weighted mean.
 #'
 #' @return A [tibble][tibble::tibble]: wide (x plus one column per y level) or
 #'   long (`x`, `y`, `value`).
@@ -57,7 +71,7 @@ summarise_cell <- function(x, fn, na_rm) {
 crosstab <- function(data = NULL, x, y, cell = c("count", "row_pct", "col_pct",
                                           "total_pct"),
                      value = NULL, fn = mean, wide = TRUE, digits = NULL,
-                     na_rm = TRUE) {
+                     na_rm = TRUE, weights = NULL) {
   data <- resolve_data(data)
   cell <- match.arg(cell)
   x_name <- rlang::as_name(rlang::ensym(x))
@@ -66,7 +80,11 @@ crosstab <- function(data = NULL, x, y, cell = c("count", "row_pct", "col_pct",
   has_value <- !rlang::quo_is_null(value_q)
   if (is.null(digits)) digits <- if (has_value) 2 else 0
 
+  w <- resolve_weights(data, weights)
+  weighted <- !is.null(w)
+
   d <- tibble::as_tibble(data)
+  if (weighted) d[[".w"]] <- w
   if (na_rm) {
     d[[x_name]] <- na_blank(d[[x_name]])
     d[[y_name]] <- na_blank(d[[y_name]])
@@ -75,17 +93,31 @@ crosstab <- function(data = NULL, x, y, cell = c("count", "row_pct", "col_pct",
 
   if (has_value) {
     value_name <- rlang::as_name(rlang::ensym(value))
+    if (weighted && !identical(fn, mean)) {
+      warning("Weighted crosstab aggregates `value` with the weighted mean; ",
+              "`fn` is ignored.", call. = FALSE)
+    }
     out <- d %>%
       dplyr::group_by(.data[[x_name]], .data[[y_name]]) %>%
       dplyr::summarise(
-        value = round(summarise_cell(.data[[value_name]], fn, na_rm), digits),
+        value = if (weighted) {
+          round(summarise_cell_wtd(.data[[value_name]], .data$.w, na_rm), digits)
+        } else {
+          round(summarise_cell(.data[[value_name]], fn, na_rm), digits)
+        },
         .groups = "drop"
       )
   } else {
-    counts <- dplyr::count(d, .data[[x_name]], .data[[y_name]], name = "n")
+    counts <- if (weighted) {
+      d %>%
+        dplyr::group_by(.data[[x_name]], .data[[y_name]]) %>%
+        dplyr::summarise(n = sum(.data$.w), .groups = "drop")
+    } else {
+      dplyr::count(d, .data[[x_name]], .data[[y_name]], name = "n")
+    }
     out <- switch(
       cell,
-      count = dplyr::mutate(counts, value = .data$n),
+      count = dplyr::mutate(counts, value = round(.data$n)),
       row_pct = counts %>%
         dplyr::group_by(.data[[x_name]]) %>%
         dplyr::mutate(value = round(.data$n / sum(.data$n) * 100, digits)) %>%

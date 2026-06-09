@@ -4,7 +4,7 @@
 \alias{calc_summary}
 \title{Summarise a numeric question (mean / median / sd)}
 \usage{
-calc_summary(data = NULL, column, by = NULL, na_rm = TRUE)
+calc_summary(data = NULL, column, by = NULL, na_rm = TRUE, weights = NULL)
 }
 \arguments{
 \item{data}{A data frame.}
@@ -14,6 +14,11 @@ calc_summary(data = NULL, column, by = NULL, na_rm = TRUE)
 \item{by}{Optional grouping column(s); see \code{\link[=calc_percentage]{calc_percentage()}}.}
 
 \item{na_rm}{Drop \code{NA} before summarising. Defaults to \code{TRUE}.}
+
+\item{weights}{Survey weighting: \code{NULL} (default) uses the session scheme from
+\code{\link[=set_weights]{set_weights()}} if set; \code{FALSE} forces unweighted; or pass an ad-hoc scheme.
+When weighting is active the \code{mean}, \code{median} and \code{sd} become their weighted
+versions (\code{n} stays the unweighted base).}
 }
 \value{
 A \link[tibble:tibble]{tibble} with \code{n} (non-missing count), \code{mean},
@@ -27,8 +32,10 @@ variables, with optional grouping.
 \details{
 The column is passed through \code{\link[=ensure_numeric]{ensure_numeric()}} first, so a text age column
 like \code{"25 years"} still summarises. \code{n} counts non-missing values (after that
-coercion). For a measure of how precise the \code{mean} is, pair this with
-\code{\link[=diagnose]{diagnose()}} or \code{\link[=se_mean]{se_mean()}}.
+coercion). When a weighting scheme is active the statistics are weighted (and
+missing values are dropped); \code{n} remains the unweighted respondent count. For a
+measure of how precise the \code{mean} is, pair this with \code{\link[=diagnose]{diagnose()}} or
+\code{\link[=se_mean]{se_mean()}}.
 }
 \examples{
 calc_summary(consumer_survey, demo_age)

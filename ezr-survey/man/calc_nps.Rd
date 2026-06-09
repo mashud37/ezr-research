@@ -4,7 +4,7 @@
 \alias{calc_nps}
 \title{Net Promoter Score}
 \usage{
-calc_nps(data = NULL, value, by = NULL)
+calc_nps(data = NULL, value, by = NULL, weights = NULL)
 }
 \arguments{
 \item{data}{A data frame.}
@@ -12,6 +12,11 @@ calc_nps(data = NULL, value, by = NULL)
 \item{value}{The 0-10 recommendation column (unquoted).}
 
 \item{by}{Optional grouping column(s); see \code{\link[=calc_percentage]{calc_percentage()}}.}
+
+\item{weights}{Survey weighting: \code{NULL} (default) uses the session scheme from
+\code{\link[=set_weights]{set_weights()}} if set; \code{FALSE} forces unweighted; or pass an ad-hoc scheme.
+When weighting is active \code{nps} is the weighted score (\code{n} stays the
+unweighted base).}
 }
 \value{
 A \link[tibble:tibble]{tibble} with \code{n} (valid responses) and \code{nps} (an

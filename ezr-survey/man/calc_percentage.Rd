@@ -12,7 +12,8 @@ calc_percentage(
   levels = NULL,
   digits = 0,
   wide = FALSE,
-  na_rm = TRUE
+  na_rm = TRUE,
+  weights = NULL
 )
 }
 \arguments{
@@ -41,10 +42,17 @@ workflow. Defaults to \code{FALSE} (tidy long form).}
 
 \item{na_rm}{If \code{TRUE} (default), blanks and "Prefer not to answer" responses
 (see \code{\link[=na_blank]{na_blank()}}) are dropped before counting.}
+
+\item{weights}{Survey weighting for this call: \code{NULL} (default) uses the
+session scheme from \code{\link[=set_weights]{set_weights()}} if one is set; \code{FALSE} forces unweighted;
+or pass an ad-hoc scheme (any form \code{\link[=set_weights]{set_weights()}} accepts) to weight just
+this call. When weighting is active a \code{wpct} column (weighted percentage) is
+added beside \code{n} and \code{pct}.}
 }
 \value{
-A \link[tibble:tibble]{tibble} with \code{column}, \code{n} and \code{pct} (long form),
-or one row per group with an answer column each (wide form).
+A \link[tibble:tibble]{tibble} with \code{column}, \code{n} and \code{pct} (and \code{wpct}
+when weighting is active) in long form, or one row per group with an answer
+column each (wide form).
 }
 \description{
 The headline helper: replaces the ubiquitous

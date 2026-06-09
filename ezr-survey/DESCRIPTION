@@ -1,7 +1,7 @@
 Package: ezrsurvey
 Type: Package
 Title: Single-Line Helpers for Consumer Survey Analysis
-Version: 0.1.0
+Version: 0.2.0
 Authors@R:
     person("Andreas", "Schellewald", email = "aschellewald@acm.org",
            role = c("aut", "cre"))
