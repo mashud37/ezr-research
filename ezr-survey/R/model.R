@@ -7,6 +7,10 @@
 #' @param data A data frame.
 #' @param value The 0-10 recommendation column (unquoted).
 #' @param by Optional grouping column(s); see [calc_percentage()].
+#' @param weights Survey weighting: `NULL` (default) uses the session scheme from
+#'   [set_weights()] if set; `FALSE` forces unweighted; or pass an ad-hoc scheme.
+#'   When weighting is active `nps` is the weighted score (`n` stays the
+#'   unweighted base).
 #'
 #' @return A [tibble][tibble::tibble] with `n` (valid responses) and `nps` (an
 #'   integer from -100 to 100), one row per group when `by` is given.
@@ -31,26 +35,39 @@
 #'
 #' calc_nps(consumer_survey, nps_value, by = region)
 #' @export
-calc_nps <- function(data = NULL, value, by = NULL) {
+calc_nps <- function(data = NULL, value, by = NULL, weights = NULL) {
   data <- resolve_data(data)
   col_name <- rlang::as_name(rlang::ensym(value))
   by_q <- rlang::enquo(by)
   has_by <- !rlang::quo_is_null(by_q)
 
+  w <- resolve_weights(data, weights)
+  weighted <- !is.null(w)
+
   d <- data
+  if (weighted) d[[".w"]] <- w
   d[[col_name]] <- ensure_numeric(d[[col_name]], name = col_name)
   d[[".nps_group"]] <- nps_group(d[[col_name]])
   d <- dplyr::filter(d, !is.na(.data$.nps_group))
 
   grouped <- if (has_by) dplyr::group_by(d, dplyr::pick({{ by }})) else d
 
-  grouped %>%
-    dplyr::summarise(
-      n = dplyr::n(),
-      nps = round(mean(.data$.nps_group) * 100),
-      .groups = "drop"
-    ) %>%
-    tibble::as_tibble()
+  out <- if (weighted) {
+    grouped %>%
+      dplyr::summarise(
+        n = dplyr::n(),
+        nps = round(stats::weighted.mean(.data$.nps_group, .data$.w) * 100),
+        .groups = "drop"
+      )
+  } else {
+    grouped %>%
+      dplyr::summarise(
+        n = dplyr::n(),
+        nps = round(mean(.data$.nps_group) * 100),
+        .groups = "drop"
+      )
+  }
+  tibble::as_tibble(out)
 }
 
 # Internal: relative weights analysis via the rwa package.

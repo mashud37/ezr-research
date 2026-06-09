@@ -10,7 +10,8 @@ calc_percentage_batch(
   by = NULL,
   sort = c("none", "desc", "asc"),
   digits = 0,
-  na_rm = TRUE
+  na_rm = TRUE,
+  weights = NULL
 )
 }
 \arguments{
@@ -19,7 +20,8 @@ calc_percentage_batch(
 \item{...}{Columns to tabulate, using tidyselect (e.g. \code{starts_with("demo_")}
 or \verb{demo_gender, demo_edu}).}
 
-\item{by, sort, digits, na_rm}{Passed to \code{\link[=calc_percentage]{calc_percentage()}}.}
+\item{by, sort, digits, na_rm, weights}{Passed to \code{\link[=calc_percentage]{calc_percentage()}} (so a
+\code{wpct} column appears when weighting is active).}
 }
 \value{
 A \link[tibble:tibble]{tibble} with \code{variable}, \code{answer}, \code{n}, \code{pct}

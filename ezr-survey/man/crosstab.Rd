@@ -13,7 +13,8 @@ crosstab(
   fn = mean,
   wide = TRUE,
   digits = NULL,
-  na_rm = TRUE
+  na_rm = TRUE,
+  weights = NULL
 )
 }
 \arguments{
@@ -39,6 +40,11 @@ for percentages, \code{2} when \code{value} is supplied.}
 
 \item{na_rm}{Drop blanks / non-answers in \code{x}, \code{y} (and \code{NA} in \code{value}).
 Default \code{TRUE}.}
+
+\item{weights}{Survey weighting: \code{NULL} (default) uses the session scheme from
+\code{\link[=set_weights]{set_weights()}} if set; \code{FALSE} forces unweighted; or pass an ad-hoc scheme.
+When weighting is active the cells default to weighted values -- weighted
+counts, weighted percentages, or (for a numeric \code{value}) the weighted mean.}
 }
 \value{
 A \link[tibble:tibble]{tibble}: wide (x plus one column per y level) or

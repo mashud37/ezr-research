@@ -53,9 +53,15 @@ order_factor <- function(df, key, sort = c("none", "desc", "asc"),
 #'   workflow. Defaults to `FALSE` (tidy long form).
 #' @param na_rm If `TRUE` (default), blanks and "Prefer not to answer" responses
 #'   (see [na_blank()]) are dropped before counting.
+#' @param weights Survey weighting for this call: `NULL` (default) uses the
+#'   session scheme from [set_weights()] if one is set; `FALSE` forces unweighted;
+#'   or pass an ad-hoc scheme (any form [set_weights()] accepts) to weight just
+#'   this call. When weighting is active a `wpct` column (weighted percentage) is
+#'   added beside `n` and `pct`.
 #'
-#' @return A [tibble][tibble::tibble] with `column`, `n` and `pct` (long form),
-#'   or one row per group with an answer column each (wide form).
+#' @return A [tibble][tibble::tibble] with `column`, `n` and `pct` (and `wpct`
+#'   when weighting is active) in long form, or one row per group with an answer
+#'   column each (wide form).
 #'
 #' @details
 #' Percentages are computed *within* each group, so they sum to about 100 per
@@ -90,7 +96,7 @@ order_factor <- function(df, key, sort = c("none", "desc", "asc"),
 calc_percentage <- function(data = NULL, column, by = NULL,
                             sort = c("none", "desc", "asc"),
                             levels = NULL, digits = 0,
-                            wide = FALSE, na_rm = TRUE) {
+                            wide = FALSE, na_rm = TRUE, weights = NULL) {
   data <- resolve_data(data)
   sort <- match.arg(sort)
   col_sym <- rlang::ensym(column)
@@ -98,7 +104,11 @@ calc_percentage <- function(data = NULL, column, by = NULL,
   by_q <- rlang::enquo(by)
   has_by <- !rlang::quo_is_null(by_q)
 
+  w <- resolve_weights(data, weights)
+  weighted <- !is.null(w)
+
   d <- data
+  if (weighted) d[[".w"]] <- w
   if (na_rm) {
     d[[col_name]] <- na_blank(d[[col_name]])
     d <- dplyr::filter(d, !is.na(.data[[col_name]]))
@@ -115,10 +125,21 @@ calc_percentage <- function(data = NULL, column, by = NULL,
     }
   }
 
-  out <- grouped %>%
-    dplyr::count(!!col_sym, name = "n") %>%
-    dplyr::mutate(pct = round(.data$n / sum(.data$n) * 100, digits)) %>%
-    dplyr::ungroup()
+  if (weighted) {
+    out <- grouped %>%
+      dplyr::group_by(!!col_sym, .add = TRUE) %>%
+      dplyr::summarise(n = dplyr::n(), .wsum = sum(.data$.w),
+                       .groups = "drop_last") %>%
+      dplyr::mutate(pct = round(.data$n / sum(.data$n) * 100, digits),
+                    wpct = round(.data$.wsum / sum(.data$.wsum) * 100, digits)) %>%
+      dplyr::ungroup() %>%
+      dplyr::select(-".wsum")
+  } else {
+    out <- grouped %>%
+      dplyr::count(!!col_sym, name = "n") %>%
+      dplyr::mutate(pct = round(.data$n / sum(.data$n) * 100, digits)) %>%
+      dplyr::ungroup()
+  }
 
   # If the caller didn't request an ordering, apply a registered order for this
   # variable (see register_order()), when one exists.
@@ -128,9 +149,11 @@ calc_percentage <- function(data = NULL, column, by = NULL,
   out <- order_factor(out, col_name, sort = sort, levels = levels)
 
   if (wide) {
+    val_col <- if (weighted) "wpct" else "pct"
+    drop_cols <- if (weighted) c("n", "pct") else "n"
     out <- out %>%
-      dplyr::select(-"n") %>%
-      tidyr::pivot_wider(names_from = !!col_sym, values_from = "pct")
+      dplyr::select(-dplyr::all_of(drop_cols)) %>%
+      tidyr::pivot_wider(names_from = !!col_sym, values_from = val_col)
   }
 
   tibble::as_tibble(out)
@@ -265,6 +288,10 @@ calc_percentage_multi <- function(data = NULL, prefix, id = NULL, by = NULL,
 #' @param column Numeric column to summarise (unquoted).
 #' @param by Optional grouping column(s); see [calc_percentage()].
 #' @param na_rm Drop `NA` before summarising. Defaults to `TRUE`.
+#' @param weights Survey weighting: `NULL` (default) uses the session scheme from
+#'   [set_weights()] if set; `FALSE` forces unweighted; or pass an ad-hoc scheme.
+#'   When weighting is active the `mean`, `median` and `sd` become their weighted
+#'   versions (`n` stays the unweighted base).
 #'
 #' @return A [tibble][tibble::tibble] with `n` (non-missing count), `mean`,
 #'   `median` and `sd`, one row per group when `by` is supplied.
@@ -272,8 +299,10 @@ calc_percentage_multi <- function(data = NULL, prefix, id = NULL, by = NULL,
 #' @details
 #' The column is passed through [ensure_numeric()] first, so a text age column
 #' like `"25 years"` still summarises. `n` counts non-missing values (after that
-#' coercion). For a measure of how precise the `mean` is, pair this with
-#' [diagnose()] or [se_mean()].
+#' coercion). When a weighting scheme is active the statistics are weighted (and
+#' missing values are dropped); `n` remains the unweighted respondent count. For a
+#' measure of how precise the `mean` is, pair this with [diagnose()] or
+#' [se_mean()].
 #'
 #' @family summaries
 #' @seealso [calc_percentage()] for categorical variables, [diagnose()] for
@@ -288,27 +317,43 @@ calc_percentage_multi <- function(data = NULL, prefix, id = NULL, by = NULL,
 #'
 #' calc_summary(consumer_survey, demo_age, by = region)
 #' @export
-calc_summary <- function(data = NULL, column, by = NULL, na_rm = TRUE) {
+calc_summary <- function(data = NULL, column, by = NULL, na_rm = TRUE,
+                         weights = NULL) {
   data <- resolve_data(data)
   col_sym <- rlang::ensym(column)
   col_name <- rlang::as_name(col_sym)
   by_q <- rlang::enquo(by)
   has_by <- !rlang::quo_is_null(by_q)
 
+  w <- resolve_weights(data, weights)
+  weighted <- !is.null(w)
+  if (weighted) data[[".w"]] <- w
+
   # Salvage numbers from lightly messy text (e.g. "25 years") before summarising.
   data[[col_name]] <- ensure_numeric(data[[col_name]], name = col_name)
 
   grouped <- if (has_by) dplyr::group_by(data, dplyr::pick({{ by }})) else data
 
-  grouped %>%
-    dplyr::summarise(
-      n = sum(!is.na(!!col_sym)),
-      mean = mean(!!col_sym, na.rm = na_rm),
-      median = stats::median(!!col_sym, na.rm = na_rm),
-      sd = stats::sd(!!col_sym, na.rm = na_rm),
-      .groups = "drop"
-    ) %>%
-    tibble::as_tibble()
+  out <- if (weighted) {
+    grouped %>%
+      dplyr::summarise(
+        n = sum(!is.na(!!col_sym)),
+        mean = stats::weighted.mean(!!col_sym, .data$.w, na.rm = na_rm),
+        median = wtd_median(!!col_sym, .data$.w),
+        sd = wtd_sd(!!col_sym, .data$.w),
+        .groups = "drop"
+      )
+  } else {
+    grouped %>%
+      dplyr::summarise(
+        n = sum(!is.na(!!col_sym)),
+        mean = mean(!!col_sym, na.rm = na_rm),
+        median = stats::median(!!col_sym, na.rm = na_rm),
+        sd = stats::sd(!!col_sym, na.rm = na_rm),
+        .groups = "drop"
+      )
+  }
+  tibble::as_tibble(out)
 }
 
 #' Percentages for a batch of questions at once
@@ -321,7 +366,8 @@ calc_summary <- function(data = NULL, column, by = NULL, na_rm = TRUE) {
 #' @param data A data frame.
 #' @param ... Columns to tabulate, using tidyselect (e.g. `starts_with("demo_")`
 #'   or `demo_gender, demo_edu`).
-#' @param by,sort,digits,na_rm Passed to [calc_percentage()].
+#' @param by,sort,digits,na_rm,weights Passed to [calc_percentage()] (so a
+#'   `wpct` column appears when weighting is active).
 #'
 #' @return A [tibble][tibble::tibble] with `variable`, `answer`, `n`, `pct`
 #'   (plus any `by` columns).
@@ -350,7 +396,7 @@ calc_summary <- function(data = NULL, column, by = NULL, na_rm = TRUE) {
 #' @export
 calc_percentage_batch <- function(data = NULL, ..., by = NULL,
                                   sort = c("none", "desc", "asc"),
-                                  digits = 0, na_rm = TRUE) {
+                                  digits = 0, na_rm = TRUE, weights = NULL) {
   data <- resolve_data(data)
   sort <- match.arg(sort)
   cols <- names(dplyr::select(data, ...))
@@ -362,7 +408,8 @@ calc_percentage_batch <- function(data = NULL, ..., by = NULL,
   purrr::map_dfr(cols, function(col) {
     res <- rlang::inject(
       calc_percentage(data, !!rlang::sym(col), by = !!by_q,
-                      sort = sort, digits = digits, na_rm = na_rm)
+                      sort = sort, digits = digits, na_rm = na_rm,
+                      weights = weights)
     )
     names(res)[names(res) == col] <- "answer"
     res$answer <- as.character(res$answer)

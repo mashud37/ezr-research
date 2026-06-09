@@ -16,6 +16,10 @@ reference:
   desc: Percentages, summaries and cross-tabulations in one line.
   contents:
   - has_concept("summaries")
+- title: Weighting
+  desc: Post-stratification / raking applied automatically to the summaries.
+  contents:
+  - has_concept("weighting")
 - title: Model
   desc: NPS and importance/performance modelling.
   contents:
