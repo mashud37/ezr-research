@@ -1,7 +1,7 @@
 # ezrsurvey <img src="man/figures/logo.png" align="right" height="120" alt="" />
 
-> ezrsurvey — a small, opinionated tidyverse wrapper for everyday consumer-survey
-> work.
+> ezrsurvey — tidyverse helpers for everyday consumer-survey work, designed so
+> common tasks require minimal R experience.
 
 `ezrsurvey` packages the patterns a research manager reaches for again and again:
 loading and stacking survey exports, turning questions into percentages without
@@ -92,7 +92,7 @@ plot_bars(calc_percentage(consumer_survey, demo_gender)) |> save_plot("gender.sv
   bad" guidance to any chart from a small band spec — the presets
   `bands_rating_3()` / `bands_nps()` cover the common cases.
 
-## AI summaries (Phase 2)
+## AI summaries
 
 ```r
 # one-time: store a key in the OS keyring
@@ -115,7 +115,7 @@ ai_report_sections(
 Prompts are named templates (`list_prompts()`); add your own with
 `register_prompt()`. Only the summary table you pass is sent to the provider.
 
-## Reporting (Phase 2)
+## Reporting
 
 ```r
 # Build a PowerPoint deck directly from R
@@ -130,12 +130,6 @@ report_deck(
 # ...or scaffold a Quarto report you can render to pptx / html / pdf / docx
 scaffold_report("html", path = "report.qmd", title = "Q2 Viewer Survey")
 ```
-
-## Roadmap (Phase 3)
-
-- Worked **examples, help and tab-completion metadata** across every function so
-  `?fn` and IDE F1 give runnable, copy-paste answers; a getting-started
-  vignette and a pkgdown site.
 
 ## License
 

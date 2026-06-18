@@ -13,7 +13,7 @@ embeddings, in the usual single-line, rich-result-object style.
 
 # ezrmodel 0.2.0
 
-Phase 2: text mining and latent-variable modelling, in the same single-line,
+Text mining and latent-variable modelling, in the same single-line,
 rich-result-object style.
 
 ## Text mining
