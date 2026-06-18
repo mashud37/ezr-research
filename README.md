@@ -1,8 +1,8 @@
 # ezr — a family of easier R packages for research work
 
-This repository is the home for the **`ezr*`** family of R packages: small,
-opinionated tidyverse wrappers that turn repetitive day-to-day research-manager
-work into one-line helpers. Each package lives in its own subdirectory and is
+This repository is the home for the **`ezr*`** family of R packages: focused
+tidyverse wrappers that reduce repetitive day-to-day research-manager tasks to
+single readable lines — no deep R knowledge required. Each package lives in its own subdirectory and is
 built, documented and checked independently.
 
 ## Packages
@@ -11,7 +11,7 @@ built, documented and checked independently.
 | --- | --- | --- | --- |
 | **ezrsurvey** | [`ezr-survey/`](ezr-survey/) | ✅ Active (v0.1.0) | Tidyverse helpers for everyday survey analysis — load & stack exports, percentages without `count`/`mutate`/`pivot_wider`, recodes (Likert, NPS, age, generations, country→region), importance/performance modelling, precision diagnostics, a themed plotting toolkit, quick CSV/XLSX/PNG/SVG saves, AI summaries, and Quarto/officer reporting. |
 | **ezrmodel** | [`ezr-model/`](ezr-model/) | ✅ Active (v0.3.0) | Single-line advanced modelling for consumer/behavioural data — target drivers (consensus of correlation/regression/relative-weights/random-forest/factor), clustering + diagnostics, dimensionality reduction (PCA/UMAP/t-SNE), regression with stepwise/penalised selection and model comparison, group tests, text/topic modelling, and latent-variable analysis (reliability, EFA, SEM). |
-| **ezrlearning** | [`ezr-learning/`](ezr-learning/) | 🚧 In progress (v0.1.0) | A teaching companion: a `bookdown` book that re-tells the "Intro to R" workshop using the ezr family, plus a practice engine that hands out reproducible, auto-graded exercises (multiple choice and "write the ezr code"), assembles quizzes and worksheets, and can draft fresh exercises with an LLM. Unlike the others it **depends on** `ezrsurvey`/`ezrmodel` by design. |
+| **ezrlearning** | [`ezr-learning/`](ezr-learning/) | ✅ Active (v0.1.0) | A teaching companion: a `bookdown` book that re-tells the "Intro to R" workshop using the ezr family, plus a practice engine that hands out reproducible, auto-graded exercises (multiple choice and "write the ezr code"), assembles quizzes and worksheets, and can draft fresh exercises with an LLM. Unlike the others it **depends on** `ezrsurvey`/`ezrmodel` by design. |
 
 More `ezr*` packages will be added here over time. All of them follow the shared
 **[conventions & policy](CONVENTIONS.md)** (naming, the "ezr core" primitives,
