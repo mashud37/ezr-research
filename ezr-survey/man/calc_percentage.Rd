@@ -13,6 +13,7 @@ calc_percentage(
   digits = 0,
   wide = FALSE,
   na_rm = TRUE,
+  drop = NULL,
   weights = NULL
 )
 }
@@ -43,6 +44,11 @@ workflow. Defaults to \code{FALSE} (tidy long form).}
 \item{na_rm}{If \code{TRUE} (default), blanks and "Prefer not to answer" responses
 (see \code{\link[=na_blank]{na_blank()}}) are dropped before counting.}
 
+\item{drop}{Optional character vector of answer values to remove before
+counting (e.g. \code{c("Other", "Don't know")}), so the kept answers re-base to
+~100\%. Matching is case-insensitive (see \code{\link[=drop_items]{drop_items()}}). Defaults to the
+\code{drop_answers} option (\code{NULL} = drop nothing; see \code{\link[=ezrsurvey_options]{ezrsurvey_options()}}).}
+
 \item{weights}{Survey weighting for this call: \code{NULL} (default) uses the
 session scheme from \code{\link[=set_weights]{set_weights()}} if one is set; \code{FALSE} forces unweighted;
 or pass an ad-hoc scheme (any form \code{\link[=set_weights]{set_weights()}} accepts) to weight just
@@ -56,7 +62,7 @@ column each (wide form).
 }
 \description{
 The headline helper: replaces the ubiquitous
-\code{count(x) |> mutate(pct = round(n / sum(n) * 100)) |> select(-n)} dance with a
+\code{count(x) \%>\% mutate(pct = round(n / sum(n) * 100)) \%>\% select(-n)} dance with a
 single call. Returns both the raw counts and the percentages, optionally
 grouped by one or more variables and optionally pivoted to a wide
 cross-tabulation.
@@ -72,19 +78,19 @@ repeating it. \code{wide = TRUE} pivots to one row per group with a column per
 answer -- the shape you want for a slide table or an Excel tab.
 }
 \examples{
-calc_percentage(consumer_survey, demo_gender)
+calc_percentage(podracing_survey, demo_gender)
 #> # A tibble: 3 x 3
-#>   demo_gender           n   pct
-#>   <chr>             <int> <dbl>
-#> 1 As a man            648    70
-#> 2 As a woman          228    24
-#> 3 Non-binary person    56     6
+#>   demo_gender     n   pct
+#>   <chr>       <int> <dbl>
+#> 1 Female        399    42
+#> 2 Male          525    55
+#> 3 Non-binary     27     3
 
 # largest first
-calc_percentage(consumer_survey, demo_gender, sort = "desc")
+calc_percentage(podracing_survey, demo_gender, sort = "desc")
 
 # grouped and pivoted to a wide cross-tab
-calc_percentage(consumer_survey, satis_return, by = region, wide = TRUE)
+calc_percentage(podracing_survey, satis_return, by = region, wide = TRUE)
 }
 \seealso{
 \code{\link[=calc_percentage_multi]{calc_percentage_multi()}} for check-all-that-apply questions,

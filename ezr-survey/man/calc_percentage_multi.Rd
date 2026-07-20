@@ -11,6 +11,7 @@ calc_percentage_multi(
   by = NULL,
   sort = c("none", "desc", "asc"),
   digits = 0,
+  drop = NULL,
   clean_names = TRUE
 )
 }
@@ -28,6 +29,10 @@ respondent.}
 
 \item{sort, digits}{As in \code{\link[=calc_percentage]{calc_percentage()}}. Sorting acts on the \code{option}
 labels.}
+
+\item{drop}{Optional character vector of option labels to remove before
+counting (matched against the cleaned labels, case-insensitive). Defaults to
+the \code{drop_answers} option. See \code{\link[=drop_items]{drop_items()}}.}
 
 \item{clean_names}{If \code{TRUE} (default), tidy the option labels by stripping
 \code{prefix} and un-mangling exporter artefacts (\code{"A...B"} -> \code{"A / B"}).}
@@ -55,16 +60,16 @@ respondents exactly; without it, each row counts as one respondent. With
 artefacts like \code{"A...B"} are turned back into \code{"A / B"}.
 }
 \examples{
-calc_percentage_multi(consumer_survey, "motivations_",
+calc_percentage_multi(podracing_survey, "motivations_",
                       id = respondent_id, sort = "desc")
 #> # A tibble: 5 x 3
-#>   option            n   pct
-#>   <fct>         <int> <dbl>
-#> 1 entertainment   697    75
-#> 2 learn           393    42
-#> 3 social          368    39
-#> 4 habit           281    30
-#> 5 brand           201    21
+#>   option        n   pct
+#>   <fct>     <int> <dbl>
+#> 1 speed       772    79
+#> 2 drivers     533    54
+#> 3 social      437    45
+#> 4 tradition   349    36
+#> 5 betting     295    30
 }
 \seealso{
 \code{\link[=calc_percentage]{calc_percentage()}}, \code{\link[=plot_bars]{plot_bars()}}.

@@ -28,13 +28,14 @@ of 25 (percentages) or 5 (NPS counts) so that data labels never collide with
 the top of the panel.
 }
 \details{
-The ceiling is \code{ceiling(max(x) / unit) * unit + pad}. A value already sitting
-exactly on a multiple of \code{unit} is left where it is (e.g. \code{nice_max(75)} is
-\code{75}, not \code{100}); use \code{pad} when you need guaranteed headroom above the
-tallest bar for data labels. An all-\code{NA} logical column (a common shape for
-an empty survey field) is tolerated and returns \code{NA}. This is the engine
-behind \code{\link[=scale_y_pct]{scale_y_pct()}} and the percentage plot wrappers, which is why their
-bars never quite touch the top of the panel.
+The ceiling is \code{(floor(max(x) / unit) + 1) * unit + pad}: the \emph{next}
+multiple of \code{unit} strictly above \code{max(x)}, always leaving headroom even
+when the max already sits exactly on a multiple (e.g. \code{nice_max(75)} is
+\code{100}, not \code{75}). Use \code{pad} for additional headroom on top of that, e.g.
+for annotations above the tallest bar. An all-\code{NA} logical column (a common
+shape for an empty survey field) is tolerated and returns \code{NA}. This is the
+engine behind \code{\link[=scale_y_pct]{scale_y_pct()}} and the percentage plot wrappers, which is
+why their bars never quite touch the top of the panel.
 }
 \examples{
 nice_max(c(12, 63, 40))
@@ -43,8 +44,8 @@ nice_max(c(12, 63, 40))
 nice_max(80, unit = 25)        # already need >75, so jumps to 100
 #> [1] 100
 
-nice_max(75, unit = 25)        # exact multiple stays put
-#> [1] 75
+nice_max(75, unit = 25)        # exact multiple still advances, for headroom
+#> [1] 100
 
 nice_max(c(8, 17), unit = 5, pad = 10)   # next multiple of 5 (20) + 10
 #> [1] 30

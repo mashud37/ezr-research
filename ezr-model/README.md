@@ -42,6 +42,10 @@ compare_models(simple = model_lm(nps_drivers, nps ~ quality),
 cluster(ecommerce, k = 4,
         vars = c(recency_days, frequency, monetary, tenure_months))
 
+# `personas` is built (from math) to cluster cleanly: kmeans / hclust / pam all
+# recover the five segments and the silhouette finds k = 5 on its own
+cluster(personas, vars = spend_index:browse_minutes)
+
 # reduce dimensions: PCA, UMAP or t-SNE
 reduce_dims(ecommerce, method = "umap",
             vars = c(recency_days, frequency, monetary))
@@ -74,7 +78,8 @@ Every helper returns a rich `ezrmodel_*` result object with `print()` / `plot()`
   `summarise_text()`.
 - **Prep & plumbing** — `model_frame()`, `to_matrix()`, `presence_matrix()`,
   themes/palettes, `save_*()` / `export_xlsx()`, AI summaries (`ai_summarise()`).
-- **Bundled data** — `nps_drivers`, `ecommerce`, `reviews`.
+- **Bundled data** — `nps_drivers`, `ecommerce`, `reviews`, `personas` (a clean,
+  math-generated clustering example).
 
 See `NEWS.md` for the changelog and each function's help (`?drivers`) for details.
 

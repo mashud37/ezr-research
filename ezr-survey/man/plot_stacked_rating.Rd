@@ -25,9 +25,11 @@ numeric weight.}
 
 \item{value}{Percentage column (unquoted). Defaults to \code{pct}.}
 
-\item{palette}{Fill colours, named by level or positional. Defaults to
-\link{pal_rating} (use \code{scale_fill_rating(distinct = TRUE)} colours via
-\code{palette = NULL} to get the 5-distinct ramp).}
+\item{palette}{Fill colours, named by the level labels. Defaults to \code{NULL},
+which derives a red -> amber -> green rating palette from the level labels
+themselves (mapping each by its leading digit), so a very-bad..very-good
+scale is coloured worse-to-better automatically. Pass a named vector to
+override.}
 
 \item{label_min}{Hide segment labels below this percentage. Defaults to \code{1}.}
 
@@ -51,16 +53,16 @@ table with one row per feature x rating level; the \verb{partner_*} likeability 
 purchase questions in the source reports are the canonical use.
 }
 \examples{
-rating_long <- consumer_survey |>
-  dplyr::select(dplyr::starts_with("ratings_")) |>
-  tidyr::pivot_longer(dplyr::everything(),
-                      names_to = "feature", values_to = "level") |>
-  dplyr::filter(level != "") |>
-  dplyr::mutate(level = paste0(recode_likert(level), " - ", level)) |>
-  dplyr::count(feature, level) |>
-  dplyr::group_by(feature) |>
-  dplyr::mutate(pct = n / sum(n) * 100) |>
-  dplyr::ungroup()
+rating_long <- podracing_survey \%>\%
+  select(starts_with("ratings_")) \%>\%
+  tidyr::pivot_longer(everything(),
+                      names_to = "feature", values_to = "level") \%>\%
+  filter(level != "") \%>\%
+  mutate(level = paste0(recode_likert(level), " - ", level)) \%>\%
+  count(feature, level) \%>\%
+  group_by(feature) \%>\%
+  mutate(pct = n / sum(n) * 100) \%>\%
+  ungroup()
 p <- plot_stacked_rating(rating_long, feature, level)
 }
 \seealso{

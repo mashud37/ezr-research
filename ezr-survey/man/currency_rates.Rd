@@ -35,8 +35,9 @@ attr(currency_rates, "snapshot_date")
 \code{\link[=convert_currency]{convert_currency()}}, \code{\link[=add_currency]{add_currency()}}, \code{\link[=list_currencies]{list_currencies()}}.
 
 Other data:
-\code{\link{consumer_survey}},
-\code{\link{country_region}}
+\code{\link{country_region}},
+\code{\link{podracing_survey}},
+\code{\link{shopping_survey}}
 }
 \concept{data}
 \keyword{datasets}

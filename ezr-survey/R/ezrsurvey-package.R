@@ -7,6 +7,12 @@
 ## usethis namespace: end
 NULL
 
+# ezrsurvey wraps the tidyverse, so attaching it attaches the tidyverse too
+# (Depends). Importing one symbol keeps R CMD check from reporting a Depends
+# package that is never imported from.
+#' @importFrom tidyverse tidyverse_packages
+NULL
+
 # Quiet R CMD check notes about unquoted column names used in NSE pipelines and
 # about variables bound inside data-masked expressions.
 utils::globalVariables(c(

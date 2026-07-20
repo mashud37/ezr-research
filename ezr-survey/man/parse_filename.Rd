@@ -36,7 +36,7 @@ The data frame with the new metadata columns added.
 }
 \description{
 Survey exports often encode metadata in the filename (e.g.
-\code{"viewer_CDL_brand_NA_2026.csv"}). This splits a filename column on a
+\code{"podracing_wave1_NA_2026.csv"}). This splits a filename column on a
 separator into named metadata columns, dropping the file extension first.
 Replaces the brittle \code{str_split(file, "_")[[1]][n]} indexing in the original
 scripts.
@@ -49,14 +49,15 @@ split is on a fixed string (not a regex), and rows with fewer fields than
 \code{into} are padded with \code{NA} so a stray filename never derails the parse.
 }
 \examples{
-df <- tibble::tibble(file = c("viewer_CDL_acme_NA_2026.csv"))
-parse_filename(df, into = c("type", "game", "brand", "locale", "year"))
+df <- tibble::tibble(file = c("podracing_wave1_NA_2026.csv"))
+parse_filename(df, into = c("survey", "wave", "locale", "year"))
 }
 \seealso{
 \code{\link[=read_folder]{read_folder()}}.
 
 Other import:
 \code{\link[=read_folder]{read_folder()}},
-\code{\link[=select_prefix]{select_prefix()}}
+\code{\link[=select_prefix]{select_prefix()}},
+\code{\link[=select_suffix]{select_suffix()}}
 }
 \concept{import}

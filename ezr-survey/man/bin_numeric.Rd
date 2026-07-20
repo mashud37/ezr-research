@@ -49,6 +49,7 @@ bin_numeric(c(15, 19, 27, 41),
 
 Other recode:
 \code{\link[=add_region]{add_region()}},
+\code{\link[=drop_items]{drop_items()}},
 \code{\link[=ensure_numeric]{ensure_numeric()}},
 \code{\link[=generation_scheme]{generation_scheme()}},
 \code{\link[=na_blank]{na_blank()}},

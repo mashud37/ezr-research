@@ -35,6 +35,25 @@ test_that("cluster_profile crosses clusters against a variable", {
 
 test_that("cluster print and plot work", {
   cl <- cluster(ecommerce, k = 3, vars = c(recency_days, frequency, monetary))
-  expect_output(print(cl), "clustering into k = 3")
+  expect_output(print(cl), "clustering  k = 3")
   expect_s3_class(plot(cl), "ggplot")
+})
+
+test_that("personas clusters cleanly: silhouette, recovered k, ground truth", {
+  skip_if_not_installed("cluster")
+  cl <- cluster(personas, vars = spend_index:browse_minutes)
+  expect_equal(cl$k, 5L)                                # silhouette finds true k
+  expect_gt(cl$diagnostics$avg_silhouette, 0.5)        # strong structure
+
+  # every method agrees at k = 5
+  for (m in c("kmeans", "hclust", "pam")) {
+    cm <- cluster(personas, k = 5, method = m,
+                  vars = spend_index:browse_minutes)
+    expect_gt(cm$diagnostics$avg_silhouette, 0.5)
+  }
+
+  # recovered clusters line up with the ground-truth personas
+  cp <- cluster_profile(cl, persona)
+  shares <- apply(as.matrix(cp[, setdiff(names(cp), "persona")]), 1, max)
+  expect_true(all(shares > 80))
 })

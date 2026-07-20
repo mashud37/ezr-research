@@ -1,15 +1,82 @@
-#' Bar chart of a percentage table
+# Internal: the geom_col() width that keeps bar thickness constant across
+# charts. `width` is a fraction of one category slot, and a slot shrinks as
+# categories multiply -- so a fixed 0.66 draws a 3-bar chart's bars more than
+# twice as thick as an 8-bar chart's, which is what makes a deck look incoherent
+# when you flick through it. Scaling the fraction with the bar count cancels
+# that out: thickness is bar_width / bar_ref_items either way. Past the point
+# where a bar would fill its slot the fraction is capped and bars do get thinner,
+# which is unavoidable once a chart is that dense.
+consistent_bar_width <- function(n_items) {
+  base <- ezrsurvey_default("bar_width") %||% 0.66
+  ref <- ezrsurvey_default("bar_ref_items") %||% 6
+  if (!is.finite(n_items) || n_items < 1L || !is.finite(ref) || ref < 1) {
+    return(base)
+  }
+  min(0.9, base * n_items / ref)
+}
+
+# Internal: choose orientation, wrap width, label size and sort direction for
+# plot_bars(). `orientation` and `sort` may be "auto" (decided here from the
+# number of bars and the longest label) or an explicit choice (passed through).
+auto_bar_layout <- function(labels, n_items, orientation, is_ordinal, sort,
+                            wrap, label_size) {
+  max_label <- if (length(labels)) max(nchar(labels), na.rm = TRUE) else 0L
+
+  if (orientation == "auto") {
+    use_bars <- n_items > ezrsurvey_default("bar_cols_max_items") ||
+      max_label > ezrsurvey_default("bar_cols_max_label")
+    orientation <- if (use_bars) "bars" else "cols"
+  }
+
+  if (is.null(wrap)) {
+    wrap <- if (orientation == "bars") ezrsurvey_default("bar_wrap_bars") else
+      ezrsurvey_default("bar_wrap_cols")
+  }
+
+  if (sort == "auto") {
+    # An intentional ordinal scale is left as-is; otherwise put the longest bar
+    # on top (bars, after coord_flip => ascending) or on the left (cols).
+    sort <- if (is_ordinal) "none" else if (orientation == "bars") "asc" else "desc"
+  }
+
+  if (is.null(label_size)) {
+    thr <- ezrsurvey_default("bar_cols_max_items")
+    label_size <- max(
+      ezrsurvey_default("bar_size_min"),
+      ezrsurvey_default("bar_label_size") -
+        ezrsurvey_default("bar_size_step") * max(0, n_items - thr)
+    )
+  }
+
+  list(orientation = orientation, wrap = wrap, sort = sort, size = label_size)
+}
+
+#' Bar chart of a percentage table (auto-laid-out)
 #'
 #' Plots the output of [calc_percentage()] (or [calc_percentage_multi()]) as a
 #' labelled bar chart, with a tidy auto-scaled axis ([nice_max()]) and the
-#' ezrsurvey theme. Generalises the `bars_freq()` helper from the original reports.
+#' ezrsurvey theme. By default the **layout is chosen for you**: vertical columns
+#' for a few short labels, horizontal bars for many or long ones, with long
+#' labels wrapped, the text size stepped down as bars multiply, and the bars
+#' ordered so the longest sits at the top (bars) or on the left (cols).
+#' Generalises the `bars_freq()` helper from the original reports.
 #'
 #' @param data A data frame with a category column and a value column.
 #' @param label Category column (unquoted). If `NULL` (default), the first
 #'   non-`n`, non-value column is used.
 #' @param value Value column (unquoted). Defaults to `pct`.
-#' @param flip If `TRUE`, draw horizontal bars (labels to the right). Defaults to
-#'   `FALSE`.
+#' @param orientation `"auto"` (default), `"cols"` (vertical) or `"bars"`
+#'   (horizontal). `"auto"` picks horizontal bars when there are more than
+#'   `bar_cols_max_items` items or a label longer than `bar_cols_max_label`
+#'   characters (see [ezrsurvey_options()]).
+#' @param sort `"auto"` (default), `"none"`, `"asc"` or `"desc"`. `"auto"` orders
+#'   bars by value so the longest is on top (bars) or on the left (cols), but
+#'   leaves an intentional ordinal scale (an ordered factor, e.g. from a
+#'   registered order) untouched.
+#' @param wrap Label wrap width in characters ([stringr::str_wrap()]). `NULL`
+#'   (default) uses `bar_wrap_cols` / `bar_wrap_bars` for the chosen orientation.
+#' @param flip Deprecated back-compat shortcut: `TRUE` forces `orientation =
+#'   "bars"`, `FALSE` forces `"cols"`. `NULL` (default) defers to `orientation`.
 #' @param avg_line If `TRUE`, add a reference line at the mean value. Defaults to
 #'   `FALSE`.
 #' @param axis_labels If `TRUE`, show the percentage axis; if `FALSE` (default)
@@ -18,32 +85,60 @@
 #'   `pct_axis_unit` option (`25`; see [ezrsurvey_options()]).
 #' @param max Optional fixed y-axis maximum (e.g. `100`). Defaults to the
 #'   `pct_axis_max` option (`NULL` = dynamic).
-#' @param fill Bar fill colour. Defaults to [pal_neutral].
+#' @param fill Bar fill colour. `NULL` (default) uses the brand primary colour
+#'   when a brand is set (see [use_brand()]), else [pal_neutral].
 #' @param title Optional plot title.
+#' @param label_size Data-label text size. `NULL` (default) steps down from
+#'   `bar_label_size` as the number of bars grows (floored at `bar_size_min`).
 #'
 #' @return A ggplot object.
 #'
 #' @details
 #' Expects a summary table (from [calc_percentage()] and friends), not raw survey
 #' rows. The label column is auto-detected as the first non-`n`, non-value column,
-#' so a piped percentage table just works. The axis ceiling is chosen by
-#' [nice_max()] / the `pct_axis_*` options so data labels never collide with the
-#' panel top, and the bars carry their own percentage labels (the `%` axis is
-#' hidden unless `axis_labels = TRUE`). Add decision guidance with
+#' so a piped percentage table just works. The layout decisions all read from the
+#' `bar_*` options ([ezrsurvey_options()]): `orientation = "auto"` switches to
+#' horizontal bars once there are many or long labels, labels are wrapped to
+#' `bar_wrap_cols` / `bar_wrap_bars`, the data-label size steps down with the
+#' bar count, and `sort = "auto"` puts the longest bar at the top (bars) or on the
+#' left (cols) -- unless the label column is an ordered factor (a registered or
+#' explicit order), which is preserved. The axis ceiling is chosen by [nice_max()]
+#' / the `pct_axis_*` options so data labels never collide with the panel top, and
+#' the `%` axis is hidden unless `axis_labels = TRUE`. Add decision guidance with
 #' [annotate_bands()].
+#'
+#' Bars are drawn to a constant thickness regardless of how many there are
+#' (`bar_width` / `bar_ref_items`, see [ezrsurvey_options()]), so a three-answer
+#' chart and a ten-answer chart look like they belong in the same deck instead
+#' of the first one's bars turning into slabs.
 #'
 #' @family plots
 #' @seealso [calc_percentage()], [scale_y_pct()], [annotate_bands()].
 #' @examples
-#' p <- calc_percentage(consumer_survey, demo_gender, sort = "desc") |>
-#'   plot_bars()
-#' # p is a ggplot object; print(p) to draw it
+#' # auto layout: few short labels -> vertical columns, largest on the left
+#' p <- calc_percentage(podracing_survey, demo_gender) %>% plot_bars()
+#'
+#' # many long labels -> horizontal bars, wrapped, largest on top
+#' p2 <- calc_percentage(podracing_survey, fav_driver) %>% plot_bars()
+#'
+#' # an ordinal scale keeps its order; force horizontal with orientation
+#' p3 <- calc_percentage(podracing_survey, demo_edu) %>%
+#'   plot_bars(orientation = "bars")
 #' @export
-plot_bars <- function(data, label = NULL, value = pct, flip = FALSE,
+plot_bars <- function(data, label = NULL, value = pct,
+                      orientation = c("auto", "cols", "bars"),
+                      sort = c("auto", "none", "asc", "desc"),
+                      wrap = NULL, flip = NULL,
                       avg_line = FALSE, axis_labels = FALSE,
                       unit = ezrsurvey_default("pct_axis_unit"),
                       max = ezrsurvey_default("pct_axis_max"),
-                      fill = pal_neutral, title = NULL) {
+                      fill = NULL, title = NULL, label_size = NULL) {
+  fill <- fill %||% ezrsurvey_default("brand_color_primary") %||%
+    ezrsurvey_default("brand_colors")[1] %||% pal_neutral
+  orientation <- match.arg(orientation)
+  sort <- match.arg(sort)
+  if (!is.null(flip)) orientation <- if (isTRUE(flip)) "bars" else "cols"
+
   value_sym <- rlang::ensym(value)
   value_name <- rlang::as_name(value_sym)
   label_q <- rlang::enquo(label)
@@ -56,25 +151,60 @@ plot_bars <- function(data, label = NULL, value = pct, flip = FALSE,
   } else {
     label_sym <- rlang::ensym(label)
   }
+  label_name <- rlang::as_name(label_sym)
 
   vals <- data[[value_name]]
+  n_items <- nrow(data)
+  is_ordinal <- is.ordered(data[[label_name]])
+  layout <- auto_bar_layout(as.character(data[[label_name]]), n_items,
+                            orientation, is_ordinal, sort, wrap, label_size)
+
+  # Order rows by value (unless the label is an intentional ordinal scale).
+  if (layout$sort != "none") {
+    o <- order(vals, decreasing = (layout$sort == "desc"))
+    data <- data[o, , drop = FALSE]
+    vals <- vals[o]
+    lev_order <- unique(as.character(data[[label_name]]))
+  } else if (is.factor(data[[label_name]])) {
+    lev_order <- levels(data[[label_name]])
+  } else {
+    lev_order <- unique(as.character(data[[label_name]]))
+  }
+
+  # Wrap labels and lock the level order to the chosen ordering.
+  data[[label_name]] <- factor(
+    stringr::str_wrap(as.character(data[[label_name]]), width = layout$wrap),
+    levels = unique(stringr::str_wrap(lev_order, width = layout$wrap))
+  )
   data[[".bar_label"]] <- label_pct()(vals)
 
+  pad <- if (layout$orientation == "bars") unit * 0.5 else 0
+  axis_sz <- max(6, 11 - 0.6 * max(0, n_items - ezrsurvey_default("bar_cols_max_items")))
+  cat_axis_theme <- if (layout$orientation == "bars") {
+    ggplot2::theme(axis.text.y = ggplot2::element_text(size = axis_sz))
+  } else {
+    ggplot2::theme(axis.text.x = ggplot2::element_text(size = axis_sz))
+  }
+
   p <- ggplot2::ggplot(data, ggplot2::aes(!!label_sym, !!value_sym)) +
-    ggplot2::geom_col(ggplot2::aes(fill = ""), width = .66) +
+    ggplot2::geom_col(ggplot2::aes(fill = ""), width = consistent_bar_width(n_items)) +
     ggplot2::geom_hline(yintercept = 0) +
     ggplot2::labs(x = "", y = "", title = title) +
-    scale_y_pct(values = vals, unit = unit, max = max, labels = axis_labels) +
+    scale_y_pct(values = vals, unit = unit, pad = pad, max = max,
+                labels = axis_labels) +
     ggplot2::scale_fill_manual(values = fill) +
-    theme_ezrsurvey(transparent = TRUE)
+    theme_ezrsurvey(transparent = TRUE) +
+    cat_axis_theme
 
-  if (flip) {
+  if (layout$orientation == "bars") {
     p <- p +
-      ggplot2::geom_text(ggplot2::aes(label = .data$.bar_label), hjust = -0.5) +
+      ggplot2::geom_text(ggplot2::aes(label = .data$.bar_label), hjust = -0.3,
+                         size = layout$size) +
       ggplot2::coord_flip()
   } else {
     p <- p +
-      ggplot2::geom_text(ggplot2::aes(label = .data$.bar_label), vjust = -1)
+      ggplot2::geom_text(ggplot2::aes(label = .data$.bar_label), vjust = -1,
+                         size = layout$size)
   }
 
   if (avg_line) {
@@ -95,9 +225,11 @@ plot_bars <- function(data, label = NULL, value = pct, flip = FALSE,
 #'   `"1 - Very bad"` .. `"5 - Very good"`. The leading digit is used as the
 #'   numeric weight.
 #' @param value Percentage column (unquoted). Defaults to `pct`.
-#' @param palette Fill colours, named by level or positional. Defaults to
-#'   [pal_rating] (use `scale_fill_rating(distinct = TRUE)` colours via
-#'   `palette = NULL` to get the 5-distinct ramp).
+#' @param palette Fill colours, named by the level labels. Defaults to `NULL`,
+#'   which derives a red -> amber -> green rating palette from the level labels
+#'   themselves (mapping each by its leading digit), so a very-bad..very-good
+#'   scale is coloured worse-to-better automatically. Pass a named vector to
+#'   override.
 #' @param label_min Hide segment labels below this percentage. Defaults to `1`.
 #' @param show_average Append the weighted mean to each feature label. Defaults
 #'   to `TRUE`.
@@ -115,16 +247,16 @@ plot_bars <- function(data, label = NULL, value = pct, flip = FALSE,
 #' @family plots
 #' @seealso [calc_percentage()], [scale_fill_rating()].
 #' @examples
-#' rating_long <- consumer_survey |>
-#'   dplyr::select(dplyr::starts_with("ratings_")) |>
-#'   tidyr::pivot_longer(dplyr::everything(),
-#'                       names_to = "feature", values_to = "level") |>
-#'   dplyr::filter(level != "") |>
-#'   dplyr::mutate(level = paste0(recode_likert(level), " - ", level)) |>
-#'   dplyr::count(feature, level) |>
-#'   dplyr::group_by(feature) |>
-#'   dplyr::mutate(pct = n / sum(n) * 100) |>
-#'   dplyr::ungroup()
+#' rating_long <- podracing_survey %>%
+#'   select(starts_with("ratings_")) %>%
+#'   tidyr::pivot_longer(everything(),
+#'                       names_to = "feature", values_to = "level") %>%
+#'   filter(level != "") %>%
+#'   mutate(level = paste0(recode_likert(level), " - ", level)) %>%
+#'   count(feature, level) %>%
+#'   group_by(feature) %>%
+#'   mutate(pct = n / sum(n) * 100) %>%
+#'   ungroup()
 #' p <- plot_stacked_rating(rating_long, feature, level)
 #' @export
 plot_stacked_rating <- function(data, feature, level, value = pct,
@@ -176,9 +308,10 @@ plot_stacked_rating <- function(data, feature, level, value = pct,
     ggplot2::theme(legend.position = "top",
                    legend.title = ggplot2::element_blank())
 
-  if (!is.null(pal)) {
-    p <- p + ggplot2::scale_fill_manual(values = pal)
+  if (is.null(pal)) {
+    pal <- rating_palette(d[[level_name]])
   }
+  p <- p + ggplot2::scale_fill_manual(values = pal)
   p
 }
 
@@ -193,6 +326,8 @@ plot_stacked_rating <- function(data, feature, level, value = pct,
 #'   limits.
 #' @param title Optional title; a sensible default is generated from `score`.
 #' @param height Bar thickness in plot units. Defaults to `0.5`.
+#' @param label_size Band-label text size. `NULL` (default) matches the theme's
+#'   base font size (11 pt).
 #'
 #' @return A ggplot object.
 #'
@@ -205,19 +340,20 @@ plot_stacked_rating <- function(data, feature, level, value = pct,
 #' @family plots
 #' @seealso [calc_nps()], [plot_nps()].
 #' @examples
-#' nps <- calc_nps(consumer_survey, nps_value)$nps
+#' nps <- calc_nps(podracing_survey, nps_value)$nps
 #' p <- plot_nps_gauge(nps)
 #' p_rating <- plot_nps_gauge(3.8, scale = "rating")
 #' @export
 plot_nps_gauge <- function(score, scale = c("nps", "rating"),
-                           title = NULL, height = 0.5) {
+                           title = NULL, height = 0.5, label_size = NULL) {
   scale <- match.arg(scale)
+  label_size <- label_size %||% (11 / ggplot2::.pt)
   if (scale == "nps") {
     bands <- tibble::tibble(
       label = c("NEEDS WORK", "GOOD", "GREAT", "EXCELLENT"),
       from = c(-100, 0, 30, 70),
       to = c(0, 30, 70, 100),
-      colour = c("#FF3300", "#FFCB3E", "#A7C23D", "#86A33B")
+      colour = unname(pal_rating[c("1", "3", "4", "5")])
     )
     lim <- c(-100, 100)
     if (is.null(title)) title <- paste0("Net Promoter Score of: ", round(score))
@@ -235,7 +371,8 @@ plot_nps_gauge <- function(score, scale = c("nps", "rating"),
                                     fill = .data$label)) +
     ggplot2::geom_text(ggplot2::aes(x = (.data$from + .data$to) / 2,
                                     y = height / 2, label = .data$label),
-                       colour = "white", fontface = "bold") +
+                       colour = "white", fontface = "bold",
+                       size = label_size) +
     ggplot2::geom_segment(
       data = data.frame(score = score),
       ggplot2::aes(x = .data$score, xend = .data$score, y = 0, yend = height),
@@ -275,12 +412,14 @@ plot_nps_gauge <- function(score, scale = c("nps", "rating"),
 #' @family plots
 #' @seealso [calc_nps()], [plot_nps_gauge()].
 #' @examples
-#' p <- plot_nps(consumer_survey, nps_value)
+#' p <- plot_nps(podracing_survey, nps_value)
 #' # p is a ggplot; print(p) to draw it
 #' @export
 plot_nps <- function(data = NULL, value, title = NULL) {
-  data <- resolve_data(data)
-  col_name <- rlang::as_name(rlang::ensym(value))
+  r <- resolve_data_columns(rlang::enquo(data), list(rlang::enquo(value)),
+                            missing(value))
+  data <- r$data
+  col_name <- col_label(r$cols[[1]])
   v <- ensure_numeric(data[[col_name]], quiet = TRUE)
   v <- v[!is.na(v) & v >= 0 & v <= 10]
   if (length(v) == 0L) {
@@ -301,18 +440,22 @@ plot_nps <- function(data = NULL, value, title = NULL) {
 
   ggplot2::ggplot(tab, ggplot2::aes(factor(.data$nps_value), .data$pct,
                                     fill = factor(.data$group))) +
-    ggplot2::geom_col(width = .66) +
+    ggplot2::geom_col(width = consistent_bar_width(nrow(tab))) +
     ggplot2::geom_text(ggplot2::aes(label = paste0(.data$pct, "%")), vjust = -1) +
     ggplot2::geom_hline(yintercept = 0) +
     ggplot2::annotate("text", x = 4, y = ymax,
                       label = paste0(share(-1), "% DETRACTOR\nNot likely"),
-                      colour = pal_nps[["-1"]], fontface = "bold") +
+                      colour = pal_nps[["-1"]], fontface = "bold",
+                      size = 10 / ggplot2::.pt, vjust = 1, lineheight = 0.9) +
     ggplot2::annotate("text", x = 8.5, y = ymax,
                       label = paste0(share(0), "% PASSIVE\nSomewhat likely"),
-                      colour = pal_nps[["0"]], fontface = "bold") +
-    ggplot2::annotate("text", x = 10.5, y = ymax,
+                      colour = pal_nps[["0"]], fontface = "bold",
+                      size = 10 / ggplot2::.pt, vjust = 1, lineheight = 0.9) +
+    ggplot2::annotate("text", x = Inf, y = ymax,
                       label = paste0(share(1), "% PROMOTER\nVery likely"),
-                      colour = pal_nps[["1"]], fontface = "bold") +
+                      colour = pal_nps[["1"]], fontface = "bold",
+                      size = 10 / ggplot2::.pt, vjust = 1, hjust = 1,
+                      lineheight = 0.9) +
     ggplot2::scale_y_continuous(limits = c(0, ymax), labels = NULL) +
     scale_fill_nps() +
     ggplot2::labs(title = title, x = "", y = "") +
@@ -330,13 +473,17 @@ plot_nps <- function(data = NULL, value, title = NULL) {
 #' @param title Optional title; defaults to the average performance.
 #' @param repel Use `ggrepel` for non-overlapping labels when available.
 #'   Defaults to `TRUE`.
+#' @param bands Decision-band spec drawn across the top and used to colour the
+#'   points. Defaults to [bands_rating_3()] (BAD 1-3, OK 3-4, GOOD 4-5).
 #'
 #' @return A ggplot object.
 #'
 #' @details
 #' Each feature is a point: performance on the x-axis (mean 1--5 rating, with a
 #' reference line at the average) and importance on the y-axis (relative weight,
-#' as a percentage), coloured by performance band. Read it by quadrant --
+#' as a percentage). Each point takes the colour of the decision band it falls
+#' in, so a feature averaging 2.4 is red because it sits in the BAD band -- the
+#' point and the band behind it can never disagree. Read it by quadrant --
 #' high-importance, low-performance features (upper left) are the priorities to
 #' fix, while high-importance, high-performance features (upper right) are
 #' strengths to protect. Feed it an [ipm_model()] table; uses `ggrepel` for
@@ -345,22 +492,28 @@ plot_nps <- function(data = NULL, value, title = NULL) {
 #' @family plots
 #' @seealso [ipm_model()], [compare_values()].
 #' @examplesIf requireNamespace("rwa", quietly = TRUE)
-#' ipm_model(consumer_survey, nps_value, "ratings_") |> plot_ipm()
+#' ipm_model(podracing_survey, nps_value, "ratings_") %>% plot_ipm()
 #' @export
-plot_ipm <- function(model, title = NULL, repel = TRUE) {
+plot_ipm <- function(model, title = NULL, repel = TRUE,
+                     bands = bands_rating_3()) {
   ymax <- nice_max(model$importance + 1, unit = 5)
   avg <- round(mean(model$performance, na.rm = TRUE), 2)
-  verdict <- if (avg >= 4) "good" else if (avg < 3) "bad" else "ok"
   if (is.null(title)) {
-    title <- paste0("Average performance of: ", avg, " (", verdict, ")")
+    title <- paste0("Average performance of: ", avg,
+                    " (", tolower(band_label(avg, bands)), ")")
   }
 
+  # Colour each point by the band it sits in, so a feature inside the red BAD
+  # zone is red -- reading the class off a rounded 1-5 code instead put a 2.4
+  # in the amber bucket while the band behind it said BAD.
+  model[[".band"]] <- band_colour(model$performance, bands)
+
   p <- ggplot2::ggplot(model, ggplot2::aes(.data$performance, .data$importance)) +
-    ggplot2::geom_point(ggplot2::aes(colour = .data$perf_class),
+    ggplot2::geom_point(ggplot2::aes(colour = .data$.band),
                         size = 6, shape = 15) +
     ggplot2::geom_vline(xintercept = mean(model$performance, na.rm = TRUE)) +
     ggplot2::labs(title = title, x = "\nperformance", y = "importance\n") +
-    scale_colour_rating() +
+    ggplot2::scale_colour_identity() +
     ggplot2::scale_y_continuous(limits = c(0, ymax), labels = label_pct()) +
     ggplot2::scale_x_continuous(limits = c(1, 5), breaks = 1:5) +
     theme_ezrsurvey_xy(transparent = TRUE)
@@ -373,7 +526,7 @@ plot_ipm <- function(model, title = NULL, repel = TRUE) {
                                 vjust = -1, size = 4)
   }
 
-  annotate_bands(p, bands_rating_3(), axis = "x", at = ymax,
+  annotate_bands(p, bands, axis = "x", at = ymax,
                  label_offset = ymax * 0.04)
 }
 
@@ -399,7 +552,7 @@ plot_ipm <- function(model, title = NULL, repel = TRUE) {
 #' @family plots
 #' @seealso [sample_comments()], [sample_comments_diverse()].
 #' @examplesIf requireNamespace("treemapify", quietly = TRUE)
-#' sample_comments(consumer_survey, nps_com, show_com, n = 5) |>
+#' sample_comments(podracing_survey, nps_com, show_com, n = 5) %>%
 #'   plot_quotes_tree()
 #' @export
 plot_quotes_tree <- function(data, label = comment, area = length,

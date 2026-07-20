@@ -32,7 +32,7 @@ shares called out across the top and the overall score in the title. It is the
 detailed companion slide to the gauge.
 }
 \examples{
-p <- plot_nps(consumer_survey, nps_value)
+p <- plot_nps(podracing_survey, nps_value)
 # p is a ggplot; print(p) to draw it
 }
 \seealso{

@@ -6,21 +6,32 @@ test_that("calc_nps equals %promoters - %detractors", {
 })
 
 test_that("calc_nps groups by `by`", {
-  out <- calc_nps(consumer_survey, nps_value, by = region)
-  expect_equal(nrow(out), dplyr::n_distinct(consumer_survey$region))
+  out <- calc_nps(podracing_survey, nps_value, by = region)
+  expect_equal(nrow(out), dplyr::n_distinct(podracing_survey$region))
   expect_true(all(out$nps >= -100 & out$nps <= 100))
 })
 
 test_that("ipm_model returns expected columns", {
   skip_if_not_installed("rwa")
-  m <- ipm_model(consumer_survey, nps_value, "ratings_")
+  m <- ipm_model(podracing_survey, nps_value, "ratings_")
   expect_true(all(c("feature", "importance", "performance", "perf_class") %in%
                     names(m)))
-  expect_equal(nrow(m), 5)                       # five ratings_ features
+  expect_equal(nrow(m), 6)                       # six ratings_ features
   expect_s3_class(m$perf_class, "factor")
   expect_true(all(m$performance >= 1 & m$performance <= 5))
 })
 
 test_that("ipm_model errors on a missing prefix", {
-  expect_error(ipm_model(consumer_survey, nps_value, "nope_"))
+  expect_error(ipm_model(podracing_survey, nps_value, "nope_"))
+})
+
+test_that("perf_class buckets by integer part, not rounding", {
+  skip_if_not_installed("rwa")
+  m <- ipm_model(podracing_survey, nps_value, "ratings_")
+  expect_equal(as.character(m$perf_class),
+               as.character(floor(m$performance)))
+  # a mid-band mean stays in its own band (3.57 -> 3, never rounds to 4)
+  expect_equal(as.character(cut_perf_band(3.57)), "3")
+  expect_equal(as.character(cut_perf_band(3.0)), "3")
+  expect_equal(as.character(cut_perf_band(4.99)), "4")
 })

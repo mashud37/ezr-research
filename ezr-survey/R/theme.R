@@ -7,7 +7,8 @@
 #' major gridlines on the named axes.
 #'
 #' @param base_size Base font size in points. Defaults to `11`.
-#' @param base_family Base font family. Defaults to `"sans"`.
+#' @param base_family Base font family. `NULL` (default) uses the brand body
+#'   font when one is set and installed (see [use_brand()]), else `"sans"`.
 #' @param transparent If `TRUE`, make the plot, panel and legend backgrounds
 #'   transparent (handy for slides). Defaults to `FALSE`.
 #'
@@ -23,14 +24,14 @@
 #'
 #' @family themes
 #' @examples
-#' library(ggplot2)
-#' df <- calc_percentage(consumer_survey, demo_gender)
+#' df <- calc_percentage(podracing_survey, demo_gender)
 #' ggplot(df, aes(demo_gender, pct)) + geom_col() + theme_ezrsurvey()
 #' ggplot(df, aes(demo_gender, pct)) + geom_col() + theme_ezrsurvey_y()
 #' @rdname theme_ezrsurvey
 #' @export
-theme_ezrsurvey <- function(base_size = 11, base_family = "sans",
+theme_ezrsurvey <- function(base_size = 11, base_family = NULL,
                            transparent = FALSE) {
+  base_family <- base_family %||% resolve_brand_family() %||% "sans"
   t <- ggplot2::theme(
     axis.ticks = ggplot2::element_blank(),
     axis.title = ggplot2::element_text(face = "italic"),
@@ -56,6 +57,37 @@ theme_ezrsurvey <- function(base_size = 11, base_family = "sans",
   t
 }
 
+.brand_font_notified <- new.env(parent = emptyenv())
+
+# Internal: the brand body font, but only when brand fonts are enabled and the
+# typeface is actually installed -- an unavailable family would make every
+# chart render with substituted glyphs and ggplot warnings on this machine.
+resolve_brand_family <- function() {
+  if (!isTRUE(ezrsurvey_default("brand_fonts_enabled"))) return(NULL)
+  family <- ezrsurvey_default("brand_font_minor")
+  if (is.null(family) || !nzchar(family)) return(NULL)
+  if (!requireNamespace("systemfonts", quietly = TRUE)) {
+    notify_brand_font(family,
+                      "install the 'systemfonts' package to use brand fonts")
+    return(NULL)
+  }
+  info <- tryCatch(systemfonts::font_info(family), error = function(e) NULL)
+  if (is.null(info) || !nrow(info) ||
+      !identical(tolower(info$family[[1]]), tolower(family))) {
+    notify_brand_font(family, "font not installed on this machine")
+    return(NULL)
+  }
+  family
+}
+
+notify_brand_font <- function(family, why) {
+  if (!isTRUE(.brand_font_notified[[family]])) {
+    message("Brand font '", family, "' not applied (", why,
+            "); using 'sans'.")
+    .brand_font_notified[[family]] <- TRUE
+  }
+}
+
 # Faint major gridline used by the axis variants.
 .ezrsurvey_grid <- function() {
   ggplot2::element_line(colour = "grey97", linewidth = ggplot2::rel(.1))
@@ -63,7 +95,7 @@ theme_ezrsurvey <- function(base_size = 11, base_family = "sans",
 
 #' @rdname theme_ezrsurvey
 #' @export
-theme_ezrsurvey_x <- function(base_size = 11, base_family = "sans",
+theme_ezrsurvey_x <- function(base_size = 11, base_family = NULL,
                              transparent = FALSE) {
   theme_ezrsurvey(base_size, base_family, transparent) +
     ggplot2::theme(
@@ -75,7 +107,7 @@ theme_ezrsurvey_x <- function(base_size = 11, base_family = "sans",
 
 #' @rdname theme_ezrsurvey
 #' @export
-theme_ezrsurvey_y <- function(base_size = 11, base_family = "sans",
+theme_ezrsurvey_y <- function(base_size = 11, base_family = NULL,
                              transparent = FALSE) {
   theme_ezrsurvey(base_size, base_family, transparent) +
     ggplot2::theme(
@@ -86,7 +118,7 @@ theme_ezrsurvey_y <- function(base_size = 11, base_family = "sans",
 
 #' @rdname theme_ezrsurvey
 #' @export
-theme_ezrsurvey_xy <- function(base_size = 11, base_family = "sans",
+theme_ezrsurvey_xy <- function(base_size = 11, base_family = NULL,
                               transparent = FALSE) {
   theme_ezrsurvey(base_size, base_family, transparent) +
     ggplot2::theme(

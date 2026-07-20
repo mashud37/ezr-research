@@ -17,15 +17,22 @@ test_that("read_folder errors helpfully", {
 })
 
 test_that("select_prefix keeps id plus prefixed columns", {
-  out <- select_prefix(consumer_survey, "demo_", keep = "respondent_id")
+  out <- select_prefix(podracing_survey, "demo_", keep = "respondent_id")
   expect_equal(names(out)[1], "respondent_id")
   expect_true(all(grepl("^demo_", names(out)[-1])))
 })
 
+test_that("select_suffix keeps id plus suffixed columns", {
+  out <- select_suffix(podracing_survey, "_com", keep = "respondent_id")
+  expect_equal(names(out)[1], "respondent_id")
+  expect_true(all(grepl("_com$", names(out)[-1])))
+  expect_setequal(names(out)[-1], c("nps_com", "show_com"))
+})
+
 test_that("parse_filename splits metadata and drops the extension", {
-  df <- tibble::tibble(file = "viewer_CDL_acme_NA_2026.csv")
-  out <- parse_filename(df, into = c("type", "game", "brand", "locale", "year"))
-  expect_equal(out$type, "viewer")
+  df <- tibble::tibble(file = "podracing_wave1_NA_2026.csv")
+  out <- parse_filename(df, into = c("survey", "wave", "locale", "year"))
+  expect_equal(out$survey, "podracing")
   expect_equal(out$year, "2026")
   expect_true("file" %in% names(out))       # kept by default
 })

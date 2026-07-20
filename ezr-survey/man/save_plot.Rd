@@ -6,7 +6,7 @@
 \usage{
 save_plot(
   plot,
-  path,
+  path = NULL,
   width = 8,
   height = 4.5,
   dpi = 300,
@@ -18,7 +18,9 @@ save_plot(
 \item{plot}{A ggplot object.}
 
 \item{path}{Output path; the extension sets the format (\code{.png}, \code{.svg},
-\code{.pdf}, \code{.jpg}/\code{.jpeg}, \code{.tiff}).}
+\code{.pdf}, \code{.jpg}/\code{.jpeg}, \code{.tiff}). If \code{NULL} (default), the plot is written
+to \code{outputs/plot.png} in the working directory. Missing directories are
+created.}
 
 \item{width, height}{Size in inches. Default \verb{8 x 4.5}.}
 
@@ -41,13 +43,13 @@ pipeline without breaking it.
 \details{
 The device is chosen from the file extension, and the plot is returned
 invisibly so the call slots into a pipeline without breaking it
-(\code{p |> save_plot("p.png") |> print()}). Defaults suit slides: a transparent
+(\code{p \%>\% save_plot("p.png") \%>\% print()}). Defaults suit slides: a transparent
 background (matching the ezrsurvey themes) and a generous size; pass
 \code{bg = "white"} for a solid background. SVG output needs the suggested
 \code{svglite} package.
 }
 \examples{
-p <- plot_bars(calc_percentage(consumer_survey, demo_gender))
+p <- plot_bars(calc_percentage(podracing_survey, demo_gender))
 tmp <- tempfile(fileext = ".png")
 save_plot(p, tmp)
 file.exists(tmp)

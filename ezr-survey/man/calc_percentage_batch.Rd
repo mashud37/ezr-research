@@ -11,6 +11,7 @@ calc_percentage_batch(
   sort = c("none", "desc", "asc"),
   digits = 0,
   na_rm = TRUE,
+  drop = NULL,
   weights = NULL
 )
 }
@@ -20,8 +21,9 @@ calc_percentage_batch(
 \item{...}{Columns to tabulate, using tidyselect (e.g. \code{starts_with("demo_")}
 or \verb{demo_gender, demo_edu}).}
 
-\item{by, sort, digits, na_rm, weights}{Passed to \code{\link[=calc_percentage]{calc_percentage()}} (so a
-\code{wpct} column appears when weighting is active).}
+\item{by, sort, digits, na_rm, drop, weights}{Passed to \code{\link[=calc_percentage]{calc_percentage()}} (so a
+\code{wpct} column appears when weighting is active, and \code{drop} removes unwanted
+answers from every question).}
 }
 \value{
 A \link[tibble:tibble]{tibble} with \code{variable}, \code{answer}, \code{n}, \code{pct}
@@ -43,15 +45,15 @@ question block. To send each question to its own Excel tab instead, see
 \code{\link[=export_xlsx]{export_xlsx()}}.
 }
 \examples{
-calc_percentage_batch(consumer_survey, demo_gender, demo_job)
+calc_percentage_batch(podracing_survey, demo_gender, demo_job)
 #> # A tibble: 8 x 4
 #>   variable    answer                n   pct
 #>   <chr>       <chr>             <int> <dbl>
-#> 1 demo_gender As a man            648    70
-#> 2 demo_gender As a woman          228    24
+#> 1 demo_gender Female              399    42
+#> 2 demo_gender Male                525    55
 #> # ... and so on for each answer of each variable
 
-calc_percentage_batch(consumer_survey, dplyr::starts_with("demo_"))
+calc_percentage_batch(podracing_survey, starts_with("demo_"))
 }
 \seealso{
 \code{\link[=calc_percentage]{calc_percentage()}}, \code{\link[=export_xlsx]{export_xlsx()}}.

@@ -20,11 +20,13 @@ list_report_templates()
 \code{\link[=scaffold_report]{scaffold_report()}}.
 
 Other reporting:
+\code{\link[=example_report]{example_report()}},
 \code{\link[=report_add_plot]{report_add_plot()}},
 \code{\link[=report_add_slide]{report_add_slide()}},
 \code{\link[=report_add_table]{report_add_table()}},
 \code{\link[=report_add_text]{report_add_text()}},
 \code{\link[=report_deck]{report_deck()}},
+\code{\link[=report_layouts]{report_layouts()}},
 \code{\link[=report_new]{report_new()}},
 \code{\link[=report_save]{report_save()}},
 \code{\link[=scaffold_report]{scaffold_report()}}

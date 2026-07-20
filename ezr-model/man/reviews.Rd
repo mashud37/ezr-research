@@ -30,7 +30,8 @@ head(reviews)
 \seealso{
 Other data:
 \code{\link{ecommerce}},
-\code{\link{nps_drivers}}
+\code{\link{nps_drivers}},
+\code{\link{personas}}
 }
 \concept{data}
 \keyword{datasets}

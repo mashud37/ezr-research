@@ -27,17 +27,19 @@
 #' @family modelling
 #' @seealso [nps_group()], [plot_nps()], [plot_nps_gauge()].
 #' @examples
-#' calc_nps(consumer_survey, nps_value)
+#' calc_nps(podracing_survey, nps_value)
 #' #> # A tibble: 1 x 2
 #' #>       n   nps
 #' #>   <int> <dbl>
-#' #> 1  1000     3
+#' #> 1  1000     7
 #'
-#' calc_nps(consumer_survey, nps_value, by = region)
+#' calc_nps(podracing_survey, nps_value, by = region)
 #' @export
 calc_nps <- function(data = NULL, value, by = NULL, weights = NULL) {
-  data <- resolve_data(data)
-  col_name <- rlang::as_name(rlang::ensym(value))
+  r <- resolve_data_columns(rlang::enquo(data), list(rlang::enquo(value)),
+                            missing(value))
+  data <- r$data
+  col_name <- col_label(r$cols[[1]])
   by_q <- rlang::enquo(by)
   has_by <- !rlang::quo_is_null(by_q)
 
@@ -97,6 +99,10 @@ rwa_importance <- function(df, outcome, predictors) {
 #' @param outcome The outcome column (unquoted), e.g. `nps_value`.
 #' @param predictors The predictor columns, using tidyselect (e.g.
 #'   `starts_with("ratings_")`).
+#' @param recode If `TRUE` (default), character predictor columns are mapped to
+#'   1-5 with [recode_likert()]; numeric columns are left as-is.
+#' @param likert_levels Scale wordings passed to [recode_likert()] when
+#'   recoding.
 #'
 #' @return A [tibble][tibble::tibble] with `feature` and `importance`.
 #'
@@ -105,27 +111,41 @@ rwa_importance <- function(df, outcome, predictors) {
 #' variance between correlated predictors, which ordinary regression
 #' coefficients handle poorly. The weights are rescaled to sum to ~100, so each
 #' feature's `importance` reads as "this feature accounts for X% of what drives
-#' the outcome". Only complete cases are used, and all columns are coerced to
-#' numeric (recode worded ratings with [recode_likert()] first if needed). Most
-#' users call [ipm_model()], which pairs this with performance for the
-#' importance/performance matrix.
+#' the outcome". Only complete cases are used. Worded rating columns are recoded
+#' to 1-5 automatically (`recode = TRUE`). Most users call [ipm_model()], which
+#' pairs this with performance for the importance/performance matrix.
 #'
 #' @family modelling
 #' @seealso [ipm_model()], [plot_ipm()].
 #' @examplesIf requireNamespace("rwa", quietly = TRUE)
-#' # predictors must be numeric -- recode worded ratings first (or use ipm_model())
-#' d <- consumer_survey
-#' d[paste0("r_", 1:5)] <- lapply(d[grep("^ratings_", names(d))], recode_likert)
-#' calc_importance(d, nps_value, dplyr::starts_with("r_"))
+#' calc_importance(podracing_survey, nps_value, starts_with("ratings_"))
 #' @export
-calc_importance <- function(data = NULL, outcome, predictors) {
-  data <- resolve_data(data)
-  out_name <- rlang::as_name(rlang::ensym(outcome))
-  pred_names <- names(dplyr::select(data, {{ predictors }}))
+calc_importance <- function(data = NULL, outcome, predictors,
+                            recode = TRUE,
+                            likert_levels = c("Very bad", "Bad", "Ok",
+                                              "Good", "Very good")) {
+  r <- resolve_data_columns(rlang::enquo(data),
+                            list(rlang::enquo(outcome), rlang::enquo(predictors)),
+                            missing(predictors))
+  data <- r$data
+  out_name <- col_label(r$cols[[1]])
+  pred_names <- names(dplyr::select(data, !!r$cols[[2]]))
   if (length(pred_names) == 0L) {
     stop("No predictor columns selected.", call. = FALSE)
   }
+  if (recode) {
+    data <- dplyr::mutate(data, dplyr::across(dplyr::all_of(pred_names), function(col) {
+      if (is.numeric(col)) col else recode_likert(col, levels = likert_levels)
+    }))
+  }
   rwa_importance(data, out_name, pred_names)
+}
+
+# Bucket a 1-5 mean rating into its performance band by integer part, so a mean
+# of 3.57 sits in band 3 (the band it is actually inside) rather than rounding
+# up to 4 and picking up the next colour.
+cut_perf_band <- function(performance) {
+  factor(floor(performance), levels = as.character(1:5))
 }
 
 #' Build an importance / performance model
@@ -144,8 +164,8 @@ calc_importance <- function(data = NULL, outcome, predictors) {
 #'   recoding.
 #'
 #' @return A [tibble][tibble::tibble] with `feature`, `importance`,
-#'   `performance` and `perf_class` (the rounded performance as a 1-5 factor,
-#'   used for colouring).
+#'   `performance` and `perf_class` (the performance band as a 1-5 factor, from
+#'   its integer part so a 3.57 mean sits in band 3, used for colouring).
 #'
 #' @details
 #' An importance/performance model answers two questions per feature at once:
@@ -155,18 +175,24 @@ calc_importance <- function(data = NULL, outcome, predictors) {
 #' low-performance features are where to invest. Worded rating columns are mapped
 #' to 1--5 with [recode_likert()] automatically (`recode = TRUE`); the prefix is
 #' stripped from feature names; and `perf_class` buckets performance into a 1--5
-#' factor for colouring. Requires the suggested `rwa` package.
+#' factor by its integer part (a 3.57 mean is band 3, not 4) for colouring.
+#' Requires the suggested `rwa` package.
 #'
 #' @family modelling
 #' @seealso [calc_importance()], [plot_ipm()], [compare_values()].
 #' @examplesIf requireNamespace("rwa", quietly = TRUE)
-#' ipm_model(consumer_survey, nps_value, "ratings_")
+#' ipm_model(podracing_survey, nps_value, "ratings_")
 #' @export
 ipm_model <- function(data = NULL, outcome, rating_prefix, recode = TRUE,
                       likert_levels = c("Very bad", "Bad", "Ok",
                                         "Good", "Very good")) {
-  data <- resolve_data(data)
-  out_name <- rlang::as_name(rlang::ensym(outcome))
+  r <- resolve_data_columns(rlang::enquo(data),
+                            list(rlang::enquo(outcome),
+                                 rlang::enquo(rating_prefix)),
+                            missing(rating_prefix))
+  data <- r$data
+  out_name <- col_label(r$cols[[1]])
+  rating_prefix <- rlang::eval_tidy(r$cols[[2]])
   rate_cols <- names(dplyr::select(data, dplyr::starts_with(rating_prefix)))
   if (length(rate_cols) == 0L) {
     stop("No columns start with prefix '", rating_prefix, "'.", call. = FALSE)
@@ -193,8 +219,7 @@ ipm_model <- function(data = NULL, outcome, rating_prefix, recode = TRUE,
     dplyr::mutate(
       feature = clean_label(stringr::str_remove(.data$feature,
                                                 stringr::fixed(rating_prefix))),
-      perf_class = factor(round(.data$performance),
-                          levels = as.character(1:5))
+      perf_class = cut_perf_band(.data$performance)
     ) %>%
     tibble::as_tibble()
 }

@@ -1,7 +1,7 @@
 test_that("nice_max rounds up to the next multiple", {
   expect_equal(nice_max(63, 25), 75)
   expect_equal(nice_max(80, 25), 100)
-  expect_equal(nice_max(75, 25), 75)   # exact multiple stays put
+  expect_equal(nice_max(75, 25), 100)  # exact multiple still advances, for headroom
   expect_equal(nice_max(c(8, 17), 5), 20)
   expect_equal(nice_max(40, 25, pad = 10), 60)
 })

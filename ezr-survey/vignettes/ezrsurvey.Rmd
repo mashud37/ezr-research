@@ -18,7 +18,7 @@ knitr::opts_chunk$set(
 
 `ezrsurvey` turns the things consumer-survey analysts do over and over into
 single-line helpers. This vignette walks through a typical analysis of the
-bundled `consumer_survey` dataset: from raw answers to percentages, models,
+bundled `podracing_survey` dataset: from raw answers to percentages, models,
 diagnostics and a chart you could drop on a slide.
 
 ```{r setup}
@@ -27,12 +27,12 @@ library(ezrsurvey)
 
 ## The data
 
-`consumer_survey` is 1,000 simulated respondents with demographics, a 0--10 NPS
+`podracing_survey` is 1,000 simulated respondents with demographics, a 0--10 NPS
 question, worded feature ratings, multi-select motivations, brand questions and
 open-text comments.
 
 ```{r}
-consumer_survey[, c("respondent_id", "demo_gender", "demo_age", "nps_value")]
+podracing_survey[, c("respondent_id", "demo_gender", "demo_age", "nps_value")]
 ```
 
 ## Percentages without the `count`/`mutate`/`pivot_wider` dance
@@ -41,20 +41,20 @@ consumer_survey[, c("respondent_id", "demo_gender", "demo_age", "nps_value")]
 call.
 
 ```{r}
-calc_percentage(consumer_survey, demo_gender, sort = "desc")
+calc_percentage(podracing_survey, demo_gender, sort = "desc")
 ```
 
 Group with `by`, and pivot to a wide cross-tab with `wide = TRUE`:
 
 ```{r}
-calc_percentage(consumer_survey, satis_return, by = region, wide = TRUE)
+calc_percentage(podracing_survey, satis_return, by = region, wide = TRUE)
 ```
 
 Check-all-that-apply questions live in a block of columns sharing a prefix;
 `calc_percentage_multi()` handles the per-respondent denominator for you:
 
 ```{r}
-calc_percentage_multi(consumer_survey, "motivations_",
+calc_percentage_multi(podracing_survey, "motivations_",
                       id = respondent_id, sort = "desc")
 ```
 
@@ -66,23 +66,23 @@ variable; `calc_percentage()` then applies it automatically.
 ```{r}
 register_order(
   "education",
-  levels = c("Less than high school", "High school or equivalent",
-             "Some college but no degree", "Associate degree",
-             "Bachelor degree", "Masters degree or higher"),
+  levels = c("Primary or less", "Lower secondary", "Upper secondary",
+             "Short-cycle tertiary", "Bachelor or equivalent",
+             "Master or equivalent", "Doctoral or equivalent"),
   vars = "demo_edu"
 )
 
-calc_percentage(consumer_survey, demo_edu)
+calc_percentage(podracing_survey, demo_edu)
 ```
 
 ## Net Promoter Score
 
 ```{r}
-calc_nps(consumer_survey, nps_value)
+calc_nps(podracing_survey, nps_value)
 ```
 
 ```{r}
-plot_nps(consumer_survey, nps_value)
+plot_nps(podracing_survey, nps_value)
 ```
 
 ## Importance / performance
@@ -91,7 +91,7 @@ plot_nps(consumer_survey, nps_value)
 score) with feature performance; `plot_ipm()` draws the matrix.
 
 ```{r}
-model <- ipm_model(consumer_survey, nps_value, "ratings_")
+model <- ipm_model(podracing_survey, nps_value, "ratings_")
 model
 ```
 
@@ -102,7 +102,7 @@ computes the differences and `plot_diff()` draws the change chart.
 
 ```{r}
 previous <- transform(model, performance = performance - c(.3, -.1, .2, 0, .1))
-compare_values(model, previous) |>
+compare_values(model, previous) %>%
   plot_diff()
 ```
 
@@ -112,7 +112,7 @@ compare_values(model, previous) |>
 error for any column -- numeric (point) or categorical (proportion).
 
 ```{r}
-diagnose(consumer_survey, demo_gender, nps_value)
+diagnose(podracing_survey, demo_gender, nps_value)
 ```
 
 For a one-shot, plain-language read on the whole study, `precision_summary()`
@@ -120,7 +120,7 @@ picks the point-scale and proportion variables for you and writes the bullet
 points you would otherwise hand-craft for a report appendix:
 
 ```{r}
-precision_summary(consumer_survey)
+precision_summary(podracing_survey)
 ```
 
 ### Why relative standard error?
@@ -151,13 +151,13 @@ your achieved sample size bounds every percentage in the study -- which is why
 Every table and plot has a one-line, pipe-friendly save:
 
 ```{r, eval = FALSE}
-calc_percentage(consumer_survey, demo_gender) |> save_data("gender.xlsx")
-plot_nps(consumer_survey, nps_value) |> save_plot("nps.png")
+calc_percentage(podracing_survey, demo_gender) %>% save_data("gender.xlsx")
+plot_nps(podracing_survey, nps_value) %>% save_plot("nps.png")
 
 # several tables, one tab each
 export_xlsx(
-  gender = calc_percentage(consumer_survey, demo_gender),
-  job    = calc_percentage(consumer_survey, demo_job),
+  gender = calc_percentage(podracing_survey, demo_gender),
+  job    = calc_percentage(podracing_survey, demo_job),
   path   = "summary.xlsx"
 )
 ```

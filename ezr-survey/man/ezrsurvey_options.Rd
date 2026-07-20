@@ -27,14 +27,45 @@ Recognised options:
 \item{\code{pct_axis_unit}}{Rounding step for percentage y-axes (default \code{25}).}
 \item{\code{pct_axis_max}}{Fixed percentage y-axis maximum, e.g. \code{100}; \code{NULL}
 (default) means dynamic via \code{\link[=nice_max]{nice_max()}}.}
+\item{\code{bar_cols_max_items}, \code{bar_cols_max_label}}{Thresholds that switch
+\code{\link[=plot_bars]{plot_bars()}} (\code{orientation = "auto"}) from vertical columns to horizontal
+bars: more than \code{bar_cols_max_items} bars (\code{6}) or any label longer than
+\code{bar_cols_max_label} characters (\code{12}).}
+\item{\code{bar_wrap_cols}, \code{bar_wrap_bars}}{\code{\link[stringr:str_wrap]{stringr::str_wrap()}} widths used by
+\code{\link[=plot_bars]{plot_bars()}} for column (\code{12}) and bar (\code{28}) labels.}
+\item{\code{bar_label_size}, \code{bar_size_step}, \code{bar_size_min}}{Data-label text
+sizing in \code{\link[=plot_bars]{plot_bars()}}: base size (\code{3.5}), reduction per item past the
+item threshold (\code{0.15}) and the floor (\code{2.4}).}
+\item{\code{bar_width}, \code{bar_ref_items}}{Bar thickness. Bars are drawn at
+\code{bar_width} (\code{0.66}) of a category slot when a chart has \code{bar_ref_items}
+(\code{6}) bars, and the fraction scales with the bar count so the \emph{drawn}
+thickness stays the same on every chart. Raise \code{bar_ref_items} for
+thinner bars throughout, lower it for chunkier ones.}
 \item{\code{age_breaks}, \code{age_labels}}{Default bands used by \code{\link[=recode_age]{recode_age()}}.}
 \item{\code{na_answers}}{Strings treated as non-answers by \code{\link[=na_blank]{na_blank()}}.}
+\item{\code{drop_answers}}{Answer values dropped by the \verb{drop =} argument of
+\code{\link[=calc_percentage]{calc_percentage()}} and friends when \code{drop} is not given; \code{NULL} (default)
+means drop nothing. See \code{\link[=drop_items]{drop_items()}}.}
 \item{\code{generation_scheme}}{Default scheme for \code{\link[=recode_generation]{recode_generation()}}.}
 \item{\code{current_year}}{Reference year for age-to-cohort conversion; \code{NULL}
 uses the system year.}
 \item{\code{default_by}}{Default grouping column name(s) applied by
 \code{\link[=calc_percentage]{calc_percentage()}} / \code{\link[=calc_percentage_multi]{calc_percentage_multi()}} when \code{by} is omitted;
 \code{NULL} (default) means no default grouping.}
+\item{\code{brand_colors}, \code{brand_color_primary}}{Organisation brand colours:
+a vector of accent hexes and the primary accent used as the default
+single-series fill. Usually set by \code{\link[=use_brand]{use_brand()}}, but can be set by hand
+or in a profile. \code{NULL} (default) keeps the neutral ezrsurvey look.}
+\item{\code{brand_font_major}, \code{brand_font_minor}}{Brand heading and body
+typefaces. \code{brand_font_minor} becomes the default \code{base_family} of
+\code{\link[=theme_ezrsurvey]{theme_ezrsurvey()}} when the font is installed on this machine.}
+\item{\code{brand_fonts_enabled}}{Set \code{FALSE} to keep brand colours but ignore
+brand fonts (default \code{TRUE}).}
+\item{\code{brand_template_pptx}, \code{brand_template_docx}}{Paths to the brand
+PowerPoint / Word template used as the default reference document by
+\code{\link[=report_new]{report_new()}}, \code{\link[=report_deck]{report_deck()}} and \code{\link[=scaffold_report]{scaffold_report()}}. These are
+machine-specific absolute paths -- if you persist them, prefer the
+project-level \code{.ezrsurvey.yml} profile over the user-level one.}
 }
 
 Options are ordinary R options under the \code{ezrsurvey.} prefix, so anything you

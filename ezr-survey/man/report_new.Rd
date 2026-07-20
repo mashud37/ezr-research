@@ -4,47 +4,72 @@
 \alias{report_new}
 \title{Start a new PowerPoint or Word report}
 \usage{
-report_new(format = c("pptx", "docx"), template = NULL)
+report_new(
+  format = c("pptx", "docx"),
+  template = NULL,
+  style = c("elevated", "plain"),
+  slide_numbers = TRUE
+)
 }
 \arguments{
 \item{format}{\code{"pptx"} (default) for PowerPoint or \code{"docx"} for Word.}
 
 \item{template}{Optional path to a \code{.pptx} / \code{.docx} to use as the style
-template (reference doc). If \code{NULL}, officer's blank default is used.}
+template (reference doc). \code{NULL} (default) uses the brand template
+registered by \code{\link[=use_brand]{use_brand()}}, falling back to one of the package's built-in
+16:9 templates (see \code{style}).}
+
+\item{style}{Which built-in template to fall back on when no \code{template} and
+no brand template are set. \code{"elevated"} (default) is the styled deck: an
+accent lead-in over a hairline under every title, a hairline above the
+footer strip, a full-bleed accent band across the foot of the title slide
+and slide numbers in the corner. \code{"plain"} is the same widescreen deck
+with no decoration at all -- plain white slides. Ignored when a template
+is supplied.}
+
+\item{slide_numbers}{If \code{TRUE} (default), every content slide added with
+\code{\link[=report_add_slide]{report_add_slide()}} shows the template's slide-number placeholder in
+its usual corner. Requires the suggested \code{xml2} package (silently skipped
+without it, or when the template has no slide-number placeholder).}
 }
 \value{
 An officer document object (\code{rpptx} or \code{rdocx}).
 }
 \description{
-Opens a blank \pkg{officer} document you can build up with the
-\verb{report_add_*()} helpers and write out with \code{\link[=report_save]{report_save()}}. This is the
-"build slides/Word directly from R" path; for a Quarto-based workflow see
-\code{\link[=scaffold_report]{scaffold_report()}}.
+Opens an \pkg{officer} document you can build up with the \verb{report_add_*()}
+helpers and write out with \code{\link[=report_save]{report_save()}}. This is the "build slides/Word
+directly from R" path; for a Quarto-based workflow see \code{\link[=scaffold_report]{scaffold_report()}}.
 }
 \details{
-This is the "build it from R" path: you get a blank \pkg{officer} document and
+This is the "build it from R" path: you get an \pkg{officer} document and
 add to it slide by slide (pptx) or section by section (docx) with the
-\verb{report_add_*()} helpers, then write it out with \code{\link[=report_save]{report_save()}}. For a quick
-deck from a list of charts and tables, \code{\link[=report_deck]{report_deck()}} does the whole thing in
-one call; for a document-driven workflow, \code{\link[=scaffold_report]{scaffold_report()}} gives you a
-Quarto template instead. Requires the suggested \code{officer} package.
+\verb{report_add_*()} helpers, then write it out with \code{\link[=report_save]{report_save()}}. Slide
+layouts are chosen by inspecting the template's placeholders, so any
+organisation template works -- see \code{\link[=report_layouts]{report_layouts()}} for what yours
+contains. For a quick deck from a list of charts and tables, \code{\link[=report_deck]{report_deck()}}
+does the whole thing in one call; for a document-driven workflow,
+\code{\link[=scaffold_report]{scaffold_report()}} gives you a Quarto template instead. Requires the
+suggested \code{officer} package.
 }
 \examples{
 \dontrun{
 doc <- report_new("pptx")
+doc <- report_new("pptx", template = "brand/org-template.pptx")
 }
 }
 \seealso{
 \code{\link[=report_add_slide]{report_add_slide()}}, \code{\link[=report_add_plot]{report_add_plot()}}, \code{\link[=report_add_table]{report_add_table()}},
-\code{\link[=report_save]{report_save()}}, \code{\link[=report_deck]{report_deck()}}.
+\code{\link[=report_save]{report_save()}}, \code{\link[=report_deck]{report_deck()}}, \code{\link[=report_layouts]{report_layouts()}}, \code{\link[=use_brand]{use_brand()}}.
 
 Other reporting:
+\code{\link[=example_report]{example_report()}},
 \code{\link[=list_report_templates]{list_report_templates()}},
 \code{\link[=report_add_plot]{report_add_plot()}},
 \code{\link[=report_add_slide]{report_add_slide()}},
 \code{\link[=report_add_table]{report_add_table()}},
 \code{\link[=report_add_text]{report_add_text()}},
 \code{\link[=report_deck]{report_deck()}},
+\code{\link[=report_layouts]{report_layouts()}},
 \code{\link[=report_save]{report_save()}},
 \code{\link[=scaffold_report]{scaffold_report()}}
 }

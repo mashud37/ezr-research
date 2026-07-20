@@ -17,24 +17,26 @@ report_add_table(doc, data, autofit = TRUE)
 The updated document.
 }
 \description{
-Adds a data frame as a \pkg{flextable} -- on the current slide (pptx) or as a
-new table (docx).
+Adds a data frame as a \pkg{flextable} -- in the current slide's content
+placeholder (pptx) or as a new table (docx).
 }
 \examples{
 \dontrun{
-tbl <- calc_percentage(consumer_survey, demo_gender)
-report_new("docx") |> report_add_table(tbl)
+tbl <- calc_percentage(podracing_survey, demo_gender)
+report_new("docx") \%>\% report_add_table(tbl)
 }
 }
 \seealso{
 \code{\link[=report_add_plot]{report_add_plot()}}.
 
 Other reporting:
+\code{\link[=example_report]{example_report()}},
 \code{\link[=list_report_templates]{list_report_templates()}},
 \code{\link[=report_add_plot]{report_add_plot()}},
 \code{\link[=report_add_slide]{report_add_slide()}},
 \code{\link[=report_add_text]{report_add_text()}},
 \code{\link[=report_deck]{report_deck()}},
+\code{\link[=report_layouts]{report_layouts()}},
 \code{\link[=report_new]{report_new()}},
 \code{\link[=report_save]{report_save()}},
 \code{\link[=scaffold_report]{scaffold_report()}}

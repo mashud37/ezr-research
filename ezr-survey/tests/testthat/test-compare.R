@@ -7,9 +7,9 @@ test_that("compare_values computes current - previous", {
 })
 
 test_that("compare_values works on percentage tables", {
-  a <- calc_percentage(dplyr::filter(consumer_survey, region == "Europe"),
+  a <- calc_percentage(dplyr::filter(podracing_survey, region == "Europe"),
                        demo_gender)
-  b <- calc_percentage(dplyr::filter(consumer_survey, region == "North America"),
+  b <- calc_percentage(dplyr::filter(podracing_survey, region == "North America"),
                        demo_gender)
   out <- compare_values(b, a, by = "demo_gender", value = "pct")
   expect_true("difference" %in% names(out))
@@ -26,7 +26,7 @@ test_that("plot_diff builds a diverging chart", {
                   performance = c(3.1, 4.2, 3.5))
   b <- data.frame(feature = c("price", "quality", "service"),
                   performance = c(2.8, 4.4, 3.9))
-  p <- compare_values(b, a) |> plot_diff()
+  p <- compare_values(b, a) %>% plot_diff()
   expect_s3_class(p, "ggplot")
   expect_no_error(ggplot2::ggplot_build(p))
 })
@@ -36,8 +36,8 @@ test_that("export_xlsx writes one tab per table", {
   dir <- withr::local_tempdir()
   path <- file.path(dir, "out.xlsx")
   out <- export_xlsx(
-    gender = calc_percentage(consumer_survey, demo_gender),
-    calc_percentage(consumer_survey, demo_job),
+    gender = calc_percentage(podracing_survey, demo_gender),
+    calc_percentage(podracing_survey, demo_job),
     path = path
   )
   expect_equal(out, path)

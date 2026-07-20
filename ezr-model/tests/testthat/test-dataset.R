@@ -26,3 +26,9 @@ test_that("helpers error without data or default", {
 test_that("use_dataset rejects non-data-frames", {
   expect_error(use_dataset(1:10))
 })
+
+test_that("reviews open text is globally unique (no comment repeats)", {
+  vals <- reviews$text[nzchar(reviews$text)]
+  expect_gt(length(vals), 0)
+  expect_equal(anyDuplicated(vals), 0L)
+})

@@ -9,10 +9,10 @@ report_add_text(doc, text, ...)
 \arguments{
 \item{doc}{A document from \code{\link[=report_new]{report_new()}}.}
 
-\item{text}{Text to add.}
+\item{text}{Text to add; a character vector becomes one paragraph (bullet)
+per element on slides.}
 
-\item{...}{Passed to \code{\link[officer:body_add_par]{officer::body_add_par()}} (docx) or used as the body
-placeholder (pptx).}
+\item{...}{Passed to \code{\link[officer:body_add_par]{officer::body_add_par()}} (docx only).}
 }
 \value{
 The updated document.
@@ -22,16 +22,18 @@ Add a paragraph of text to a report
 }
 \examples{
 \dontrun{
-report_new("docx") |> report_add_text("Key findings follow.")
+report_new("docx") \%>\% report_add_text("Key findings follow.")
 }
 }
 \seealso{
 Other reporting:
+\code{\link[=example_report]{example_report()}},
 \code{\link[=list_report_templates]{list_report_templates()}},
 \code{\link[=report_add_plot]{report_add_plot()}},
 \code{\link[=report_add_slide]{report_add_slide()}},
 \code{\link[=report_add_table]{report_add_table()}},
 \code{\link[=report_deck]{report_deck()}},
+\code{\link[=report_layouts]{report_layouts()}},
 \code{\link[=report_new]{report_new()}},
 \code{\link[=report_save]{report_save()}},
 \code{\link[=scaffold_report]{scaffold_report()}}

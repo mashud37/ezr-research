@@ -17,13 +17,14 @@
 #'   if `x` is empty or all `NA`.
 #'
 #' @details
-#' The ceiling is `ceiling(max(x) / unit) * unit + pad`. A value already sitting
-#' exactly on a multiple of `unit` is left where it is (e.g. `nice_max(75)` is
-#' `75`, not `100`); use `pad` when you need guaranteed headroom above the
-#' tallest bar for data labels. An all-`NA` logical column (a common shape for
-#' an empty survey field) is tolerated and returns `NA`. This is the engine
-#' behind [scale_y_pct()] and the percentage plot wrappers, which is why their
-#' bars never quite touch the top of the panel.
+#' The ceiling is `(floor(max(x) / unit) + 1) * unit + pad`: the *next*
+#' multiple of `unit` strictly above `max(x)`, always leaving headroom even
+#' when the max already sits exactly on a multiple (e.g. `nice_max(75)` is
+#' `100`, not `75`). Use `pad` for additional headroom on top of that, e.g.
+#' for annotations above the tallest bar. An all-`NA` logical column (a common
+#' shape for an empty survey field) is tolerated and returns `NA`. This is the
+#' engine behind [scale_y_pct()] and the percentage plot wrappers, which is
+#' why their bars never quite touch the top of the panel.
 #'
 #' @family scales
 #' @seealso [scale_y_pct()], [label_pct()].
@@ -34,8 +35,8 @@
 #' nice_max(80, unit = 25)        # already need >75, so jumps to 100
 #' #> [1] 100
 #'
-#' nice_max(75, unit = 25)        # exact multiple stays put
-#' #> [1] 75
+#' nice_max(75, unit = 25)        # exact multiple still advances, for headroom
+#' #> [1] 100
 #'
 #' nice_max(c(8, 17), unit = 5, pad = 10)   # next multiple of 5 (20) + 10
 #' #> [1] 30
@@ -57,10 +58,9 @@ nice_max <- function(x, unit = 25, pad = 0) {
     return(NA_real_)
   }
   m <- max(x)
-  # Smallest multiple of `unit` that is >= m -- exactly the original report's
-  # `seq(0, .., unit)[which(max <= seq)[1]]`. An exact multiple stays put; use
-  # `pad` when you need guaranteed headroom above the tallest bar.
-  steps <- ceiling(m / unit)
+  # Next multiple of `unit` strictly above m, so the tallest bar always has
+  # headroom -- an exact multiple still advances one full step.
+  steps <- floor(m / unit) + 1
   steps * unit + pad
 }
 
@@ -95,8 +95,7 @@ nice_max <- function(x, unit = 25, pad = 0) {
 #' @family scales
 #' @seealso [nice_max()], [label_pct()], [plot_bars()].
 #' @examples
-#' df <- calc_percentage(consumer_survey, demo_gender)
-#' library(ggplot2)
+#' df <- calc_percentage(podracing_survey, demo_gender)
 #' ggplot(df, aes(demo_gender, pct)) +
 #'   geom_col() +
 #'   scale_y_pct(df$pct)            # axis capped at a tidy multiple, "%" labels

@@ -9,10 +9,12 @@ report_add_plot(doc, plot, width = NULL, height = NULL, dpi = 150)
 \arguments{
 \item{doc}{A document from \code{\link[=report_new]{report_new()}}.}
 
-\item{plot}{A ggplot object.}
+\item{plot}{A ggplot object (any grid grob also works, e.g. an aligned
+plot from \code{\link[=report_deck]{report_deck()}}'s alignment step).}
 
-\item{width, height}{Image size in inches. Defaults to \verb{9 x 5} (pptx body) /
-\verb{6 x 3.5} (docx).}
+\item{width, height}{Image size in inches. \code{NULL} (default) sizes the image
+to the slide's content placeholder (pptx) or \verb{6 x 3.5} (docx), so charts
+fill whatever template the deck is built on.}
 
 \item{dpi}{Raster resolution. Defaults to \code{150}.}
 }
@@ -20,24 +22,31 @@ report_add_plot(doc, plot, width = NULL, height = NULL, dpi = 150)
 The updated document.
 }
 \description{
-Renders a ggplot to an image and places it on the current slide (pptx) or as
-a new figure (docx).
+Renders a ggplot to an image and places it in the current slide's content
+placeholder (pptx) or as a new figure (docx).
+}
+\details{
+On slides the image is rendered at exactly the content placeholder's size,
+so nothing is stretched or letterboxed; when the template does not define
+placeholder geometry the slide size (minus margins) is used instead.
 }
 \examples{
 \dontrun{
-p <- calc_percentage(consumer_survey, demo_gender) |> plot_bars()
-report_new("pptx") |> report_add_slide("Gender") |> report_add_plot(p)
+p <- calc_percentage(podracing_survey, demo_gender) \%>\% plot_bars()
+report_new("pptx") \%>\% report_add_slide("Gender") \%>\% report_add_plot(p)
 }
 }
 \seealso{
 \code{\link[=report_add_table]{report_add_table()}}.
 
 Other reporting:
+\code{\link[=example_report]{example_report()}},
 \code{\link[=list_report_templates]{list_report_templates()}},
 \code{\link[=report_add_slide]{report_add_slide()}},
 \code{\link[=report_add_table]{report_add_table()}},
 \code{\link[=report_add_text]{report_add_text()}},
 \code{\link[=report_deck]{report_deck()}},
+\code{\link[=report_layouts]{report_layouts()}},
 \code{\link[=report_new]{report_new()}},
 \code{\link[=report_save]{report_save()}},
 \code{\link[=scaffold_report]{scaffold_report()}}

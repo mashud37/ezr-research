@@ -4,13 +4,30 @@ ezrsurvey_defaults <- function() {
   list(
     pct_axis_unit = 25,        # rounding step for percentage y-axes
     pct_axis_max = NULL,       # fixed y-axis max (NULL = dynamic via nice_max)
+    bar_cols_max_items = 6,    # > this many bars => horizontal in orientation "auto"
+    bar_cols_max_label = 12,   # labels longer (chars) => horizontal in "auto"
+    bar_wrap_cols = 12,        # str_wrap width for vertical-column labels
+    bar_wrap_bars = 28,        # str_wrap width for horizontal-bar labels
+    bar_label_size = 3.5,      # base data-label text size
+    bar_size_step = 0.15,      # text-size reduction per item past the threshold
+    bar_size_min = 2.4,        # floor for the data-label text size
+    bar_width = 0.66,          # slot fraction drawn at bar_ref_items
+    bar_ref_items = 6,         # item count anchoring the constant bar thickness
     age_breaks = c(0, 18, 22, 26, 30, 35, Inf),
     age_labels = c("17 or younger", "18 to 21", "22 to 25",
                    "26 to 29", "30 to 34", "35+"),
     na_answers = "Prefer not to answer",
+    drop_answers = NULL,       # default answer values dropped by `drop =`
     generation_scheme = "pew",
     current_year = NULL,       # NULL = the system year
-    default_by = NULL          # default grouping column(s) for calc_percentage
+    default_by = NULL,         # default grouping column(s) for calc_percentage
+    brand_colors = NULL,       # accent hexes (accent1..6), e.g. from use_brand()
+    brand_color_primary = NULL,   # single hex; default single-series fill
+    brand_font_major = NULL,   # heading typeface from the brand theme
+    brand_font_minor = NULL,   # body typeface; feeds theme_ezrsurvey()
+    brand_fonts_enabled = TRUE,   # apply brand fonts to ggplot text
+    brand_template_pptx = NULL,   # default reference .pptx for reports
+    brand_template_docx = NULL    # default reference .docx for reports
   )
 }
 
@@ -40,14 +57,45 @@ ezrsurvey_default <- function(name) {
 #'   \item{`pct_axis_unit`}{Rounding step for percentage y-axes (default `25`).}
 #'   \item{`pct_axis_max`}{Fixed percentage y-axis maximum, e.g. `100`; `NULL`
 #'     (default) means dynamic via [nice_max()].}
+#'   \item{`bar_cols_max_items`, `bar_cols_max_label`}{Thresholds that switch
+#'     [plot_bars()] (`orientation = "auto"`) from vertical columns to horizontal
+#'     bars: more than `bar_cols_max_items` bars (`6`) or any label longer than
+#'     `bar_cols_max_label` characters (`12`).}
+#'   \item{`bar_wrap_cols`, `bar_wrap_bars`}{[stringr::str_wrap()] widths used by
+#'     [plot_bars()] for column (`12`) and bar (`28`) labels.}
+#'   \item{`bar_label_size`, `bar_size_step`, `bar_size_min`}{Data-label text
+#'     sizing in [plot_bars()]: base size (`3.5`), reduction per item past the
+#'     item threshold (`0.15`) and the floor (`2.4`).}
+#'   \item{`bar_width`, `bar_ref_items`}{Bar thickness. Bars are drawn at
+#'     `bar_width` (`0.66`) of a category slot when a chart has `bar_ref_items`
+#'     (`6`) bars, and the fraction scales with the bar count so the *drawn*
+#'     thickness stays the same on every chart. Raise `bar_ref_items` for
+#'     thinner bars throughout, lower it for chunkier ones.}
 #'   \item{`age_breaks`, `age_labels`}{Default bands used by [recode_age()].}
 #'   \item{`na_answers`}{Strings treated as non-answers by [na_blank()].}
+#'   \item{`drop_answers`}{Answer values dropped by the `drop =` argument of
+#'     [calc_percentage()] and friends when `drop` is not given; `NULL` (default)
+#'     means drop nothing. See [drop_items()].}
 #'   \item{`generation_scheme`}{Default scheme for [recode_generation()].}
 #'   \item{`current_year`}{Reference year for age-to-cohort conversion; `NULL`
 #'     uses the system year.}
 #'   \item{`default_by`}{Default grouping column name(s) applied by
 #'     [calc_percentage()] / [calc_percentage_multi()] when `by` is omitted;
 #'     `NULL` (default) means no default grouping.}
+#'   \item{`brand_colors`, `brand_color_primary`}{Organisation brand colours:
+#'     a vector of accent hexes and the primary accent used as the default
+#'     single-series fill. Usually set by [use_brand()], but can be set by hand
+#'     or in a profile. `NULL` (default) keeps the neutral ezrsurvey look.}
+#'   \item{`brand_font_major`, `brand_font_minor`}{Brand heading and body
+#'     typefaces. `brand_font_minor` becomes the default `base_family` of
+#'     [theme_ezrsurvey()] when the font is installed on this machine.}
+#'   \item{`brand_fonts_enabled`}{Set `FALSE` to keep brand colours but ignore
+#'     brand fonts (default `TRUE`).}
+#'   \item{`brand_template_pptx`, `brand_template_docx`}{Paths to the brand
+#'     PowerPoint / Word template used as the default reference document by
+#'     [report_new()], [report_deck()] and [scaffold_report()]. These are
+#'     machine-specific absolute paths -- if you persist them, prefer the
+#'     project-level `.ezrsurvey.yml` profile over the user-level one.}
 #' }
 #'
 #' @param ... Either nothing (to read all values) or named `option = value`
@@ -226,14 +274,24 @@ use_ezrsurvey_profile <- function(path = NULL, overwrite = FALSE) {
     "#   - Prefer not to answer",
     "#   - Don't know",
     "",
+    "# Organisation brand -- usually set per project via use_brand(), but the",
+    "# values can live here too. Template paths are machine-specific: keep them",
+    "# in the project-level .ezrsurvey.yml, not this user-level file.",
+    "# brand_colors: ['#4472C4', '#ED7D31', '#A5A5A5', '#FFC000']",
+    "# brand_color_primary: '#4472C4'",
+    "# brand_font_minor: Calibri",
+    "# brand_fonts_enabled: true",
+    "# brand_template_pptx: C:/path/to/org-template.pptx",
+    "",
     "# Reusable level orders, linked to variable names and/or prefixes.",
     "# orders:",
     "#   education:",
     "#     levels:",
-    "#       - Less than high school",
-    "#       - High school or equivalent",
-    "#       - Bachelor degree",
-    "#       - Masters degree or higher",
+    "#       - Primary or less",
+    "#       - Lower secondary",
+    "#       - Upper secondary",
+    "#       - Bachelor or equivalent",
+    "#       - Master or equivalent",
     "#     vars: [demo_edu]",
     "#   likert_bad_good:",
     "#     levels: [Very bad, Bad, Ok, Good, Very good]",

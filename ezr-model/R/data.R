@@ -62,3 +62,38 @@
 #' @examples
 #' head(reviews)
 "reviews"
+
+#' Simulated consumer personas (a clean clustering example)
+#'
+#' A fictional customer table built from explicit mathematical functions so that
+#' every clustering technique in the package gives a textbook "what good looks
+#' like" result. Five personas are drawn as well-separated Gaussian blobs (via
+#' `MASS::mvrnorm`) in six informative dimensions -- the between-cluster distance
+#' is far larger than the within-cluster spread -- so [cluster()] with `"kmeans"`,
+#' `"hclust"` or `"pam"` all recover the same segments, the silhouette peaks at
+#' the true `k = 5` (so `cluster(personas)` with `k = NULL` finds it), and
+#' [reduce_dims()] (PCA / UMAP / t-SNE) shows clean structure. A redundant column
+#' (`pages_viewed`, which tracks `browse_minutes`) gives PCA an obvious low-rank
+#' structure without disturbing the segments. The ground-truth label is kept in
+#' `persona` so you can check a recovered solution with [cluster_profile()].
+#'
+#' @format A [tibble][tibble::tibble] with 740 rows and 9 columns:
+#' \describe{
+#'   \item{customer_id}{Customer id (character).}
+#'   \item{spend_index}{Monthly spend index (0-120).}
+#'   \item{visit_freq}{Visits per month (integer).}
+#'   \item{basket_size}{Average items per basket.}
+#'   \item{discount_sensitivity}{Responsiveness to discounts (0-100).}
+#'   \item{loyalty_score}{Loyalty-programme engagement (0-100).}
+#'   \item{browse_minutes}{Average session length in minutes.}
+#'   \item{pages_viewed}{Pages viewed per session (redundant with
+#'     `browse_minutes`).}
+#'   \item{persona}{Ground-truth segment label (character).}
+#' }
+#' @source Simulated. See `data-raw/make_datasets.R`.
+#' @family data
+#' @examplesIf requireNamespace("cluster", quietly = TRUE)
+#' cl <- cluster(personas, vars = spend_index:browse_minutes)
+#' cl
+#' cluster_profile(cl, persona)
+"personas"

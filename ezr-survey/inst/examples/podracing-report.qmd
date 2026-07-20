@@ -1,0 +1,299 @@
+---
+title: "Pod-Racing Fan Survey"
+subtitle: "Annual fan study: findings, drivers and recommendations"
+author: "Insights team"
+date: today
+format:
+  html:
+    toc: true
+    toc-location: left
+    theme: cosmo
+    embed-resources: true
+    fig-format: svg
+params:
+  ai: false
+---
+
+```{r setup, include=FALSE}
+library(ezrsurvey)
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE,
+                      fig.width = 9, fig.height = 5, dpi = 150)
+
+use_dataset(podracing_survey)
+
+ctx <- ai_context(
+  podracing_survey,
+  question = "Annual fan survey after the pod-racing season",
+  fieldwork = "Example data bundled with ezrsurvey"
+)
+
+# Every figure quoted in the prose is computed here and interpolated inline, so
+# the narrative cannot drift away from the charts when the data changes.
+n_total <- nrow(podracing_survey)
+nps <- calc_nps(nps_value)$nps
+grp <- nps_group(podracing_survey$nps_value)
+share_promoter <- round(mean(grp == 1, na.rm = TRUE) * 100)
+share_detractor <- round(mean(grp == -1, na.rm = TRUE) * 100)
+
+ipm <- ipm_model(nps_value, "ratings_")
+threshold <- bands_rating_3()$to[1]
+priority <- ipm[ipm$performance < threshold, ]
+priority <- priority[order(-priority$importance), ]
+strongest <- ipm[order(-ipm$performance), ][1, ]
+top_driver <- ipm[order(-ipm$importance), ][1, ]
+
+regions <- calc_nps(nps_value, by = region)
+regions <- regions[order(-regions$nps), ]
+best_region <- regions[1, ]
+worst_region <- regions[nrow(regions), ]
+
+motiv <- calc_percentage_multi("motivations_", id = respondent_id,
+                               sort = "desc")
+demo <- calc_percentage(demo_gender, sort = "desc")
+mean_age <- calc_summary(demo_age)$mean
+
+ret <- calc_percentage(satis_return)
+share_return <- round(sum(ret$pct[ret$satis_return %in%
+                                    c("Likely", "Very likely")]))
+
+fmt <- function(x) format(x, big.mark = ",")
+```
+
+A study of `r fmt(n_total)` pod-racing fans, covering how they rate the
+experience, what drives their willingness to recommend it, and where the
+opportunities sit. Code is shown alongside the output so the analysis can be
+audited and re-run; for a blank scaffold to start your own report from, use
+`scaffold_report()`.
+
+## Executive summary
+
+The fan base recommends pod racing, but narrowly. The Net Promoter Score is
+**`r sprintf("%+d", nps)`** on a base of `r fmt(n_total)`: `r share_promoter`%
+promoters against `r share_detractor`% detractors, with `r share_return`%
+saying they are likely to return next season. This is not a lukewarm crowd so
+much as a divided one, and the division is explainable.
+
+Enthusiasm rests on the spectacle. `r round(motiv$pct[1])`% attend for the
+`r motiv$option[1]`, and `r strongest$feature` is the best-delivered part of
+the experience at `r sprintf("%.2f", strongest$performance)` out of 5. That is
+the asset to protect.
+
+What holds the score down is delivery on the basics.
+`r nrow(priority)` of the `r nrow(ipm)` rated features fall below the
+acceptable threshold of `r threshold`.0:
+`r paste(sprintf("%s (%.2f)", priority$feature, priority$performance), collapse = ", ")`.
+The most consequential of these is **`r priority$feature[1]`**, which carries
+`r round(priority$importance[1])`% of explained importance in the
+recommendation model while being rated only
+`r sprintf("%.2f", priority$performance[1])`. It is the highest-return fix
+available.
+
+The weakness is also regional rather than universal:
+`r best_region$region` returns `r sprintf("%+d", best_region$nps)` against
+`r worst_region$region` at `r sprintf("%+d", worst_region$nps)`, a spread of
+`r best_region$nps - worst_region$nps` points that no single global programme
+will close.
+
+```{r}
+#| eval: !expr params$ai
+#| output: asis
+#| echo: false
+cat(ai_summarise(calc_nps(nps_value), template = "exec_summary", context = ctx))
+```
+
+## The headline: willingness to recommend
+
+`r sprintf("%+d", nps)` places the fan base in positive territory, but well
+short of the enthusiasm the sport's own marketing assumes.
+
+```{r}
+#| fig-height: 2.5
+plot_nps_gauge(nps)
+```
+
+The distribution matters more than the single number. A score of
+`r sprintf("%+d", nps)` could describe a uniformly tepid audience or a split
+one; here it is the latter, with substantial mass at both ends.
+
+```{r}
+plot_nps(nps_value)
+```
+
+Stated return intent corroborates it: `r share_return`% likely or very likely
+to come back, with a sizeable undecided middle that is winnable.
+
+```{r}
+calc_percentage(satis_return, sort = "desc") %>% plot_bars()
+```
+
+### Where the score differs
+
+```{r}
+regions
+```
+
+`r best_region$region` leads on advocacy at `r sprintf("%+d", best_region$nps)`;
+`r worst_region$region` trails at `r sprintf("%+d", worst_region$nps)`. Read
+the bases in the table before acting on any one region: the smaller cells carry
+margins of error wide enough to overlap (see
+[Methodology](#methodology-and-precision)).
+
+## What drives the score
+
+`ipm_model()` regresses recommendation on the rating block and crosses
+importance against delivered performance. The quadrant to act on is upper
+left: features that matter and are not being delivered.
+
+```{r}
+#| fig-height: 6
+plot_ipm(ipm)
+```
+
+`r top_driver$feature` carries the most weight in the model at
+`r round(top_driver$importance)`% of explained importance. Points are coloured
+by the decision band they fall in, so anything sitting in the red zone is
+below the acceptable threshold regardless of how close it looks to the next
+band.
+
+The full ranking:
+
+```{r}
+ipm[order(-ipm$importance), ]
+```
+
+Feature-level ratings show the same picture in distribution form, ordered by
+weighted mean:
+
+```{r}
+rating_long <- podracing_survey %>%
+  select(starts_with("ratings_")) %>%
+  pivot_longer(everything(), names_to = "feature", values_to = "level") %>%
+  filter(level != "") %>%
+  mutate(feature = sub("^ratings_", "", feature),
+         level = paste0(recode_likert(level), " - ", level)) %>%
+  count(feature, level) %>%
+  group_by(feature) %>%
+  mutate(pct = n / sum(n) * 100) %>%
+  ungroup()
+
+plot_stacked_rating(rating_long, feature, level)
+```
+
+```{r}
+#| eval: !expr params$ai
+#| output: asis
+#| echo: false
+cat(ai_summarise(ipm, template = "drivers_barriers", context = ctx))
+```
+
+### Movement against a benchmark
+
+With a previous wave, `compare_values()` and `plot_diff()` show the shift.
+Here the mechanics are illustrated against the scale midpoint, which doubles
+as a read on how far each feature sits from acceptable:
+
+```{r}
+compare_values(
+  current  = ipm %>% select(feature, performance),
+  previous = ipm %>% mutate(performance = threshold) %>%
+    select(feature, performance)
+) %>%
+  plot_diff()
+```
+
+## Who the audience is
+
+`r round(demo$pct[1])`% of respondents are
+`r tolower(as.character(demo[[1]][1]))`, average age
+`r round(mean_age)`.
+
+```{r}
+calc_percentage(demo_gender, sort = "desc") %>% plot_bars()
+```
+
+Occupation spreads across many long labels, so the chart switches itself to
+horizontal bars:
+
+```{r}
+calc_percentage(demo_job, sort = "asc") %>% plot_bars()
+```
+
+Motivations are a check-all-that-apply block, counted over respondents rather
+than ticks, so the percentages intentionally sum past 100:
+
+```{r}
+motiv %>% plot_bars(label = option)
+```
+
+`r round(motiv$pct[1])`% come for the `r motiv$option[1]`, ahead of
+`r motiv$option[2]` at `r round(motiv$pct[2])`%. `r motiv$option[nrow(motiv)]`
+is the minority motive, which bears on how heavily that category should front
+the sponsorship mix.
+
+A crosstab turns any pair of questions into a report-ready table:
+
+```{r}
+crosstab(region, demo_gender, cell = "row_pct")
+```
+
+## In their own words
+
+`sample_comments_diverse()` selects maximally different verbatims. These are
+illustrative of the range of opinion, not a measurement of how common each
+view is.
+
+```{r}
+#| fig-height: 6
+sample_comments_diverse(nps_com, show_com, n = 8, seed = 42) %>%
+  plot_quotes_tree()
+```
+
+```{r}
+#| eval: !expr params$ai
+#| output: asis
+#| echo: false
+cat(ai_summarise(sample_comments_diverse(nps_com, show_com, n = 20, seed = 42),
+                 template = "thematic_analysis", context = ctx))
+```
+
+## Weighting the sample
+
+The achieved sample is `r round(demo$pct[1])`%
+`r tolower(as.character(demo[[1]][1]))`. Where the fan population is known to
+differ, `set_weights()` rakes the sample to the targets and every summary
+helper picks the weights up automatically, reporting `wpct` beside the
+unweighted `pct`:
+
+```{r}
+set_weights(c(variable = "demo_gender",
+              Male = 0.49, Female = 0.50, "Non-binary" = 0.01))
+calc_percentage(satis_return, sort = "desc")
+clear_weights()
+```
+
+## Methodology and precision {#methodology-and-precision}
+
+`r fmt(n_total)` responses. `precision_summary()` reports the margin of error
+each headline figure carries; quote it whenever two percentages are compared,
+because differences smaller than the margin are not differences.
+
+```{r}
+precision_summary(demo_gender, starts_with("ratings_"))
+```
+
+```{r}
+#| eval: !expr params$ai
+#| output: asis
+#| echo: false
+cat(ai_summarise(diagnose(demo_gender, starts_with("ratings_")),
+                 template = "methodology", context = ctx))
+```
+
+```{r cleanup, include=FALSE}
+clear_dataset()
+```
+
+> Rendered with `quarto render podracing-report.qmd`. Add `-P ai:true` to
+> draft the AI narrative sections (needs `ellmer` and a stored key, see
+> `set_llm_key()`). The matching slide deck is built by `podracing-deck.R` in
+> the same folder.

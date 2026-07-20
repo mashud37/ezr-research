@@ -26,7 +26,9 @@ mark_value(
 
 \item{label}{Optional text label drawn at the marker.}
 
-\item{...}{Passed to \code{\link[ggplot2:annotate]{ggplot2::annotate()}} for the label.}
+\item{...}{Passed to \code{\link[ggplot2:annotate]{ggplot2::annotate()}} for the label; overrides the
+default justification, which keeps the label inside the panel next to the
+marker line.}
 }
 \value{
 The plot with the marker added.
@@ -37,7 +39,7 @@ here" marker used on the NPS and quality gauges.
 }
 \examples{
 \dontrun{
-p |> mark_value(42, axis = "x", label = "NPS 42")
+p \%>\% mark_value(42, axis = "x", label = "NPS 42")
 }
 }
 \seealso{

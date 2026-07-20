@@ -29,6 +29,7 @@ get_llm_key("openai")
 
 Other ai:
 \code{\link[=ai_chat]{ai_chat()}},
+\code{\link[=ai_context]{ai_context()}},
 \code{\link[=ai_report_sections]{ai_report_sections()}},
 \code{\link[=ai_summarise]{ai_summarise()}},
 \code{\link[=delete_llm_key]{delete_llm_key()}},

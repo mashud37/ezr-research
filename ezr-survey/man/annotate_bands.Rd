@@ -9,10 +9,10 @@ annotate_bands(
   bands,
   axis = c("x", "y"),
   at = NULL,
-  label_offset = 0,
+  label_offset = NULL,
   labels = TRUE,
   text_colour = NULL,
-  text_size = 4,
+  text_size = NULL,
   linewidth = 1
 )
 }
@@ -30,12 +30,14 @@ labels (e.g. the top of a bar chart). If \code{NULL}, inferred from the plot's
 panel range.}
 
 \item{label_offset}{Distance to nudge labels away from the marker line, in
-data units of the opposite axis. Defaults to \code{0}.}
+data units of the opposite axis. If \code{NULL} (default), 4\% of the opposite
+axis range, so labels sit clear of the line instead of on top of it.}
 
 \item{labels}{Whether to draw the band labels. Defaults to \code{TRUE}.}
 
 \item{text_colour, text_size}{Label appearance. \code{text_colour = NULL} (default)
-uses each band's own colour.}
+uses each band's own colour; \code{text_size = NULL} (default) matches the
+theme's base font size (11 pt) instead of a fixed geom size.}
 
 \item{linewidth}{Marker line width. Defaults to \code{1}.}
 }
@@ -61,7 +63,7 @@ the plot when omitted).
 }
 \examples{
 \dontrun{
-plot_ipm_base |>
+plot_ipm_base \%>\%
   annotate_bands(bands_rating_3(), axis = "x", at = 30)
 }
 }

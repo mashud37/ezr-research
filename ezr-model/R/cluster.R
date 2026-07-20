@@ -59,6 +59,9 @@ choose_k <- function(m, k_max = 8, seed = NULL) {
 #' cl <- cluster(ecommerce, k = 4,
 #'               vars = c(recency_days, frequency, monetary, tenure_months))
 #' cl
+#'
+#' # `personas` is built to cluster cleanly; k is found automatically
+#' cluster(personas, vars = spend_index:browse_minutes)
 #' @export
 cluster <- function(data = NULL, k = NULL,
                     method = c("kmeans", "hclust", "pam"),
@@ -136,18 +139,52 @@ cluster <- function(data = NULL, k = NULL,
 
 #' @export
 print.ezrmodel_clusters <- function(x, ...) {
-  cat(sprintf("%s clustering into k = %d  (%d rows, %d variables)\n",
-              x$method, x$k, sum(x$ok), length(x$vars)))
+  cat(sprintf(
+    "%s clustering  k = %d  |  %d rows  |  %d variables\n",
+    x$method, x$k, sum(x$ok), length(x$vars)
+  ))
   sz <- x$sizes
-  cat("  sizes: ", paste(sprintf("c%d=%d", sz$cluster, sz$n), collapse = "  "),
+  cat("sizes:   ", paste(sprintf("c%d=%d", sz$cluster, sz$n), collapse = "  "),
       "\n", sep = "")
-  if (!is.na(x$diagnostics$avg_silhouette)) {
-    cat(sprintf("  average silhouette width: %.2f\n",
-                x$diagnostics$avg_silhouette))
+  diag_parts <- character(0)
+  if (!is.na(x$diagnostics$avg_silhouette))
+    diag_parts <- c(diag_parts,
+                    sprintf("silhouette %.2f  (>0.5 strong, 0.25-0.5 reasonable)",
+                            x$diagnostics$avg_silhouette))
+  if (!is.na(x$diagnostics$within_ss_ratio))
+    diag_parts <- c(diag_parts,
+                    sprintf("within/total SS %.2f", x$diagnostics$within_ss_ratio))
+  if (length(diag_parts))
+    cat("quality: ", paste(diag_parts, collapse = "  "), "\n", sep = "")
+
+  cat("\nVariable profiles (means, * = notably high, · = notably low):\n")
+  prof  <- x$profile
+  vars  <- x$vars
+  k_ids <- sz$cluster
+  cw    <- 9L
+  nw    <- max(nchar(vars)) + 2L
+
+  m_raw <- as.matrix(x$data[x$ok, vars, drop = FALSE])
+  ovr   <- colMeans(m_raw, na.rm = TRUE)
+  sds   <- apply(m_raw, 2L, stats::sd, na.rm = TRUE)
+
+  hdr <- formatC("", width = nw)
+  for (k in k_ids) hdr <- paste0(hdr, formatC(paste0("c", k), width = cw))
+  cat(hdr, formatC("all", width = cw), "\n", sep = "")
+
+  for (v in vars) {
+    line <- formatC(v, width = nw, flag = "-")
+    cms  <- prof[[v]]
+    for (i in seq_along(k_ids)) {
+      mu  <- cms[[i]]
+      z   <- if (sds[[v]] > 0) (mu - ovr[[v]]) / sds[[v]] else 0
+      mrk <- if (z > 0.5) "*" else if (z < -0.5) "·" else " "
+      line <- paste0(line, formatC(sprintf("%.1f%s", mu, mrk), width = cw))
+    }
+    line <- paste0(line, formatC(sprintf("%.1f", ovr[[v]]), width = cw))
+    cat(line, "\n", sep = "")
   }
-  if (!is.na(x$diagnostics$within_ss_ratio)) {
-    cat(sprintf("  within/total SS: %.2f\n", x$diagnostics$within_ss_ratio))
-  }
+
   cat("\n")
   invisible(x)
 }

@@ -40,6 +40,7 @@ generation_scheme("pew")
 Other recode:
 \code{\link[=add_region]{add_region()}},
 \code{\link[=bin_numeric]{bin_numeric()}},
+\code{\link[=drop_items]{drop_items()}},
 \code{\link[=ensure_numeric]{ensure_numeric()}},
 \code{\link[=na_blank]{na_blank()}},
 \code{\link[=nps_group]{nps_group()}},

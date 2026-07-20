@@ -12,6 +12,7 @@ ai_summarise(
   model = NULL,
   chat = NULL,
   title = NULL,
+  context = NULL,
   max_rows = 50,
   ...
 )
@@ -31,6 +32,10 @@ template's default instruction.}
 fresh chat is created using the template's system prompt.}
 
 \item{title}{Optional context title for the table.}
+
+\item{context}{Optional survey context from \code{\link[=ai_context]{ai_context()}} (or a character
+vector), included in the prompt so the model can respect sample sizes and
+margins of error.}
 
 \item{max_rows}{Maximum rows of \code{data} to include in the prompt. Defaults to
 \code{50}.}
@@ -57,7 +62,7 @@ steer a single call. A fresh chat is created per call unless you pass one via
 }
 \examples{
 \dontrun{
-calc_percentage(consumer_survey, demo_gender, sort = "desc") |>
+calc_percentage(podracing_survey, demo_gender, sort = "desc") \%>\%
   ai_summarise(template = "exec_summary", provider = "openai")
 }
 }
@@ -66,6 +71,7 @@ calc_percentage(consumer_survey, demo_gender, sort = "desc") |>
 
 Other ai:
 \code{\link[=ai_chat]{ai_chat()}},
+\code{\link[=ai_context]{ai_context()}},
 \code{\link[=ai_report_sections]{ai_report_sections()}},
 \code{\link[=delete_llm_key]{delete_llm_key()}},
 \code{\link[=get_llm_key]{get_llm_key()}},

@@ -1,47 +1,98 @@
-#' Simulated consumer-survey responses
+#' Simulated pod-racing fan survey
 #'
-#' A fictional but realistic consumer-survey dataset used throughout the ezrsurvey
-#' examples and tests -- the package's answer to `starwars` or the baseball data,
-#' but survey-shaped. A latent satisfaction drives correlated feature ratings and
-#' NPS, demographics follow plausible skews, and the multi-select, brand and
-#' open-text columns mirror the shapes the helpers consume. Blanks and
+#' A fictional consumer-feedback survey from a Boonta Eve-style pod-racing
+#' meeting -- an affectionate Star Wars parody used throughout the ezrsurvey
+#' examples and tests (the package's literal answer to `starwars`, but
+#' survey-shaped). A latent enjoyment drives correlated attribute ratings and the
+#' recommend score, the demographics use international-standard categories
+#' (ISO/IEC 5218 sex, ISCED education, ILO labour-force status, ISIC sectors,
+#' ISO 3166 countries), and the multi-select, sponsor and open-text columns mirror
+#' the shapes the helpers consume. The open-text comments deliberately name many
+#' drivers, places and races, so they exercise the text / NER helpers. Blanks and
 #' "Prefer not to answer" responses are sprinkled in so cleaning helpers have
 #' something to do.
 #'
-#' @format A [tibble][tibble::tibble] with 1,000 rows and 29 columns:
+#' @format A [tibble][tibble::tibble] with 1,000 rows and 32 columns:
 #' \describe{
 #'   \item{respondent_id}{Unique respondent id (character).}
 #'   \item{collector}{Survey source: email, panel, socials or in_app.}
-#'   \item{demo_age}{Age in years (integer, 14-45).}
-#'   \item{demo_gender}{Gender identity (some blank / "Prefer not to answer").}
-#'   \item{demo_edu}{Highest education level.}
-#'   \item{demo_country}{Country of residence.}
+#'   \item{demo_age}{Age in years (integer, 16-70).}
+#'   \item{demo_gender}{Sex/gender: Male, Female, Non-binary (ISO/IEC 5218,
+#'     extended), some blank / "Prefer not to answer".}
+#'   \item{demo_edu}{Highest education level (ISCED 2011 broad categories).}
+#'   \item{demo_country}{Country of residence (ISO 3166 names).}
 #'   \item{region}{World region derived from `demo_country`.}
-#'   \item{demo_job}{Employment status.}
-#'   \item{demo_sector}{Sector or field of study.}
-#'   \item{nps_value}{0-10 "how likely to recommend" rating (integer).}
-#'   \item{satis_return}{Likelihood of returning (Very unlikely .. Very likely).}
-#'   \item{ratings_content, ratings_production, ratings_hosts, ratings_pacing,
-#'     ratings_value}{Worded 1-5 feature ratings (Very bad .. Very good).}
-#'   \item{motivations_entertainment, motivations_learn, motivations_social,
-#'     motivations_brand, motivations_habit}{Multi-select motivations; each holds
-#'     its option text when chosen, otherwise `""`.}
-#'   \item{partner_recall_Acme, partner_recall_Globex, partner_recall_Initech}{
-#'     Sponsor recall per brand (Sponsor / Not a sponsor / Don't know this
-#'     brand).}
-#'   \item{partner_likeability_Acme, partner_likeability_Globex,
-#'     partner_likeability_Initech}{Brand likeability (Very likeable ..
+#'   \item{demo_job}{Labour-force status (ILO categories).}
+#'   \item{demo_sector}{Industry sector (ISIC Rev.4 sections).}
+#'   \item{race_attended}{Which meeting they attended (e.g. "Boonta Eve
+#'     Classic"); long labels that exercise the auto bar layout.}
+#'   \item{fav_driver}{Favourite pod-racer (e.g. "Anakin Skywalker", "Sebulba").}
+#'   \item{nps_value}{0-10 "how likely to recommend attending" rating (integer).}
+#'   \item{satis_return}{Likelihood of returning next season (Very unlikely ..
+#'     Very likely).}
+#'   \item{ratings_atmosphere, ratings_commentary, ratings_safety, ratings_speed,
+#'     ratings_value, ratings_venue}{Worded 1-5 attribute ratings (Very bad ..
+#'     Very good).}
+#'   \item{motivations_speed, motivations_drivers, motivations_betting,
+#'     motivations_social, motivations_tradition}{Multi-select reasons for
+#'     attending; each holds its option text when chosen, otherwise `""`.}
+#'   \item{partner_recall_PodTech, partner_recall_BanthaBrew,
+#'     partner_recall_JawaJuice}{Sponsor recall per brand (Sponsor / Not a
+#'     sponsor / Don't know this brand).}
+#'   \item{partner_likeability_PodTech, partner_likeability_BanthaBrew,
+#'     partner_likeability_JawaJuice}{Sponsor likeability (Very likeable ..
 #'     Very unlikeable).}
 #'   \item{nps_com, show_com}{Open-text comments (mostly blank).}
 #' }
 #'
-#' @source Simulated. See `data-raw/make_consumer_survey.R` for the generator.
+#' @source Simulated. See `data-raw/make_podracing_survey.R` for the generator.
 #' @family data
 #'
 #' @examples
-#' calc_percentage(consumer_survey, demo_gender, sort = "desc")
-#' calc_nps(consumer_survey, nps_value)
-"consumer_survey"
+#' calc_percentage(podracing_survey, demo_gender, sort = "desc")
+#' calc_nps(podracing_survey, nps_value)
+"podracing_survey"
+
+#' Simulated historical shopping-behaviour survey
+#'
+#' A fictional survey of patrons of a turn-of-the-century (c. 1905) general
+#' emporium, written in an Edwardian register for colour. It behaves like a real
+#' survey export -- a latent satisfaction drives the worded attribute ratings and
+#' the recommend score together, demographics use standard sex/country categories
+#' alongside period social-class and occupation items, and the multi-select and
+#' open-text columns mirror the shapes the helpers consume. A companion to
+#' [podracing_survey] for examples that want a second, very different theme.
+#'
+#' @format A [tibble][tibble::tibble] with 800 rows and 25 columns:
+#' \describe{
+#'   \item{patron_id}{Unique patron id (character).}
+#'   \item{demo_age}{Age in years (integer, 18-80).}
+#'   \item{demo_gender}{Sex (Female / Male, some "Prefer not to answer").}
+#'   \item{demo_country}{Country of residence (ISO 3166 names).}
+#'   \item{region}{World region derived from `demo_country`.}
+#'   \item{social_class}{Edwardian social class (Upper class .. Poor).}
+#'   \item{occupation}{Period occupation (Clerk, Domestic servant, ...).}
+#'   \item{household_size}{Number in the household (integer).}
+#'   \item{weekly_spend}{Weekly spend at the emporium, in shillings (numeric).}
+#'   \item{payment}{How they pay: Cash, On account or Barter.}
+#'   \item{transport}{How they travel to the shop (On foot, Horse and cart, ...).}
+#'   \item{visit_frequency}{How often they visit (Never .. Always).}
+#'   \item{recommend}{0-10 "would recommend to a neighbour" rating (integer).}
+#'   \item{ratings_goods, ratings_service, ratings_credit, ratings_delivery,
+#'     ratings_value}{Worded 1-5 attribute ratings (Very bad .. Very good).}
+#'   \item{reasons_price, reasons_quality, reasons_credit, reasons_proximity,
+#'     reasons_variety, reasons_service}{Multi-select reasons for patronage; each
+#'     holds its option text when chosen, otherwise `""`.}
+#'   \item{comment}{Open-text comment (mostly blank).}
+#' }
+#'
+#' @source Simulated. See `data-raw/make_shopping_survey.R` for the generator.
+#' @family data
+#'
+#' @examples
+#' calc_percentage(shopping_survey, social_class, sort = "desc")
+#' calc_summary(shopping_survey, weekly_spend, by = payment)
+"shopping_survey"
 
 #' Country to region lookup
 #'

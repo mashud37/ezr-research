@@ -10,7 +10,8 @@ get_prompt(name)
 \item{name}{Template name (see \code{\link[=list_prompts]{list_prompts()}}).}
 }
 \value{
-A list with \code{system}, \code{instruction} and \code{description}.
+A list with \code{system}, \code{instruction}, \code{description} and (possibly
+\code{NULL}) \code{output_contract}.
 }
 \description{
 Get a prompt template specification
@@ -23,6 +24,7 @@ get_prompt("key_findings")
 
 Other ai:
 \code{\link[=ai_chat]{ai_chat()}},
+\code{\link[=ai_context]{ai_context()}},
 \code{\link[=ai_report_sections]{ai_report_sections()}},
 \code{\link[=ai_summarise]{ai_summarise()}},
 \code{\link[=delete_llm_key]{delete_llm_key()}},

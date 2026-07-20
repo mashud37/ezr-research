@@ -31,7 +31,7 @@ package.
 }
 \examples{
 \dontshow{if (requireNamespace("treemapify", quietly = TRUE)) withAutoprint(\{ # examplesIf}
-sample_comments(consumer_survey, nps_com, show_com, n = 5) |>
+sample_comments(podracing_survey, nps_com, show_com, n = 5) \%>\%
   plot_quotes_tree()
 \dontshow{\}) # examplesIf}
 }

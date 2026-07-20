@@ -101,7 +101,7 @@ ai_chat <- function(provider = "openai", model = NULL, system_prompt = NULL,
 #' @seealso [ai_report_sections()] to summarise many tables at once.
 #' @examples
 #' \dontrun{
-#' tidy(drivers(nps_drivers, nps)) |>
+#' tidy(drivers(nps_drivers, nps)) %>%
 #'   ai_summarise(template = "exec_summary", provider = "openai")
 #' }
 #' @export

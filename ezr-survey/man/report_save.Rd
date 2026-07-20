@@ -4,12 +4,14 @@
 \alias{report_save}
 \title{Save a report to disk}
 \usage{
-report_save(doc, path)
+report_save(doc, path = NULL)
 }
 \arguments{
 \item{doc}{A document from \code{\link[=report_new]{report_new()}}.}
 
-\item{path}{Output file path (\code{.pptx} or \code{.docx}).}
+\item{path}{Output file path (\code{.pptx} or \code{.docx}). If \code{NULL} (default), the
+report is written to \code{outputs/report.pptx} / \code{outputs/report.docx} in the
+working directory. Missing directories are created.}
 }
 \value{
 Invisibly \code{path}.
@@ -19,17 +21,19 @@ Save a report to disk
 }
 \examples{
 \dontrun{
-report_new("pptx") |> report_add_slide("Hi") |> report_save("out.pptx")
+report_new("pptx") \%>\% report_add_slide("Hi") \%>\% report_save("out.pptx")
 }
 }
 \seealso{
 Other reporting:
+\code{\link[=example_report]{example_report()}},
 \code{\link[=list_report_templates]{list_report_templates()}},
 \code{\link[=report_add_plot]{report_add_plot()}},
 \code{\link[=report_add_slide]{report_add_slide()}},
 \code{\link[=report_add_table]{report_add_table()}},
 \code{\link[=report_add_text]{report_add_text()}},
 \code{\link[=report_deck]{report_deck()}},
+\code{\link[=report_layouts]{report_layouts()}},
 \code{\link[=report_new]{report_new()}},
 \code{\link[=scaffold_report]{scaffold_report()}}
 }

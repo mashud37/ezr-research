@@ -40,7 +40,7 @@ columns differ across files, missing columns are filled with \code{NA}.
 Loads all CSV files matching \code{pattern} in \code{path}, reading each as character
 (so survey codes never get silently coerced), tags every row with its source
 filename, and row-binds the lot into one tibble. Generalises the
-\code{list.files() |> map(read.csv) |> bind_rows()} opening of the original
+\code{list.files() \%>\% map(read.csv) \%>\% bind_rows()} opening of the original
 scripts.
 }
 \details{
@@ -57,8 +57,8 @@ column records which file each row came from -- split it into metadata with
 \examples{
 # build a tiny folder of CSVs, then read them back
 dir <- tempfile(); dir.create(dir)
-readr::write_csv(head(consumer_survey, 3), file.path(dir, "a.csv"))
-readr::write_csv(head(consumer_survey, 2), file.path(dir, "b.csv"))
+readr::write_csv(head(podracing_survey, 3), file.path(dir, "a.csv"))
+readr::write_csv(head(podracing_survey, 2), file.path(dir, "b.csv"))
 read_folder(dir)[, c("file", "respondent_id")]
 }
 \seealso{
@@ -66,6 +66,7 @@ read_folder(dir)[, c("file", "respondent_id")]
 
 Other import:
 \code{\link[=parse_filename]{parse_filename()}},
-\code{\link[=select_prefix]{select_prefix()}}
+\code{\link[=select_prefix]{select_prefix()}},
+\code{\link[=select_suffix]{select_suffix()}}
 }
 \concept{import}

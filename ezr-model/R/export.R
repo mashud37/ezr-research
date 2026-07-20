@@ -22,7 +22,7 @@ file_ext <- function(path) tolower(tools::file_ext(path))
 #' @details
 #' The device is chosen from the file extension, and the plot is returned
 #' invisibly so the call slots into a pipeline without breaking it
-#' (`p |> save_plot("p.png") |> print()`). Defaults suit slides: a transparent
+#' (`p %>% save_plot("p.png") %>% print()`). Defaults suit slides: a transparent
 #' background (matching the ezrmodel themes) and a generous size; pass
 #' `bg = "white"` for a solid background. SVG output needs the suggested
 #' `svglite` package.
@@ -79,7 +79,7 @@ save_plot <- function(plot, path, width = 8, height = 4.5, dpi = 300,
 #' @family save
 #' @seealso [save_plot()], [save_output()], [export_xlsx()].
 #' @examples
-#' tab <- correlations(nps_drivers, nps) |> tidy()
+#' tab <- correlations(nps_drivers, nps) %>% tidy()
 #' tmp <- tempfile(fileext = ".csv")
 #' save_data(tab, tmp)
 #' file.exists(tmp)
@@ -118,12 +118,12 @@ save_data <- function(data, path, na = "", ...) {
 #' @seealso [save_plot()], [save_data()].
 #' @examples
 #' tmp_csv <- tempfile(fileext = ".csv")
-#' tidy(correlations(nps_drivers, nps)) |> save_output(tmp_csv)
+#' tidy(correlations(nps_drivers, nps)) %>% save_output(tmp_csv)
 #'
 #' \donttest{
 #' library(ggplot2)
 #' tmp_png <- tempfile(fileext = ".png")
-#' (ggplot(nps_drivers, aes(value, nps)) + geom_point()) |> save_output(tmp_png)
+#' (ggplot(nps_drivers, aes(value, nps)) + geom_point()) %>% save_output(tmp_png)
 #' }
 #' @export
 save_output <- function(x, path, ...) {

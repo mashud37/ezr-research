@@ -3,7 +3,7 @@
 #' Loads all CSV files matching `pattern` in `path`, reading each as character
 #' (so survey codes never get silently coerced), tags every row with its source
 #' filename, and row-binds the lot into one tibble. Generalises the
-#' `list.files() |> map(read.csv) |> bind_rows()` opening of the original
+#' `list.files() %>% map(read.csv) %>% bind_rows()` opening of the original
 #' scripts.
 #'
 #' @param path Directory to read from.
@@ -38,8 +38,8 @@
 #' @examples
 #' # build a tiny folder of CSVs, then read them back
 #' dir <- tempfile(); dir.create(dir)
-#' readr::write_csv(head(consumer_survey, 3), file.path(dir, "a.csv"))
-#' readr::write_csv(head(consumer_survey, 2), file.path(dir, "b.csv"))
+#' readr::write_csv(head(podracing_survey, 3), file.path(dir, "a.csv"))
+#' readr::write_csv(head(podracing_survey, 2), file.path(dir, "b.csv"))
 #' read_folder(dir)[, c("file", "respondent_id")]
 #' @export
 read_folder <- function(path, pattern = "\\.csv$", id = "file",
@@ -96,8 +96,8 @@ read_folder <- function(path, pattern = "\\.csv$", id = "file",
 #' @family import
 #' @seealso [read_folder()], [calc_percentage_multi()].
 #' @examples
-#' select_prefix(consumer_survey, "demo_", keep = "respondent_id")
-#' select_prefix(consumer_survey, c("ratings_", "partner_"))
+#' select_prefix(podracing_survey, "demo_", keep = "respondent_id")
+#' select_prefix(podracing_survey, c("ratings_", "partner_"))
 #' @export
 select_prefix <- function(data = NULL, prefix, keep = NULL) {
   data <- resolve_data(data)
@@ -108,10 +108,47 @@ select_prefix <- function(data = NULL, prefix, keep = NULL) {
   )
 }
 
+#' Select identifier and suffixed columns
+#'
+#' The mirror of [select_prefix()]: keeps a handful of id columns plus every
+#' column sharing a suffix -- the `select(id, ends_with("_com"))` idiom -- in
+#' one tidy call.
+#'
+#' @param data A data frame. If omitted, the session default ([use_dataset()])
+#'   is used.
+#' @param suffix One or more column-name suffixes to keep (e.g. `"_com"`, or
+#'   `c("_com", "_score")`).
+#' @param keep Optional character vector of additional column names to retain in
+#'   front of the suffixed block (e.g. an id column).
+#'
+#' @return A data frame with `keep` columns followed by all suffix-matching
+#'   columns.
+#'
+#' @details
+#' Some questionnaire blocks are marked by a trailing tag rather than a leading
+#' one (`_com` open-text follow-ups, `_score` derived columns), so this grabs
+#' one such block plus a couple of id columns without naming every variable.
+#' Order is `keep` first, then the suffix-matching columns in their original
+#' order.
+#'
+#' @family import
+#' @seealso [select_prefix()], [read_folder()].
+#' @examples
+#' select_suffix(podracing_survey, "_com", keep = "respondent_id")
+#' @export
+select_suffix <- function(data = NULL, suffix, keep = NULL) {
+  data <- resolve_data(data)
+  dplyr::select(
+    data,
+    dplyr::all_of(keep %||% character(0)),
+    dplyr::ends_with(suffix)
+  )
+}
+
 #' Split a filename column into metadata columns
 #'
 #' Survey exports often encode metadata in the filename (e.g.
-#' `"viewer_CDL_brand_NA_2026.csv"`). This splits a filename column on a
+#' `"podracing_wave1_NA_2026.csv"`). This splits a filename column on a
 #' separator into named metadata columns, dropping the file extension first.
 #' Replaces the brittle `str_split(file, "_")[[1]][n]` indexing in the original
 #' scripts.
@@ -140,8 +177,8 @@ select_prefix <- function(data = NULL, prefix, keep = NULL) {
 #' @family import
 #' @seealso [read_folder()].
 #' @examples
-#' df <- tibble::tibble(file = c("viewer_CDL_acme_NA_2026.csv"))
-#' parse_filename(df, into = c("type", "game", "brand", "locale", "year"))
+#' df <- tibble::tibble(file = c("podracing_wave1_NA_2026.csv"))
+#' parse_filename(df, into = c("survey", "wave", "locale", "year"))
 #' @export
 parse_filename <- function(data = NULL, col = "file",
                            into, sep = "_", drop_ext = TRUE, remove = FALSE) {

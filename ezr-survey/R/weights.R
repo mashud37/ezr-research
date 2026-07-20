@@ -11,6 +11,11 @@
 # `weights` argument to override per call (`FALSE` to force unweighted, a spec to
 # use an ad-hoc scheme).
 
+# Session store for the active weighting scheme (parallels .order_registry in
+# orders.R). The scheme is kept under "weight_spec" by set_weights() and read by
+# has_weights() / get_weights().
+.ezrsurvey_active <- new.env(parent = emptyenv())
+
 # ---- spec parsing --------------------------------------------------------
 
 # Internal: coerce a named vector of targets to normalised numeric shares.
@@ -188,9 +193,9 @@ resolve_weights <- function(data, weights = NULL) {
 #'   [calc_percentage()].
 #' @examples
 #' set_weights(c(variable = "demo_gender",
-#'               "As a man" = 0.49, "As a woman" = 0.50,
-#'               "Non-binary person" = 0.01))
-#' calc_percentage(consumer_survey, satis_return)   # gains a wpct column
+#'               "Male" = 0.49, "Female" = 0.50,
+#'               "Non-binary" = 0.01))
+#' calc_percentage(podracing_survey, satis_return)   # gains a wpct column
 #' clear_weights()
 #' @export
 set_weights <- function(...) {
@@ -280,10 +285,10 @@ clear_weights <- function() {
 #' @family weighting
 #' @seealso [set_weights()], [calc_percentage()].
 #' @examples
-#' w <- weight_vector(consumer_survey,
+#' w <- weight_vector(podracing_survey,
 #'                    c(variable = "demo_gender",
-#'                      "As a man" = 0.49, "As a woman" = 0.50,
-#'                      "Non-binary person" = 0.01))
+#'                      "Male" = 0.49, "Female" = 0.50,
+#'                      "Non-binary" = 0.01))
 #' round(range(w), 2)
 #' @export
 weight_vector <- function(data = NULL, weights = NULL) {

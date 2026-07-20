@@ -41,9 +41,9 @@ design effect and the effective sample size so you can see the precision cost.
 }
 \examples{
 set_weights(c(variable = "demo_gender",
-              "As a man" = 0.49, "As a woman" = 0.50,
-              "Non-binary person" = 0.01))
-calc_percentage(consumer_survey, satis_return)   # gains a wpct column
+              "Male" = 0.49, "Female" = 0.50,
+              "Non-binary" = 0.01))
+calc_percentage(podracing_survey, satis_return)   # gains a wpct column
 clear_weights()
 }
 \seealso{

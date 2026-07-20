@@ -12,6 +12,6 @@ test_that("ai_chat requires a key for cloud providers", {
 })
 
 test_that("ai_report_sections validates a named list", {
-  expect_error(ai_report_sections(list(calc_percentage(consumer_survey,
+  expect_error(ai_report_sections(list(calc_percentage(podracing_survey,
                                                         demo_gender))))
 })

@@ -4,6 +4,7 @@
 \alias{get_dataset}
 \alias{has_dataset}
 \alias{clear_dataset}
+\alias{dataset_vars}
 \title{Get, check or clear the default dataset}
 \usage{
 get_dataset()
@@ -11,11 +12,13 @@ get_dataset()
 has_dataset()
 
 clear_dataset()
+
+dataset_vars()
 }
 \value{
 \code{get_dataset()} returns the default data frame (error if none is set);
 \code{has_dataset()} returns a logical; \code{clear_dataset()} returns \code{TRUE}
-invisibly.
+invisibly; \code{dataset_vars()} returns a character vector of column names.
 }
 \description{
 Companions to \code{\link[=use_dataset]{use_dataset()}} for inspecting and resetting the session's

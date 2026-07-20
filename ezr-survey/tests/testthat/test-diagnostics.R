@@ -18,7 +18,7 @@ test_that("rse and margin_of_error compose", {
 })
 
 test_that("diagnose returns one tidy row per variable", {
-  out <- diagnose(consumer_survey, demo_gender, ratings_content)
+  out <- diagnose(podracing_survey, demo_gender, ratings_atmosphere)
   expect_equal(nrow(out), 2)
   expect_true(all(c("variable", "type", "n", "estimate", "se",
                     "rse", "moe", "precision") %in% names(out)))
@@ -26,15 +26,15 @@ test_that("diagnose returns one tidy row per variable", {
 })
 
 test_that("diagnose detects numeric vs categorical", {
-  num <- diagnose(consumer_survey, nps_value)
+  num <- diagnose(podracing_survey, nps_value)
   expect_equal(num$type, "mean")
-  cat <- diagnose(consumer_survey, demo_gender)
+  cat <- diagnose(podracing_survey, demo_gender)
   expect_equal(cat$type, "prop")
 })
 
 test_that("diagnose groups by `by`", {
-  out <- diagnose(consumer_survey, nps_value, by = region)
-  expect_equal(nrow(out), dplyr::n_distinct(consumer_survey$region))
+  out <- diagnose(podracing_survey, nps_value, by = region)
+  expect_equal(nrow(out), dplyr::n_distinct(podracing_survey$region))
   expect_true("region" %in% names(out))
 })
 
@@ -48,14 +48,14 @@ test_that("rse_rating maps RSEs to the five bands", {
 })
 
 test_that("diagnose precision uses the rating bands", {
-  out <- diagnose(consumer_survey, nps_value)
+  out <- diagnose(podracing_survey, nps_value)
   expect_true(out$precision %in% c("high precision", "precise", "satisfactory",
                                    "use with caution",
                                    "likely reliability issues"))
 })
 
 test_that("precision_summary produces a bulleted assessment object", {
-  ps <- precision_summary(consumer_survey)
+  ps <- precision_summary(podracing_survey)
   expect_s3_class(ps, "ezrsurvey_precision")
   expect_true(is.character(ps$bullets) && length(ps$bullets) >= 3)
   expect_match(ps$bullets[1], "total responses")
@@ -65,7 +65,7 @@ test_that("precision_summary produces a bulleted assessment object", {
 })
 
 test_that("precision_summary skips id / free-text columns automatically", {
-  ps <- precision_summary(consumer_survey)
+  ps <- precision_summary(podracing_survey)
   # respondent_id (near-unique) and comment columns should not be assessed
   expect_false("respondent_id" %in% ps$table$variable)
   expect_false("nps_com" %in% ps$table$variable)

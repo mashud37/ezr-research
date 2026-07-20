@@ -7,18 +7,19 @@
 \alias{theme_ezrsurvey_xy}
 \title{ezrsurvey ggplot2 themes}
 \usage{
-theme_ezrsurvey(base_size = 11, base_family = "sans", transparent = FALSE)
+theme_ezrsurvey(base_size = 11, base_family = NULL, transparent = FALSE)
 
-theme_ezrsurvey_x(base_size = 11, base_family = "sans", transparent = FALSE)
+theme_ezrsurvey_x(base_size = 11, base_family = NULL, transparent = FALSE)
 
-theme_ezrsurvey_y(base_size = 11, base_family = "sans", transparent = FALSE)
+theme_ezrsurvey_y(base_size = 11, base_family = NULL, transparent = FALSE)
 
-theme_ezrsurvey_xy(base_size = 11, base_family = "sans", transparent = FALSE)
+theme_ezrsurvey_xy(base_size = 11, base_family = NULL, transparent = FALSE)
 }
 \arguments{
 \item{base_size}{Base font size in points. Defaults to \code{11}.}
 
-\item{base_family}{Base font family. Defaults to \code{"sans"}.}
+\item{base_family}{Base font family. \code{NULL} (default) uses the brand body
+font when one is set and installed (see \code{\link[=use_brand]{use_brand()}}), else \code{"sans"}.}
 
 \item{transparent}{If \code{TRUE}, make the plot, panel and legend backgrounds
 transparent (handy for slides). Defaults to \code{FALSE}.}
@@ -42,8 +43,7 @@ gridlines on the named axes. \code{transparent = TRUE} makes the backgrounds
 transparent for slides. All the \verb{plot_*()} helpers apply one of these for you.
 }
 \examples{
-library(ggplot2)
-df <- calc_percentage(consumer_survey, demo_gender)
+df <- calc_percentage(podracing_survey, demo_gender)
 ggplot(df, aes(demo_gender, pct)) + geom_col() + theme_ezrsurvey()
 ggplot(df, aes(demo_gender, pct)) + geom_col() + theme_ezrsurvey_y()
 }

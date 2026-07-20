@@ -8,6 +8,8 @@ scaffold_report(
   format = c("pptx", "html", "pdf", "docx"),
   path = NULL,
   title = "Survey Report",
+  author = NULL,
+  reference_doc = NULL,
   overwrite = FALSE
 )
 }
@@ -20,6 +22,14 @@ scaffold_report(
 
 \item{title}{Title inserted into the template's YAML header.}
 
+\item{author}{Author name for the YAML header. \code{NULL} leaves a placeholder.}
+
+\item{reference_doc}{Path to a PowerPoint / Word template used as the
+Quarto \code{reference-doc} (pptx and docx formats only). \code{NULL} (default)
+uses the brand template registered by \code{\link[=use_brand]{use_brand()}}, if any; pptx then
+falls back to the package's built-in 16:9 template, docx leaves the line
+commented in the scaffold.}
+
 \item{overwrite}{Overwrite \code{path} if it already exists. Defaults to \code{FALSE}.}
 }
 \value{
@@ -27,27 +37,47 @@ Invisibly the path written.
 }
 \description{
 Copies a ready-to-render Quarto report skeleton into your project, wired up
-with ezrsurvey helpers (NPS gauge, importance/performance, percentage bars,
-precision diagnostics) against the bundled \code{consumer_survey} data. Swap in
-your own data at the top and render with Quarto. This is the document-driven
+with ezrsurvey helpers against the bundled \code{podracing_survey} data: an
+executive summary, per-question sections with placeholder narrative,
+optional AI-drafted text, and a methodology appendix built from the
+precision diagnostics. Swap in your own data via the \code{data} parameter (or
+at the top of the file) and render with Quarto. This is the document-driven
 counterpart to the \code{\link[=report_new]{report_new()}} / \code{\link[=report_deck]{report_deck()}} officer builders.
+}
+\details{
+Each scaffold declares two Quarto parameters: \code{data} (path to a CSV of your
+survey; empty means the bundled example data) and \code{ai} (default \code{false};
+set \code{true} to render the AI-drafted narrative chunks, which needs the
+\code{ellmer} package and a stored key, see \code{\link[=set_llm_key]{set_llm_key()}}).
+
+\strong{Corporate templates:} Quarto/Pandoc fills a \code{reference-doc} by looking
+for the \emph{standard} layout names ("Title Slide", "Title and Content", "Two
+Content", ...). A corporate template whose layouts keep those names works
+directly; one with renamed layouts will render broken or blank slides here
+-- build the deck with \code{\link[=report_deck]{report_deck()}} instead, which inspects placeholders
+and works with any template.
 }
 \examples{
 \dontrun{
 scaffold_report("html", path = "report.qmd", title = "Q2 Viewer Survey")
+scaffold_report("pptx", title = "Q2 Viewer Survey",
+                reference_doc = "brand/org-template.pptx")
 # then: quarto::quarto_render("report.qmd")
 }
 }
 \seealso{
-\code{\link[=report_deck]{report_deck()}} for building decks directly without Quarto.
+\code{\link[=report_deck]{report_deck()}} for building decks directly without Quarto;
+\code{\link[=use_brand]{use_brand()}} to register a default reference document.
 
 Other reporting:
+\code{\link[=example_report]{example_report()}},
 \code{\link[=list_report_templates]{list_report_templates()}},
 \code{\link[=report_add_plot]{report_add_plot()}},
 \code{\link[=report_add_slide]{report_add_slide()}},
 \code{\link[=report_add_table]{report_add_table()}},
 \code{\link[=report_add_text]{report_add_text()}},
 \code{\link[=report_deck]{report_deck()}},
+\code{\link[=report_layouts]{report_layouts()}},
 \code{\link[=report_new]{report_new()}},
 \code{\link[=report_save]{report_save()}}
 }

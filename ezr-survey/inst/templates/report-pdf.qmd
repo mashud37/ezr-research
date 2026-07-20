@@ -1,47 +1,99 @@
 ---
 title: "{{TITLE}}"
-author: "Your name"
+author: "{{AUTHOR}}"
 date: today
 format:
   pdf:
+    # PDF styling comes from LaTeX, not a reference-doc; adjust here.
+    documentclass: article
+    geometry: margin=2.5cm
     toc: true
-    fig-align: center
-editor: visual
+    number-sections: true
+params:
+  data: ""
+  ai: false
 ---
 
 ```{r setup, include=FALSE}
 library(ezrsurvey)
-library(ggplot2)
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE,
                       fig.width = 8, fig.height = 4.5, dpi = 150)
 
-# Replace with your own data, e.g.:
-# d <- read_folder("data/") |> select_prefix(c("demo_", "ratings_"),
-#                                            keep = "respondent_id")
-d <- consumer_survey
+# Render with your own data:  quarto render <file> -P data:my-survey.csv
+# For multi-file exports, replace this with read_folder("data/") %>% ...
+d <- if (nzchar(params$data)) {
+  readr::read_csv(params$data, show_col_types = FALSE)
+} else {
+  podracing_survey
+}
+ctx <- ai_context(d)
 ```
 
-## Net Promoter Score
+# Executive summary
+
+Replace this paragraph with the story of the survey in four sentences: the
+headline number, what drives it, the one surprise, and what you recommend
+doing about it. Write it last -- it is the only section many readers open.
+
+```{r}
+#| eval: !expr params$ai
+#| output: asis
+# AI draft (render with -P ai:true; needs ellmer + a stored key).
+# Rewrite before circulating -- it is a draft, not a finding.
+cat(ai_summarise(calc_nps(d, nps_value), template = "exec_summary",
+                 context = ctx))
+```
+
+# Who answered
+
+Describe the achieved sample: who it represents, who is missing, and anything
+that skews it.
+
+```{r}
+calc_percentage(d, demo_gender, sort = "desc") %>% knitr::kable()
+```
+
+```{r}
+calc_percentage(d, demo_edu) %>% knitr::kable()
+```
+
+# Satisfaction and NPS
+
+State the score and its context (previous wave, sector norm).
 
 ```{r}
 plot_nps_gauge(calc_nps(d, nps_value)$nps)
 ```
 
-## Importance / Performance
-
 ```{r}
-ipm_model(d, nps_value, "ratings_") |> plot_ipm()
+calc_nps(d, nps_value, by = region) %>% knitr::kable()
 ```
 
-## Gender
+# What drives satisfaction
+
+Read the matrix by quadrant: top-left (important, delivered poorly) is the
+to-do list; top-right (important, delivered well) is what to protect.
 
 ```{r}
-calc_percentage(d, demo_gender, sort = "desc") |> plot_bars()
+ipm_model(d, nps_value, "ratings_") %>% plot_ipm()
 ```
 
-## Data precision
+```{r}
+#| eval: !expr params$ai
+#| output: asis
+cat(ai_summarise(ipm_model(d, nps_value, "ratings_"),
+                 template = "drivers_barriers", context = ctx))
+```
+
+# Methodology and precision
 
 ```{r}
-diagnose(d, demo_gender, dplyr::starts_with("ratings_")) |>
-  knitr::kable()
+precision_summary(d, demo_gender, dplyr::starts_with("ratings_"))
+```
+
+```{r}
+#| eval: !expr params$ai
+#| output: asis
+cat(ai_summarise(diagnose(d, demo_gender, dplyr::starts_with("ratings_")),
+                 template = "methodology", context = ctx))
 ```

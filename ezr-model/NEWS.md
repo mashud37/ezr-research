@@ -1,3 +1,15 @@
+# ezrmodel 0.4.0
+
+## Data
+
+* New **`personas`** dataset: five consumer segments generated from explicit
+  mathematical functions (well-separated Gaussian blobs via `MASS::mvrnorm`), so
+  every clustering method (`kmeans` / `hclust` / `pam`) recovers them cleanly, the
+  silhouette finds the true `k = 5` on its own, and `reduce_dims()` (PCA / UMAP /
+  t-SNE) shows textbook structure. A redundant column gives PCA an obvious
+  low-rank structure, and a ground-truth `persona` label lets you validate a
+  recovered solution with `cluster_profile()`.
+
 # ezrmodel 0.3.0
 
 More modelling: predictor selection, model comparison and non-linear

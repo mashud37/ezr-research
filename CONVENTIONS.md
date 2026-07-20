@@ -17,6 +17,10 @@ the other packages (`ezrmodel`, `ezrlearning`, ...) copy these conventions.
 - **Complete results.** A helper returns the answer *and* its diagnostics in one
   object you can `print()`, `plot()`, and tidy — never make the user assemble
   the evaluation by hand.
+- **Tidyverse pipe, always.** These are tidyverse wrapper packages: use `%>%`
+  everywhere (source, tests, `@examples`, vignettes, READMEs) — never the base
+  R `|>`. `%>%` is re-exported from the tidyverse family the package already
+  depends on.
 
 ## 2. Packaging & naming
 
