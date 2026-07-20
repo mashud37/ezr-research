@@ -1,7 +1,3 @@
-# Holds the session's default ("active") dataset, used by the analysis helpers
-# when their `data` argument is omitted.
-.ezrmodel_active <- new.env(parent = emptyenv())
-
 # Internal: resolve the `data` argument -- an explicit data frame wins; NULL
 # falls back to the active dataset; anything else is an error.
 resolve_data <- function(data) {
@@ -35,7 +31,7 @@ resolve_data <- function(data) {
 #' back to the default -- R would try to treat `nps` as the data. So, with a
 #' default set, call the helpers in one of these equivalent ways:
 #'
-#' * pipe the data in once: `nps_drivers |> drivers(nps)`;
+#' * pipe the data in once: `nps_drivers %>% drivers(nps)`;
 #' * name the argument: `drivers(target = nps)`;
 #' * or just keep passing `data` explicitly.
 #'
@@ -56,7 +52,7 @@ use_dataset <- function(data) {
   if (!is.data.frame(data)) {
     stop("`data` must be a data frame.", call. = FALSE)
   }
-  assign("data", data, envir = .ezrmodel_active)
+  options("ezr.dataset" = data)
   invisible(data)
 }
 
@@ -67,7 +63,7 @@ use_dataset <- function(data) {
 #'
 #' @return `get_dataset()` returns the default data frame (error if none is set);
 #'   `has_dataset()` returns a logical; `clear_dataset()` returns `TRUE`
-#'   invisibly.
+#'   invisibly; `dataset_vars()` returns a character vector of column names.
 #'
 #' @details
 #' `has_dataset()` is the safe way to check before calling `get_dataset()`, which
@@ -95,20 +91,27 @@ get_dataset <- function() {
   if (!has_dataset()) {
     stop("No default dataset set; call use_dataset() first.", call. = FALSE)
   }
-  get("data", envir = .ezrmodel_active, inherits = FALSE)
+  getOption("ezr.dataset")
 }
 
 #' @rdname dataset_default
 #' @export
 has_dataset <- function() {
-  exists("data", envir = .ezrmodel_active, inherits = FALSE)
+  !is.null(getOption("ezr.dataset"))
 }
 
 #' @rdname dataset_default
 #' @export
 clear_dataset <- function() {
-  if (has_dataset()) {
-    rm("data", envir = .ezrmodel_active)
-  }
+  options("ezr.dataset" = NULL)
   invisible(TRUE)
+}
+
+#' @rdname dataset_default
+#' @export
+dataset_vars <- function() {
+  if (!has_dataset()) {
+    stop("No default dataset set; call use_dataset() first.", call. = FALSE)
+  }
+  names(get_dataset())
 }

@@ -4,7 +4,13 @@
 \alias{register_prompt}
 \title{Register a custom prompt template}
 \usage{
-register_prompt(name, system, instruction, description = "")
+register_prompt(
+  name,
+  system,
+  instruction,
+  description = "",
+  output_contract = NULL
+)
 }
 \arguments{
 \item{name}{Template name.}
@@ -14,6 +20,10 @@ register_prompt(name, system, instruction, description = "")
 \item{instruction}{The default task instruction prepended to the data.}
 
 \item{description}{One-line description shown by \code{\link[=list_prompts]{list_prompts()}}.}
+
+\item{output_contract}{Optional hard requirement on the shape of the answer
+(e.g. "Markdown bullets only"), appended to every prompt built from this
+template.}
 }
 \value{
 Invisibly the template name.
@@ -27,7 +37,8 @@ register_prompt(
   "risks",
   system = "You are a cautious risk analyst.",
   instruction = "List the top risks implied by this table.",
-  description = "Top risks implied by the data."
+  description = "Top risks implied by the data.",
+  output_contract = "Markdown bullets, most severe first."
 )
 }
 \seealso{
@@ -35,6 +46,7 @@ register_prompt(
 
 Other ai:
 \code{\link[=ai_chat]{ai_chat()}},
+\code{\link[=ai_context]{ai_context()}},
 \code{\link[=ai_report_sections]{ai_report_sections()}},
 \code{\link[=ai_summarise]{ai_summarise()}},
 \code{\link[=delete_llm_key]{delete_llm_key()}},

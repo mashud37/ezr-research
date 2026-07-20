@@ -245,20 +245,21 @@ diagnose_one <- function(x, type, z) {
 #' @family diagnostics
 #' @seealso [precision_summary()], [rse_rating()], [se_mean()], [se_prop()].
 #' @examples
-#' diagnose(consumer_survey, demo_gender, nps_value)
+#' diagnose(podracing_survey, demo_gender, nps_value)
 #' #> # A tibble: 2 x 9
 #' #>   variable    type  unit      n estimate    se   rse   moe precision
 #' #>   <chr>       <chr> <chr> <int>    <dbl> <dbl> <dbl> <dbl> <chr>
-#' #> 1 demo_gender prop  ppt     932     69.5  1.51  2.17  2.96 high precision
-#' #> 2 nps_value   mean  points 1000      7.6  0.06  0.79  0.12 high precision
+#' #> 1 demo_gender prop  ppt     951     55.2  1.61  2.92  3.16 high precision
+#' #> 2 nps_value   mean  points 1000      7.56 0.06  0.74  0.11 high precision
 #'
-#' diagnose(consumer_survey, dplyr::starts_with("ratings_"))
+#' diagnose(podracing_survey, starts_with("ratings_"))
 #' @export
 diagnose <- function(data = NULL, ..., type = c("auto", "mean", "prop"),
                      by = NULL, z = 1.96, digits = 2) {
-  data <- resolve_data(data)
+  rd <- resolve_data_dots(rlang::enquo(data), rlang::enquos(...))
+  data <- rd$data
   type <- match.arg(type)
-  vars <- names(dplyr::select(data, ...))
+  vars <- names(dplyr::select(data, !!!rd$dots))
   if (length(vars) == 0L) {
     stop("Select at least one column to diagnose.", call. = FALSE)
   }
@@ -339,11 +340,12 @@ is_categorical_like <- function(x) {
 #' @family diagnostics
 #' @seealso [diagnose()], [rse_rating()].
 #' @examples
-#' precision_summary(consumer_survey)
+#' precision_summary(podracing_survey)
 #' @export
 precision_summary <- function(data = NULL, ..., z = 1.96) {
-  data <- resolve_data(data)
-  vars <- names(dplyr::select(data, ...))
+  rd <- resolve_data_dots(rlang::enquo(data), rlang::enquos(...))
+  data <- rd$data
+  vars <- names(dplyr::select(data, !!!rd$dots))
   if (length(vars) == 0L) vars <- names(data)
 
   keep <- vapply(vars, function(v) {

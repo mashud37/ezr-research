@@ -29,10 +29,10 @@ Pair it with \code{\link[=set_weights]{set_weights()}}'s reported design effect 
 precision the weighting costs.
 }
 \examples{
-w <- weight_vector(consumer_survey,
+w <- weight_vector(podracing_survey,
                    c(variable = "demo_gender",
-                     "As a man" = 0.49, "As a woman" = 0.50,
-                     "Non-binary person" = 0.01))
+                     "Male" = 0.49, "Female" = 0.50,
+                     "Non-binary" = 0.01))
 round(range(w), 2)
 }
 \seealso{

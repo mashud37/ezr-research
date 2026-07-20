@@ -41,7 +41,7 @@ any percentage in the study can be. See \code{vignette("ezrsurvey")} for the
 rationale behind the relative-standard-error reliability bands.
 }
 \examples{
-precision_summary(consumer_survey)
+precision_summary(podracing_survey)
 }
 \seealso{
 \code{\link[=diagnose]{diagnose()}}, \code{\link[=rse_rating]{rse_rating()}}.

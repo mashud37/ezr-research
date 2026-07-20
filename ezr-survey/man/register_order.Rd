@@ -41,12 +41,12 @@ interactively for the session, or store orders in a profile with
 \examples{
 register_order(
   "education",
-  levels = c("Less than high school", "High school or equivalent",
-             "Some college but no degree", "Associate degree",
-             "Bachelor degree", "Masters degree or higher"),
+  levels = c("Primary or less", "Lower secondary", "Upper secondary",
+             "Short-cycle tertiary", "Bachelor or equivalent",
+             "Master or equivalent", "Doctoral or equivalent"),
   vars = "demo_edu"
 )
-calc_percentage(consumer_survey, demo_edu)   # rows now in education order
+calc_percentage(podracing_survey, demo_edu)   # rows now in education order
 remove_order("education")
 }
 \seealso{

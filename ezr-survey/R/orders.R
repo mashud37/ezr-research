@@ -36,12 +36,12 @@
 #' @examples
 #' register_order(
 #'   "education",
-#'   levels = c("Less than high school", "High school or equivalent",
-#'              "Some college but no degree", "Associate degree",
-#'              "Bachelor degree", "Masters degree or higher"),
+#'   levels = c("Primary or less", "Lower secondary", "Upper secondary",
+#'              "Short-cycle tertiary", "Bachelor or equivalent",
+#'              "Master or equivalent", "Doctoral or equivalent"),
 #'   vars = "demo_edu"
 #' )
-#' calc_percentage(consumer_survey, demo_edu)   # rows now in education order
+#' calc_percentage(podracing_survey, demo_edu)   # rows now in education order
 #' remove_order("education")
 #' @export
 register_order <- function(name, levels, vars = NULL, prefixes = NULL,
@@ -180,7 +180,7 @@ apply_order <- function(x, name = NULL, var = NULL) {
   if (is.null(levels)) {
     return(x)
   }
-  factor(as.character(x), levels = levels)
+  factor(as.character(x), levels = levels, ordered = TRUE)
 }
 
 #' Register a set of common ordinal scales
@@ -190,7 +190,7 @@ apply_order <- function(x, name = NULL, var = NULL) {
 #' box. Override any of them afterwards with [register_order()].
 #'
 #' Registers: `likert_bad_good`, `likert_agree`, `frequency`, `likelihood` and
-#' `education_us`.
+#' `education_isced`.
 #'
 #' @return Invisibly the names registered.
 #' @family config
@@ -212,13 +212,13 @@ register_order_presets <- function() {
                  c("Very unlikely", "Unlikely", "Not sure", "Likely",
                    "Very likely"),
                  vars = "satis_return")
-  register_order("education_us",
-                 c("Less than high school", "High school or equivalent",
-                   "Some college but no degree", "Associate degree",
-                   "Bachelor degree", "Masters degree or higher"),
+  register_order("education_isced",
+                 c("Primary or less", "Lower secondary", "Upper secondary",
+                   "Short-cycle tertiary", "Bachelor or equivalent",
+                   "Master or equivalent", "Doctoral or equivalent"),
                  vars = c("demo_edu", "education"), prefixes = "edu_")
   invisible(c("likert_bad_good", "likert_agree", "frequency",
-              "likelihood", "education_us"))
+              "likelihood", "education_isced"))
 }
 
 # Internal: register orders supplied as a config list (from a YAML profile).

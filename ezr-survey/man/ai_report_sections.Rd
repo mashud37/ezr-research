@@ -4,14 +4,28 @@
 \alias{ai_report_sections}
 \title{Summarise several tables in one pipeline}
 \usage{
-ai_report_sections(sections, provider = "openai", model = NULL, ...)
+ai_report_sections(
+  sections,
+  provider = "openai",
+  model = NULL,
+  chat = NULL,
+  context = NULL,
+  ...
+)
 }
 \arguments{
 \item{sections}{A named list. Each element is either a data frame (summarised
 with the default template) or a list with elements \code{data}, optional
-\code{template}, \code{instructions} and \code{title}.}
+\code{template}, \code{instructions}, \code{title} and \code{context}.}
 
 \item{provider, model, ...}{Passed to \code{\link[=ai_summarise]{ai_summarise()}}.}
+
+\item{chat}{An existing \code{\link[=ai_chat]{ai_chat()}} object reused across all sections. If
+\code{NULL} (default), each section opens a fresh chat with its template's
+system prompt.}
+
+\item{context}{Default survey context from \code{\link[=ai_context]{ai_context()}} applied to every
+section that does not carry its own.}
 }
 \value{
 A named list of summary strings, one per section.
@@ -19,25 +33,28 @@ A named list of summary strings, one per section.
 \description{
 Runs \code{\link[=ai_summarise]{ai_summarise()}} over a named list of report sections, returning a named
 list of summaries -- a convenient way to draft every section of a report at
-once. Each section gets its own fresh chat so summaries stay independent.
+once. By default each section gets its own fresh chat so summaries stay
+independent; pass \code{chat} to reuse one connection for the whole run.
 }
 \examples{
 \dontrun{
+ctx <- ai_context(podracing_survey, fieldwork = "Simulated data")
 ai_report_sections(
   list(
-    gender = calc_percentage(consumer_survey, demo_gender),
-    nps = list(data = calc_nps(consumer_survey, nps_value),
+    gender = calc_percentage(podracing_survey, demo_gender),
+    nps = list(data = calc_nps(podracing_survey, nps_value),
                template = "exec_summary")
   ),
-  provider = "openai"
+  provider = "openai", context = ctx
 )
 }
 }
 \seealso{
-\code{\link[=ai_summarise]{ai_summarise()}}.
+\code{\link[=ai_summarise]{ai_summarise()}}, \code{\link[=ai_context]{ai_context()}}.
 
 Other ai:
 \code{\link[=ai_chat]{ai_chat()}},
+\code{\link[=ai_context]{ai_context()}},
 \code{\link[=ai_summarise]{ai_summarise()}},
 \code{\link[=delete_llm_key]{delete_llm_key()}},
 \code{\link[=get_llm_key]{get_llm_key()}},

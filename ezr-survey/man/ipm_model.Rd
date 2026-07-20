@@ -28,8 +28,8 @@ recoding.}
 }
 \value{
 A \link[tibble:tibble]{tibble} with \code{feature}, \code{importance},
-\code{performance} and \code{perf_class} (the rounded performance as a 1-5 factor,
-used for colouring).
+\code{performance} and \code{perf_class} (the performance band as a 1-5 factor, from
+its integer part so a 3.57 mean sits in band 3, used for colouring).
 }
 \description{
 Combines driver \strong{importance} (relative weights against \code{outcome}) with
@@ -44,11 +44,12 @@ against the other (\code{\link[=plot_ipm]{plot_ipm()}}) reveals priorities: high
 low-performance features are where to invest. Worded rating columns are mapped
 to 1--5 with \code{\link[=recode_likert]{recode_likert()}} automatically (\code{recode = TRUE}); the prefix is
 stripped from feature names; and \code{perf_class} buckets performance into a 1--5
-factor for colouring. Requires the suggested \code{rwa} package.
+factor by its integer part (a 3.57 mean is band 3, not 4) for colouring.
+Requires the suggested \code{rwa} package.
 }
 \examples{
 \dontshow{if (requireNamespace("rwa", quietly = TRUE)) withAutoprint(\{ # examplesIf}
-ipm_model(consumer_survey, nps_value, "ratings_")
+ipm_model(podracing_survey, nps_value, "ratings_")
 \dontshow{\}) # examplesIf}
 }
 \seealso{

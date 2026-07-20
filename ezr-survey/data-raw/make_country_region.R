@@ -6,13 +6,13 @@ suppressPackageStartupMessages({
   library(dplyr)
 })
 
-country_region <- read_csv("country_region.csv", show_col_types = FALSE) |>
+country_region <- read_csv("country_region.csv", show_col_types = FALSE) %>%
   # Keep a clean country -> region/subregion lookup; non-answer rows are handled
   # in recode_region() rather than carried as data.
-  filter(region != "Prefer not to answer") |>
-  mutate(across(everything(), trimws)) |>
-  distinct(country, .keep_all = TRUE) |>
-  arrange(region, subregion, country) |>
+  filter(region != "Prefer not to answer") %>%
+  mutate(across(everything(), trimws)) %>%
+  distinct(country, .keep_all = TRUE) %>%
+  arrange(region, subregion, country) %>%
   tibble::as_tibble()
 
 if (!dir.exists("data")) dir.create("data")

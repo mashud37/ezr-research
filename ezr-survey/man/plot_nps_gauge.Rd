@@ -4,7 +4,13 @@
 \alias{plot_nps_gauge}
 \title{Score gauge with decision bands and a value marker}
 \usage{
-plot_nps_gauge(score, scale = c("nps", "rating"), title = NULL, height = 0.5)
+plot_nps_gauge(
+  score,
+  scale = c("nps", "rating"),
+  title = NULL,
+  height = 0.5,
+  label_size = NULL
+)
 }
 \arguments{
 \item{score}{The score to mark (NPS on -100..100, or a mean rating on 1..5).}
@@ -15,6 +21,9 @@ limits.}
 \item{title}{Optional title; a sensible default is generated from \code{score}.}
 
 \item{height}{Bar thickness in plot units. Defaults to \code{0.5}.}
+
+\item{label_size}{Band-label text size. \code{NULL} (default) matches the theme's
+base font size (11 pt).}
 }
 \value{
 A ggplot object.
@@ -31,7 +40,7 @@ a -100..100 scale banded from needs-work to excellent; \code{"rating"} uses a 1.
 scale with BAD/OK/GOOD bands. Pair it with \code{\link[=calc_nps]{calc_nps()}} for the score.
 }
 \examples{
-nps <- calc_nps(consumer_survey, nps_value)$nps
+nps <- calc_nps(podracing_survey, nps_value)$nps
 p <- plot_nps_gauge(nps)
 p_rating <- plot_nps_gauge(3.8, scale = "rating")
 }

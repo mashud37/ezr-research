@@ -38,6 +38,9 @@ summarise_cell_wtd <- function(x, w, na_rm) {
 #'   for percentages, `2` when `value` is supplied.
 #' @param na_rm Drop blanks / non-answers in `x`, `y` (and `NA` in `value`).
 #'   Default `TRUE`.
+#' @param drop Optional character vector of answer values to remove from both `x`
+#'   and `y` before tabulating (e.g. `c("Other")`), matched case-insensitively.
+#'   Defaults to the `drop_answers` option. See [drop_items()].
 #' @param weights Survey weighting: `NULL` (default) uses the session scheme from
 #'   [set_weights()] if set; `FALSE` forces unweighted; or pass an ad-hoc scheme.
 #'   When weighting is active the cells default to weighted values -- weighted
@@ -60,22 +63,24 @@ summarise_cell_wtd <- function(x, w, na_rm) {
 #' @seealso [calc_percentage()], [compare_values()], [register_order()].
 #' @examples
 #' # counts
-#' crosstab(consumer_survey, demo_gender, region)
+#' crosstab(podracing_survey, demo_gender, region)
 #'
 #' # row percentages: gender split within each region (each row ~ 100)
-#' crosstab(consumer_survey, region, demo_gender, cell = "row_pct")
+#' crosstab(podracing_survey, region, demo_gender, cell = "row_pct")
 #'
 #' # mean NPS for each region x gender cell
-#' crosstab(consumer_survey, region, demo_gender, value = nps_value, fn = mean)
+#' crosstab(podracing_survey, region, demo_gender, value = nps_value, fn = mean)
 #' @export
 crosstab <- function(data = NULL, x, y, cell = c("count", "row_pct", "col_pct",
                                           "total_pct"),
                      value = NULL, fn = mean, wide = TRUE, digits = NULL,
-                     na_rm = TRUE, weights = NULL) {
-  data <- resolve_data(data)
+                     na_rm = TRUE, drop = NULL, weights = NULL) {
+  r <- resolve_data_columns(rlang::enquo(data),
+                            list(rlang::enquo(x), rlang::enquo(y)), missing(y))
+  data <- r$data
   cell <- match.arg(cell)
-  x_name <- rlang::as_name(rlang::ensym(x))
-  y_name <- rlang::as_name(rlang::ensym(y))
+  x_name <- col_label(r$cols[[1]])
+  y_name <- col_label(r$cols[[2]])
   value_q <- rlang::enquo(value)
   has_value <- !rlang::quo_is_null(value_q)
   if (is.null(digits)) digits <- if (has_value) 2 else 0
@@ -90,6 +95,8 @@ crosstab <- function(data = NULL, x, y, cell = c("count", "row_pct", "col_pct",
     d[[y_name]] <- na_blank(d[[y_name]])
     d <- d[!is.na(d[[x_name]]) & !is.na(d[[y_name]]), , drop = FALSE]
   }
+  d <- drop_rows(d, x_name, drop)
+  d <- drop_rows(d, y_name, drop)
 
   if (has_value) {
     value_name <- rlang::as_name(rlang::ensym(value))

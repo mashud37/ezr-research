@@ -39,6 +39,11 @@ amber -> green for ratings (worse to better), a matching three-colour NPS
 scale, a sequential blue for ordered brand questions, and a neutral grey for
 plain single-series bars. Use them directly, or via the
 \code{\link[=scale_fill_rating]{scale_fill_rating()}} / \code{\link[=scale_fill_nps]{scale_fill_nps()}} ggplot2 scales.
+
+\code{pal_rating} follows the same thresholds as \code{\link[=bands_rating_3]{bands_rating_3()}}: ratings of 1
+and 2 are BAD (red), 3 is OK (amber), 4 and 5 are GOOD (green). Keeping the
+two in step matters -- a point coloured amber sitting inside a red band is
+the kind of contradiction that quietly misleads a reader.
 }
 \examples{
 pal_rating

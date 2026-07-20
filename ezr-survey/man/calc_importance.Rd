@@ -4,7 +4,13 @@
 \alias{calc_importance}
 \title{Driver importance via relative weights analysis}
 \usage{
-calc_importance(data = NULL, outcome, predictors)
+calc_importance(
+  data = NULL,
+  outcome,
+  predictors,
+  recode = TRUE,
+  likert_levels = c("Very bad", "Bad", "Ok", "Good", "Very good")
+)
 }
 \arguments{
 \item{data}{A data frame.}
@@ -13,6 +19,12 @@ calc_importance(data = NULL, outcome, predictors)
 
 \item{predictors}{The predictor columns, using tidyselect (e.g.
 \code{starts_with("ratings_")}).}
+
+\item{recode}{If \code{TRUE} (default), character predictor columns are mapped to
+1-5 with \code{\link[=recode_likert]{recode_likert()}}; numeric columns are left as-is.}
+
+\item{likert_levels}{Scale wordings passed to \code{\link[=recode_likert]{recode_likert()}} when
+recoding.}
 }
 \value{
 A \link[tibble:tibble]{tibble} with \code{feature} and \code{importance}.
@@ -27,17 +39,13 @@ Relative weights analysis (Johnson's epsilon) shares out the model's explained
 variance between correlated predictors, which ordinary regression
 coefficients handle poorly. The weights are rescaled to sum to ~100, so each
 feature's \code{importance} reads as "this feature accounts for X\% of what drives
-the outcome". Only complete cases are used, and all columns are coerced to
-numeric (recode worded ratings with \code{\link[=recode_likert]{recode_likert()}} first if needed). Most
-users call \code{\link[=ipm_model]{ipm_model()}}, which pairs this with performance for the
-importance/performance matrix.
+the outcome". Only complete cases are used. Worded rating columns are recoded
+to 1-5 automatically (\code{recode = TRUE}). Most users call \code{\link[=ipm_model]{ipm_model()}}, which
+pairs this with performance for the importance/performance matrix.
 }
 \examples{
 \dontshow{if (requireNamespace("rwa", quietly = TRUE)) withAutoprint(\{ # examplesIf}
-# predictors must be numeric -- recode worded ratings first (or use ipm_model())
-d <- consumer_survey
-d[paste0("r_", 1:5)] <- lapply(d[grep("^ratings_", names(d))], recode_likert)
-calc_importance(d, nps_value, dplyr::starts_with("r_"))
+calc_importance(podracing_survey, nps_value, starts_with("ratings_"))
 \dontshow{\}) # examplesIf}
 }
 \seealso{

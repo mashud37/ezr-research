@@ -37,13 +37,13 @@ full 0--10 distribution chart and \code{\link[=plot_nps_gauge]{plot_nps_gauge()}
 gauge.
 }
 \examples{
-calc_nps(consumer_survey, nps_value)
+calc_nps(podracing_survey, nps_value)
 #> # A tibble: 1 x 2
 #>       n   nps
 #>   <int> <dbl>
-#> 1  1000     3
+#> 1  1000     7
 
-calc_nps(consumer_survey, nps_value, by = region)
+calc_nps(podracing_survey, nps_value, by = region)
 }
 \seealso{
 \code{\link[=nps_group]{nps_group()}}, \code{\link[=plot_nps]{plot_nps()}}, \code{\link[=plot_nps_gauge]{plot_nps_gauge()}}.

@@ -42,8 +42,7 @@ left to ggplot2. Labels default to whole-percent strings via \code{\link[=label_
 rarely add it by hand -- but it is exported for custom charts.
 }
 \examples{
-df <- calc_percentage(consumer_survey, demo_gender)
-library(ggplot2)
+df <- calc_percentage(podracing_survey, demo_gender)
 ggplot(df, aes(demo_gender, pct)) +
   geom_col() +
   scale_y_pct(df$pct)            # axis capped at a tidy multiple, "\%" labels

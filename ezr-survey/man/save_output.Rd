@@ -4,12 +4,14 @@
 \alias{save_output}
 \title{Quick-save any ezrsurvey output (plot or table)}
 \usage{
-save_output(x, path, ...)
+save_output(x, path = NULL, ...)
 }
 \arguments{
 \item{x}{A ggplot, a data frame, or a (named) list of data frames.}
 
-\item{path}{Output path; the extension picks the format.}
+\item{path}{Output path; the extension picks the format. If \code{NULL}
+(default), the file lands in the working directory's \verb{outputs/} folder
+(\code{outputs/plot.png} or \code{outputs/data.csv}).}
 
 \item{...}{Passed to \code{\link[=save_plot]{save_plot()}} or \code{\link[=save_data]{save_data()}}.}
 }
@@ -23,11 +25,11 @@ pipe when you do not want to think about which saver to call.
 }
 \examples{
 tmp_csv <- tempfile(fileext = ".csv")
-calc_percentage(consumer_survey, demo_gender) |> save_output(tmp_csv)
+calc_percentage(podracing_survey, demo_gender) \%>\% save_output(tmp_csv)
 
 \donttest{
 tmp_png <- tempfile(fileext = ".png")
-plot_bars(calc_percentage(consumer_survey, demo_gender)) |> save_output(tmp_png)
+plot_bars(calc_percentage(podracing_survey, demo_gender)) \%>\% save_output(tmp_png)
 }
 }
 \seealso{

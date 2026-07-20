@@ -2,19 +2,23 @@
 % Please edit documentation in R/plot.R
 \name{plot_bars}
 \alias{plot_bars}
-\title{Bar chart of a percentage table}
+\title{Bar chart of a percentage table (auto-laid-out)}
 \usage{
 plot_bars(
   data,
   label = NULL,
   value = pct,
-  flip = FALSE,
+  orientation = c("auto", "cols", "bars"),
+  sort = c("auto", "none", "asc", "desc"),
+  wrap = NULL,
+  flip = NULL,
   avg_line = FALSE,
   axis_labels = FALSE,
   unit = ezrsurvey_default("pct_axis_unit"),
   max = ezrsurvey_default("pct_axis_max"),
-  fill = pal_neutral,
-  title = NULL
+  fill = NULL,
+  title = NULL,
+  label_size = NULL
 )
 }
 \arguments{
@@ -25,8 +29,20 @@ non-\code{n}, non-value column is used.}
 
 \item{value}{Value column (unquoted). Defaults to \code{pct}.}
 
-\item{flip}{If \code{TRUE}, draw horizontal bars (labels to the right). Defaults to
-\code{FALSE}.}
+\item{orientation}{\code{"auto"} (default), \code{"cols"} (vertical) or \code{"bars"}
+(horizontal). \code{"auto"} picks horizontal bars when there are more than
+\code{bar_cols_max_items} items or a label longer than \code{bar_cols_max_label}
+characters (see \code{\link[=ezrsurvey_options]{ezrsurvey_options()}}).}
+
+\item{sort}{\code{"auto"} (default), \code{"none"}, \code{"asc"} or \code{"desc"}. \code{"auto"} orders
+bars by value so the longest is on top (bars) or on the left (cols), but
+leaves an intentional ordinal scale (an ordered factor, e.g. from a
+registered order) untouched.}
+
+\item{wrap}{Label wrap width in characters (\code{\link[stringr:str_wrap]{stringr::str_wrap()}}). \code{NULL}
+(default) uses \code{bar_wrap_cols} / \code{bar_wrap_bars} for the chosen orientation.}
+
+\item{flip}{Deprecated back-compat shortcut: \code{TRUE} forces \code{orientation = "bars"}, \code{FALSE} forces \code{"cols"}. \code{NULL} (default) defers to \code{orientation}.}
 
 \item{avg_line}{If \code{TRUE}, add a reference line at the mean value. Defaults to
 \code{FALSE}.}
@@ -40,9 +56,13 @@ hide it (the bars carry their own data labels).}
 \item{max}{Optional fixed y-axis maximum (e.g. \code{100}). Defaults to the
 \code{pct_axis_max} option (\code{NULL} = dynamic).}
 
-\item{fill}{Bar fill colour. Defaults to \link{pal_neutral}.}
+\item{fill}{Bar fill colour. \code{NULL} (default) uses the brand primary colour
+when a brand is set (see \code{\link[=use_brand]{use_brand()}}), else \link{pal_neutral}.}
 
 \item{title}{Optional plot title.}
+
+\item{label_size}{Data-label text size. \code{NULL} (default) steps down from
+\code{bar_label_size} as the number of bars grows (floored at \code{bar_size_min}).}
 }
 \value{
 A ggplot object.
@@ -50,21 +70,41 @@ A ggplot object.
 \description{
 Plots the output of \code{\link[=calc_percentage]{calc_percentage()}} (or \code{\link[=calc_percentage_multi]{calc_percentage_multi()}}) as a
 labelled bar chart, with a tidy auto-scaled axis (\code{\link[=nice_max]{nice_max()}}) and the
-ezrsurvey theme. Generalises the \code{bars_freq()} helper from the original reports.
+ezrsurvey theme. By default the \strong{layout is chosen for you}: vertical columns
+for a few short labels, horizontal bars for many or long ones, with long
+labels wrapped, the text size stepped down as bars multiply, and the bars
+ordered so the longest sits at the top (bars) or on the left (cols).
+Generalises the \code{bars_freq()} helper from the original reports.
 }
 \details{
 Expects a summary table (from \code{\link[=calc_percentage]{calc_percentage()}} and friends), not raw survey
 rows. The label column is auto-detected as the first non-\code{n}, non-value column,
-so a piped percentage table just works. The axis ceiling is chosen by
-\code{\link[=nice_max]{nice_max()}} / the \verb{pct_axis_*} options so data labels never collide with the
-panel top, and the bars carry their own percentage labels (the \verb{\%} axis is
-hidden unless \code{axis_labels = TRUE}). Add decision guidance with
+so a piped percentage table just works. The layout decisions all read from the
+\verb{bar_*} options (\code{\link[=ezrsurvey_options]{ezrsurvey_options()}}): \code{orientation = "auto"} switches to
+horizontal bars once there are many or long labels, labels are wrapped to
+\code{bar_wrap_cols} / \code{bar_wrap_bars}, the data-label size steps down with the
+bar count, and \code{sort = "auto"} puts the longest bar at the top (bars) or on the
+left (cols) -- unless the label column is an ordered factor (a registered or
+explicit order), which is preserved. The axis ceiling is chosen by \code{\link[=nice_max]{nice_max()}}
+/ the \verb{pct_axis_*} options so data labels never collide with the panel top, and
+the \verb{\%} axis is hidden unless \code{axis_labels = TRUE}. Add decision guidance with
 \code{\link[=annotate_bands]{annotate_bands()}}.
+
+Bars are drawn to a constant thickness regardless of how many there are
+(\code{bar_width} / \code{bar_ref_items}, see \code{\link[=ezrsurvey_options]{ezrsurvey_options()}}), so a three-answer
+chart and a ten-answer chart look like they belong in the same deck instead
+of the first one's bars turning into slabs.
 }
 \examples{
-p <- calc_percentage(consumer_survey, demo_gender, sort = "desc") |>
-  plot_bars()
-# p is a ggplot object; print(p) to draw it
+# auto layout: few short labels -> vertical columns, largest on the left
+p <- calc_percentage(podracing_survey, demo_gender) \%>\% plot_bars()
+
+# many long labels -> horizontal bars, wrapped, largest on top
+p2 <- calc_percentage(podracing_survey, fav_driver) \%>\% plot_bars()
+
+# an ordinal scale keeps its order; force horizontal with orientation
+p3 <- calc_percentage(podracing_survey, demo_edu) \%>\%
+  plot_bars(orientation = "bars")
 }
 \seealso{
 \code{\link[=calc_percentage]{calc_percentage()}}, \code{\link[=scale_y_pct]{scale_y_pct()}}, \code{\link[=annotate_bands]{annotate_bands()}}.

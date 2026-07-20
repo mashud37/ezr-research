@@ -55,6 +55,9 @@ against another variable.
 cl <- cluster(ecommerce, k = 4,
               vars = c(recency_days, frequency, monetary, tenure_months))
 cl
+
+# `personas` is built to cluster cleanly; k is found automatically
+cluster(personas, vars = spend_index:browse_minutes)
 \dontshow{\}) # examplesIf}
 }
 \seealso{

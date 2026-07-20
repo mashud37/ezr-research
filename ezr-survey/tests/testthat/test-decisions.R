@@ -6,7 +6,7 @@ test_that("band presets have the required shape", {
 })
 
 test_that("annotate_bands adds layers to a plot", {
-  base <- ggplot2::ggplot(consumer_survey, ggplot2::aes(demo_age, nps_value)) +
+  base <- ggplot2::ggplot(podracing_survey, ggplot2::aes(demo_age, nps_value)) +
     ggplot2::geom_point()
   p <- annotate_bands(base, bands_rating_3(), axis = "x", at = 10)
   expect_s3_class(p, "ggplot")
@@ -15,15 +15,41 @@ test_that("annotate_bands adds layers to a plot", {
 })
 
 test_that("annotate_bands validates the band spec", {
-  base <- ggplot2::ggplot(consumer_survey, ggplot2::aes(demo_age, nps_value)) +
+  base <- ggplot2::ggplot(podracing_survey, ggplot2::aes(demo_age, nps_value)) +
     ggplot2::geom_point()
   expect_error(annotate_bands(base, data.frame(x = 1), at = 1))
 })
 
 test_that("mark_value adds a reference line", {
-  base <- ggplot2::ggplot(consumer_survey, ggplot2::aes(demo_age, nps_value)) +
+  base <- ggplot2::ggplot(podracing_survey, ggplot2::aes(demo_age, nps_value)) +
     ggplot2::geom_point()
   p <- mark_value(base, 5, axis = "x")
   expect_gt(length(p$layers), length(base$layers))
   expect_no_error(ggplot2::ggplot_build(p))
+})
+
+test_that("band lookup colours a value by the band it sits in", {
+  b <- bands_rating_3()   # BAD 1-3 (red), OK 3-4 (amber), GOOD 4-5 (green)
+  expect_equal(band_label(c(1.2, 2.4, 2.9), b), rep("BAD", 3))
+  expect_equal(band_label(3, b), "OK")
+  expect_equal(band_label(c(4, 5), b), c("GOOD", "GOOD"))
+  # a mid-2 rating is red, never the amber of the neighbouring band
+  expect_equal(band_colour(2.4, b), b$colour[b$label == "BAD"])
+  # out-of-range values clamp to the end bands instead of returning NA
+  expect_equal(band_label(0, b), "BAD")
+  expect_equal(band_label(99, b), "GOOD")
+})
+
+test_that("the rating palette agrees with the 3-band thresholds", {
+  b <- bands_rating_3()
+  bad <- b$colour[b$label == "BAD"]
+  ok <- b$colour[b$label == "OK"]
+  # 1 and 2 both sit in BAD, so both must carry the BAD colour -- a 2 shaded
+  # amber is the miscolouring this guards against
+  expect_equal(unname(pal_rating[["1"]]), bad)
+  expect_equal(unname(pal_rating[["2"]]), bad)
+  expect_equal(unname(pal_rating[["3"]]), ok)
+  # 4 and 5 are both good greens (two shades, distinct from bad and ok)
+  expect_false(unname(pal_rating[["4"]]) %in% c(bad, ok))
+  expect_false(unname(pal_rating[["5"]]) %in% c(bad, ok))
 })

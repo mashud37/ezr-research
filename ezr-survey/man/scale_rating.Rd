@@ -13,9 +13,10 @@ scale_colour_rating(distinct = FALSE, ...)
 scale_color_rating(distinct = FALSE, ...)
 }
 \arguments{
-\item{distinct}{If \code{TRUE}, use a fully distinct 5-colour ramp (points 1 and 2
-differ); if \code{FALSE} (default) use the report's \code{pal_rating} where 2 and 3
-share amber. The distinct ramp suits stacked bars.}
+\item{distinct}{If \code{TRUE}, use a fully distinct 5-colour ramp where each
+point has its own shade; if \code{FALSE} (default) use \link{pal_rating}, where 1 and
+2 share red and 4 and 5 share green. The distinct ramp suits stacked bars,
+where neighbouring segments need to be told apart.}
 
 \item{...}{Passed to \code{\link[ggplot2:scale_fill_manual]{ggplot2::scale_fill_manual()}} /
 \code{\link[ggplot2:scale_colour_manual]{ggplot2::scale_colour_manual()}}.}
@@ -28,13 +29,13 @@ Manual ggplot2 scales mapping a 1-5 rating (as a factor or its character
 codes \code{"1"}..\code{"5"}) onto the \link{pal_rating} red-amber-green palette.
 }
 \details{
-Maps the rating codes \code{"1"}..\code{"5"} onto \link{pal_rating}. With \code{distinct = FALSE}
-(default) points 2 and 3 share amber, matching the source reports; set
+Maps the rating codes \code{"1"}..\code{"5"} onto \link{pal_rating}, which uses the
+\code{\link[=bands_rating_3]{bands_rating_3()}} thresholds (1-2 bad, 3 ok, 4-5 good). Set
 \code{distinct = TRUE} for a fully distinct 5-colour ramp, which reads better on
-stacked bars. \code{scale_color_rating()} is an alias of \code{scale_colour_rating()}.
+stacked bars where adjacent segments must be separable.
+\code{scale_color_rating()} is an alias of \code{scale_colour_rating()}.
 }
 \examples{
-library(ggplot2)
 df <- data.frame(feature = c("a", "b"), pct = c(60, 40), rating = c(4, 2))
 ggplot(df, aes(feature, pct, fill = factor(rating))) +
   geom_col() +

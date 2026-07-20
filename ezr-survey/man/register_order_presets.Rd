@@ -16,7 +16,7 @@ box. Override any of them afterwards with \code{\link[=register_order]{register_
 }
 \details{
 Registers: \code{likert_bad_good}, \code{likert_agree}, \code{frequency}, \code{likelihood} and
-\code{education_us}.
+\code{education_isced}.
 }
 \examples{
 register_order_presets()

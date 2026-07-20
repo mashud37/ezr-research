@@ -11,14 +11,15 @@ sample_comments(
   min_chars = 30,
   max_chars = 400,
   exclude = NULL,
-  by_column = TRUE
+  by_column = TRUE,
+  seed = NULL
 )
 }
 \arguments{
 \item{data}{A data frame.}
 
 \item{...}{One or more comment columns, using tidyselect (e.g. \code{nps_com},
-\code{show_com}, or \code{dplyr::ends_with("_com")}).}
+\code{show_com}, or \code{ends_with("_com")}).}
 
 \item{n}{Number of comments to sample. With \code{by_column = TRUE}, this is per
 column.}
@@ -33,6 +34,9 @@ comments matching any are dropped (e.g. \code{c("friend", "recommend")}).}
 
 \item{by_column}{If \code{TRUE} (default), sample \code{n} from each column; if \code{FALSE},
 sample \code{n} from the pooled comments.}
+
+\item{seed}{Optional integer for reproducible sampling (the RNG state is
+restored afterwards).}
 }
 \value{
 A \link[tibble:tibble]{tibble} with \code{source}, \code{comment} and \code{length}.
@@ -52,7 +56,7 @@ source column (e.g. an even split across \code{nps_com} and \code{show_com}); wi
 set that is varied rather than uniformly random, use \code{\link[=sample_comments_diverse]{sample_comments_diverse()}}.
 }
 \examples{
-sample_comments(consumer_survey, nps_com, show_com, n = 3)
+sample_comments(podracing_survey, nps_com, show_com, n = 3)
 }
 \seealso{
 \code{\link[=sample_comments_diverse]{sample_comments_diverse()}} for a diversity-aware sample,

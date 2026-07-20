@@ -62,29 +62,31 @@ ecommerce <- tibble(
 
 # ---- reviews: small open-text corpus (Phase 2 NLP) ---------------------------
 set.seed(11)
-pos <- c(
-  "Great quality and fast delivery, would buy again.",
-  "Excellent value for money and the support team was helpful.",
-  "Easy to use and works exactly as described.",
-  "Love the product, exceeded my expectations.",
-  "Fantastic service from start to finish."
-)
-neg <- c(
-  "Poor quality, broke after a week of use.",
-  "Delivery was late and customer service ignored my emails.",
-  "Overpriced for what you get, disappointed.",
-  "Difficult to set up and the instructions were unclear.",
-  "Returned it, did not match the description at all."
-)
-neutral <- c(
-  "It is okay, does the job but nothing special.",
-  "Average product, average price, average experience.",
-  "Works fine so far, will see how it holds up."
-)
+# Every non-blank review is a hand-written line drawn WITHOUT replacement from
+# the per-sentiment banks in data-raw/comments/, so no line ever repeats in the
+# corpus. Some rows are left blank, as in a real export where not every rating
+# carries written feedback.
+read_bank <- function(name) {
+  lines <- trimws(readLines(file.path("data-raw", "comments", name), warn = FALSE))
+  unique(lines[nzchar(lines)])
+}
+make_popper <- function(pool) {
+  pool <- sample(pool)
+  i <- 0L
+  function() {
+    i <<- i + 1L
+    if (i > length(pool)) "" else pool[i]
+  }
+}
+pos_pop <- make_popper(read_bank("reviews_pos.txt"))
+neg_pop <- make_popper(read_bank("reviews_neg.txt"))
+neutral_pop <- make_popper(read_bank("reviews_neutral.txt"))
 k <- 240
 rating <- sample(1:5, k, replace = TRUE, prob = c(.12, .13, .2, .3, .25))
 text <- vapply(rating, function(r) {
-  if (r >= 4) sample(pos, 1) else if (r <= 2) sample(neg, 1) else sample(neutral, 1)
+  if (r >= 4) { if (stats::runif(1) < .6) pos_pop() else "" }
+  else if (r <= 2) { if (stats::runif(1) < .6) neg_pop() else "" }
+  else { if (stats::runif(1) < .4) neutral_pop() else "" }
 }, character(1))
 reviews <- tibble(
   review_id = sprintf("V%04d", seq_len(k)),
@@ -93,9 +95,61 @@ reviews <- tibble(
   text = text
 )
 
+# ---- personas: math-generated segments, clean for every clustering method ----
+# Five consumer personas drawn as well-separated Gaussian blobs in six
+# informative dimensions (between-cluster distance >> within-cluster spread), so
+# kmeans, hclust and pam all recover them and the silhouette peaks at the true
+# k = 5. A redundant column (`pages_viewed`, which tracks browsing time) is added
+# so PCA / scree show a clean low-rank structure without disturbing the segments.
+# MASS::mvrnorm draws each blob; the ground-truth label is kept in `persona` for
+# validating recovered clusters.
+set.seed(123)
+persona_names <- c("Premium loyalist", "Bargain hunter", "Occasional browser",
+                   "Family shopper", "New minimalist")
+features <- c("spend_index", "visit_freq", "basket_size",
+              "discount_sensitivity", "loyalty_score", "browse_minutes")
+centroids <- matrix(
+  c(85,  8, 22, 15, 90, 12,
+    35, 14,  9, 88, 30, 28,
+    20,  3,  5, 45, 20, 55,
+    65, 18, 30, 55, 60,  8,
+    42,  5,  7, 28, 38, 18),
+  nrow = 5, byrow = TRUE, dimnames = list(persona_names, features)
+)
+within_sd <- c(spend_index = 6, visit_freq = 1.4, basket_size = 2.2,
+               discount_sensitivity = 6, loyalty_score = 5, browse_minutes = 3.8)
+sizes <- c(190, 165, 150, 130, 105)
+
+blocks <- lapply(seq_len(nrow(centroids)), function(i) {
+  X <- MASS::mvrnorm(sizes[i], mu = centroids[i, ], Sigma = diag(within_sd^2))
+  as.data.frame(X)
+})
+mat <- do.call(rbind, blocks)
+persona <- rep(persona_names, sizes)
+
+personas <- tibble(
+  customer_id = sprintf("P%04d", seq_len(nrow(mat))),
+  spend_index = round(clamp(mat$spend_index, 0, 120), 1),
+  visit_freq = as.integer(clamp(round(mat$visit_freq), 1, 40)),
+  basket_size = round(clamp(mat$basket_size, 1, 60), 1),
+  discount_sensitivity = round(clamp(mat$discount_sensitivity, 0, 100), 1),
+  loyalty_score = round(clamp(mat$loyalty_score, 0, 100), 1),
+  browse_minutes = round(clamp(mat$browse_minutes, 0, 120), 1),
+  # redundant: pages viewed tracks browsing time (correlated; little extra info)
+  pages_viewed = as.integer(clamp(round(0.9 * mat$browse_minutes +
+                                        stats::rnorm(nrow(mat), 4, 3)), 1, 120)),
+  persona = persona
+)
+# Shuffle so the blocks are not in cluster order, then renumber the ids.
+personas <- personas[sample(nrow(personas)), ]
+personas$customer_id <- sprintf("P%04d", seq_len(nrow(personas)))
+personas <- tibble::as_tibble(personas)
+
 if (!dir.exists("data")) dir.create("data")
 save(nps_drivers, file = "data/nps_drivers.rda", compress = "xz")
 save(ecommerce, file = "data/ecommerce.rda", compress = "xz")
 save(reviews, file = "data/reviews.rda", compress = "xz")
+save(personas, file = "data/personas.rda", compress = "xz")
 message("Wrote nps_drivers (", nrow(nps_drivers), "), ecommerce (",
-        nrow(ecommerce), "), reviews (", nrow(reviews), ").")
+        nrow(ecommerce), "), reviews (", nrow(reviews), "), personas (",
+        nrow(personas), ").")

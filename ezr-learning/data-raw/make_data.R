@@ -18,27 +18,31 @@ worded <- function(load, offset = 0) {
   c("Very bad", "Bad", "Ok", "Good", "Very good")[lvl]
 }
 
-pos <- c(
-  "Loved the rides and the staff were so friendly.",
-  "Great day out, clean park and short queues.",
-  "Fantastic value, the kids had an amazing time.",
-  "Best theme park visit we have had, will come back."
-)
-neg <- c(
-  "The queues were far too long and the food was cold.",
-  "Overpriced tickets and the staff seemed stressed.",
-  "Rides kept breaking down, very disappointing day.",
-  "Dirty bathrooms and rude staff, would not return."
-)
-neutral <- c(
-  "It was fine, nothing special but the kids enjoyed it.",
-  "Average park, decent rides but pricey food.",
-  "An okay day, some good rides and some long waits."
-)
+# Open-text comment, mostly blank as in real exports. Every non-blank comment is
+# a hand-written line drawn WITHOUT replacement from the per-sentiment banks in
+# data-raw/comments/, so no line ever repeats within the column. Promoters and
+# detractors comment more often than the indifferent middle.
+read_bank <- function(name) {
+  lines <- trimws(readLines(file.path("data-raw", "comments", name), warn = FALSE))
+  unique(lines[nzchar(lines)])
+}
+make_popper <- function(pool) {
+  pool <- sample(pool)
+  i <- 0L
+  function() {
+    i <<- i + 1L
+    if (i > length(pool)) "" else pool[i]
+  }
+}
+pos_pop <- make_popper(read_bank("theme_park_pos.txt"))
+neg_pop <- make_popper(read_bank("theme_park_neg.txt"))
+neutral_pop <- make_popper(read_bank("theme_park_neutral.txt"))
 
 nps <- as.integer(clamp(round(8.0 + latent * 1.4 + stats::rnorm(n, 0, 1.0)), 0, 10))
 comment <- vapply(nps, function(v) {
-  if (v >= 9) sample(pos, 1) else if (v <= 6) sample(neg, 1) else sample(neutral, 1)
+  if (v >= 9) { if (stats::runif(1) < .5) pos_pop() else "" }
+  else if (v <= 6) { if (stats::runif(1) < .5) neg_pop() else "" }
+  else { if (stats::runif(1) < .3) neutral_pop() else "" }
 }, character(1))
 
 theme_park <- tibble(

@@ -7,8 +7,8 @@
 report_add_slide(
   doc,
   title = NULL,
-  layout = "Title and Content",
-  master = "Office Theme",
+  layout = NULL,
+  master = NULL,
   heading_level = 1
 )
 }
@@ -17,32 +17,43 @@ report_add_slide(
 
 \item{title}{Optional slide title / heading text.}
 
-\item{layout, master}{PowerPoint layout and master names. Defaults to the
-standard \code{"Title and Content"} / \code{"Office Theme"}.}
+\item{layout, master}{PowerPoint layout and master names. \code{NULL} (default)
+picks the template's best content layout automatically (by inspecting
+placeholders, so corporate templates with renamed layouts work). Name a
+layout from \code{\link[=report_layouts]{report_layouts()}} to override.}
 
 \item{heading_level}{Word heading level (1-3). Defaults to \code{1}.}
 }
 \value{
-The updated document (invisibly side-effecting officer object).
+The updated document.
 }
 \description{
-For a \code{pptx} document this starts a new slide and sets its title; for a \code{docx}
-document it adds a heading paragraph.
+For a \code{pptx} document this starts a new slide and sets its title; for a
+\code{docx} document it adds a heading paragraph.
+}
+\details{
+Automatic selection scores every layout of the template: a title
+placeholder plus a single content placeholder is the ideal, and the layout's
+\emph{placeholders} decide -- not its (language-dependent) name. If the chosen
+layout has no title placeholder, the title is skipped with a warning rather
+than failing the build.
 }
 \examples{
 \dontrun{
-doc <- report_new("pptx") |> report_add_slide("Audience")
+doc <- report_new("pptx") \%>\% report_add_slide("Audience")
 }
 }
 \seealso{
-\code{\link[=report_new]{report_new()}}.
+\code{\link[=report_new]{report_new()}}, \code{\link[=report_layouts]{report_layouts()}}.
 
 Other reporting:
+\code{\link[=example_report]{example_report()}},
 \code{\link[=list_report_templates]{list_report_templates()}},
 \code{\link[=report_add_plot]{report_add_plot()}},
 \code{\link[=report_add_table]{report_add_table()}},
 \code{\link[=report_add_text]{report_add_text()}},
 \code{\link[=report_deck]{report_deck()}},
+\code{\link[=report_layouts]{report_layouts()}},
 \code{\link[=report_new]{report_new()}},
 \code{\link[=report_save]{report_save()}},
 \code{\link[=scaffold_report]{scaffold_report()}}

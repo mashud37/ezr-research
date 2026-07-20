@@ -28,7 +28,7 @@ test_that("na_blank honours the na_answers option", {
 test_that("plot_bars honours the pct_axis_max option", {
   withr::defer(reset_ezrsurvey_options())
   ezrsurvey_options(pct_axis_max = 100)
-  p <- calc_percentage(consumer_survey, demo_gender) |> plot_bars()
+  p <- calc_percentage(podracing_survey, demo_gender) %>% plot_bars()
   expect_equal(ggplot2::layer_scales(p)$y$get_limits(), c(0, 100))
 })
 

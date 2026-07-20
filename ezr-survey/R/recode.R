@@ -44,6 +44,49 @@ na_blank <- function(x, also = ezrsurvey_default("na_answers"), trim = TRUE) {
   x
 }
 
+#' Drop unwanted answer categories from a question
+#'
+#' Removes specific answer values -- typically catch-all or uninformative options
+#' such as "Other", "Don't know" or "Not applicable" -- by turning them into
+#' `NA`, so they fall out of counts, percentages and charts and the remaining
+#' percentages re-base on the answers you keep. The companion to [na_blank()]
+#' (which targets blanks and standard non-answers): use `drop_items()` for the
+#' substantive categories you simply do not want to show.
+#'
+#' @param x A character (or factor) vector.
+#' @param items Character vector of exact answer values to drop. Matching is
+#'   case-insensitive.
+#' @param trim Whether to trim surrounding whitespace before comparing. Defaults
+#'   to `TRUE`.
+#'
+#' @return A character vector the same length as `x`, with any value matching
+#'   `items` replaced by `NA`.
+#'
+#' @details
+#' `x` is coerced to character (so factors are handled) and, by default,
+#' whitespace-trimmed; any value equal (ignoring case) to one of `items` becomes
+#' `NA`. The summary helpers ([calc_percentage()], [calc_percentage_multi()],
+#' [calc_percentage_batch()]) and [crosstab()] take a `drop =` argument that
+#' applies this for you *before* counting, so the kept answers re-base to ~100%;
+#' set a session-wide default with `ezrsurvey_options(drop_answers = ...)`.
+#'
+#' @family recode
+#' @seealso [na_blank()], [calc_percentage()].
+#' @examples
+#' drop_items(c("Yes", "No", "Other", "Don't know"),
+#'            items = c("Other", "Don't know"))
+#' #> [1] "Yes" "No"  NA    NA
+#' @export
+drop_items <- function(x, items, trim = TRUE) {
+  x <- as.character(x)
+  if (is.null(items) || length(items) == 0L) {
+    return(x)
+  }
+  cmp <- if (trim) stringr::str_trim(x) else x
+  x[tolower(cmp) %in% tolower(items)] <- NA_character_
+  x
+}
+
 #' Bin a numeric vector into labelled groups
 #'
 #' A thin, survey-friendly wrapper around [base::cut()] that returns a character

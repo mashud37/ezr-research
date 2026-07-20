@@ -7,6 +7,18 @@ clean_label <- function(x) {
     stringr::str_squish()
 }
 
+# Internal: remove rows whose `col` value is in the `drop` set (falling back to
+# the `drop_answers` option), leaving pre-existing NAs and kept answers intact so
+# percentages re-base on what remains. Shared by the percentage helpers.
+drop_rows <- function(df, col, drop) {
+  if (is.null(drop)) drop <- ezrsurvey_default("drop_answers")
+  if (is.null(drop) || length(drop) == 0L) {
+    return(df)
+  }
+  dropped <- is.na(drop_items(df[[col]], drop)) & !is.na(df[[col]])
+  df[!dropped, , drop = FALSE]
+}
+
 # Internal: order the levels of `key` by `pct` (or by `key` itself) and reorder
 # rows to match. Shared by the percentage helpers and the plot wrappers so a
 # chart inherits whatever order the table was built with.
@@ -14,7 +26,9 @@ order_factor <- function(df, key, sort = c("none", "desc", "asc"),
                          levels = NULL) {
   sort <- match.arg(sort)
   if (!is.null(levels)) {
-    df[[key]] <- factor(df[[key]], levels = levels)
+    # An explicit / registered order is intentional and ordinal: mark it ordered
+    # so downstream helpers (e.g. plot_bars) leave it alone instead of resorting.
+    df[[key]] <- factor(df[[key]], levels = levels, ordered = TRUE)
     return(df)
   }
   if (sort == "none") {
@@ -30,7 +44,7 @@ order_factor <- function(df, key, sort = c("none", "desc", "asc"),
 #' Count a categorical question as percentages
 #'
 #' The headline helper: replaces the ubiquitous
-#' `count(x) |> mutate(pct = round(n / sum(n) * 100)) |> select(-n)` dance with a
+#' `count(x) %>% mutate(pct = round(n / sum(n) * 100)) %>% select(-n)` dance with a
 #' single call. Returns both the raw counts and the percentages, optionally
 #' grouped by one or more variables and optionally pivoted to a wide
 #' cross-tabulation.
@@ -53,6 +67,10 @@ order_factor <- function(df, key, sort = c("none", "desc", "asc"),
 #'   workflow. Defaults to `FALSE` (tidy long form).
 #' @param na_rm If `TRUE` (default), blanks and "Prefer not to answer" responses
 #'   (see [na_blank()]) are dropped before counting.
+#' @param drop Optional character vector of answer values to remove before
+#'   counting (e.g. `c("Other", "Don't know")`), so the kept answers re-base to
+#'   ~100%. Matching is case-insensitive (see [drop_items()]). Defaults to the
+#'   `drop_answers` option (`NULL` = drop nothing; see [ezrsurvey_options()]).
 #' @param weights Survey weighting for this call: `NULL` (default) uses the
 #'   session scheme from [set_weights()] if one is set; `FALSE` forces unweighted;
 #'   or pass an ad-hoc scheme (any form [set_weights()] accepts) to weight just
@@ -79,28 +97,31 @@ order_factor <- function(df, key, sort = c("none", "desc", "asc"),
 #'   numeric variables, [register_order()] for reusable level orders.
 #'
 #' @examples
-#' calc_percentage(consumer_survey, demo_gender)
+#' calc_percentage(podracing_survey, demo_gender)
 #' #> # A tibble: 3 x 3
-#' #>   demo_gender           n   pct
-#' #>   <chr>             <int> <dbl>
-#' #> 1 As a man            648    70
-#' #> 2 As a woman          228    24
-#' #> 3 Non-binary person    56     6
+#' #>   demo_gender     n   pct
+#' #>   <chr>       <int> <dbl>
+#' #> 1 Female        399    42
+#' #> 2 Male          525    55
+#' #> 3 Non-binary     27     3
 #'
 #' # largest first
-#' calc_percentage(consumer_survey, demo_gender, sort = "desc")
+#' calc_percentage(podracing_survey, demo_gender, sort = "desc")
 #'
 #' # grouped and pivoted to a wide cross-tab
-#' calc_percentage(consumer_survey, satis_return, by = region, wide = TRUE)
+#' calc_percentage(podracing_survey, satis_return, by = region, wide = TRUE)
 #' @export
 calc_percentage <- function(data = NULL, column, by = NULL,
                             sort = c("none", "desc", "asc"),
                             levels = NULL, digits = 0,
-                            wide = FALSE, na_rm = TRUE, weights = NULL) {
-  data <- resolve_data(data)
+                            wide = FALSE, na_rm = TRUE, drop = NULL,
+                            weights = NULL) {
+  r <- resolve_data_columns(rlang::enquo(data), list(rlang::enquo(column)),
+                            missing(column))
+  data <- r$data
   sort <- match.arg(sort)
-  col_sym <- rlang::ensym(column)
-  col_name <- rlang::as_name(col_sym)
+  col_name <- col_label(r$cols[[1]])
+  col_sym <- rlang::sym(col_name)
   by_q <- rlang::enquo(by)
   has_by <- !rlang::quo_is_null(by_q)
 
@@ -109,6 +130,7 @@ calc_percentage <- function(data = NULL, column, by = NULL,
 
   d <- data
   if (weighted) d[[".w"]] <- w
+  d <- drop_rows(d, col_name, drop)
   if (na_rm) {
     d[[col_name]] <- na_blank(d[[col_name]])
     d <- dplyr::filter(d, !is.na(.data[[col_name]]))
@@ -153,7 +175,8 @@ calc_percentage <- function(data = NULL, column, by = NULL,
     drop_cols <- if (weighted) c("n", "pct") else "n"
     out <- out %>%
       dplyr::select(-dplyr::all_of(drop_cols)) %>%
-      tidyr::pivot_wider(names_from = !!col_sym, values_from = val_col)
+      tidyr::pivot_wider(names_from = !!col_sym,
+                         values_from = dplyr::all_of(val_col))
   }
 
   tibble::as_tibble(out)
@@ -177,6 +200,9 @@ calc_percentage <- function(data = NULL, column, by = NULL,
 #' @param by Optional grouping column(s); percentages are computed within group.
 #' @param sort,digits As in [calc_percentage()]. Sorting acts on the `option`
 #'   labels.
+#' @param drop Optional character vector of option labels to remove before
+#'   counting (matched against the cleaned labels, case-insensitive). Defaults to
+#'   the `drop_answers` option. See [drop_items()].
 #' @param clean_names If `TRUE` (default), tidy the option labels by stripping
 #'   `prefix` and un-mangling exporter artefacts (`"A...B"` -> `"A / B"`).
 #'
@@ -197,21 +223,24 @@ calc_percentage <- function(data = NULL, column, by = NULL,
 #' @seealso [calc_percentage()], [plot_bars()].
 #'
 #' @examples
-#' calc_percentage_multi(consumer_survey, "motivations_",
+#' calc_percentage_multi(podracing_survey, "motivations_",
 #'                       id = respondent_id, sort = "desc")
 #' #> # A tibble: 5 x 3
-#' #>   option            n   pct
-#' #>   <fct>         <int> <dbl>
-#' #> 1 entertainment   697    75
-#' #> 2 learn           393    42
-#' #> 3 social          368    39
-#' #> 4 habit           281    30
-#' #> 5 brand           201    21
+#' #>   option        n   pct
+#' #>   <fct>     <int> <dbl>
+#' #> 1 speed       772    79
+#' #> 2 drivers     533    54
+#' #> 3 social      437    45
+#' #> 4 tradition   349    36
+#' #> 5 betting     295    30
 #' @export
 calc_percentage_multi <- function(data = NULL, prefix, id = NULL, by = NULL,
                                   sort = c("none", "desc", "asc"),
-                                  digits = 0, clean_names = TRUE) {
-  data <- resolve_data(data)
+                                  digits = 0, drop = NULL, clean_names = TRUE) {
+  r <- resolve_data_columns(rlang::enquo(data), list(rlang::enquo(prefix)),
+                            missing(prefix))
+  data <- r$data
+  prefix <- rlang::eval_tidy(r$cols[[1]])
   sort <- match.arg(sort)
   id_q <- rlang::enquo(id)
   by_q <- rlang::enquo(by)
@@ -254,6 +283,8 @@ calc_percentage_multi <- function(data = NULL, prefix, id = NULL, by = NULL,
       option = stringr::str_remove(.data$option, stringr::fixed(prefix))
     )
   }
+
+  long <- drop_rows(long, "option", drop)
 
   counts <- long %>%
     dplyr::group_by(dplyr::across(dplyr::all_of(by_names)), .data$option) %>%
@@ -309,19 +340,21 @@ calc_percentage_multi <- function(data = NULL, prefix, id = NULL, by = NULL,
 #'   precision.
 #'
 #' @examples
-#' calc_summary(consumer_survey, demo_age)
+#' calc_summary(podracing_survey, demo_age)
 #' #> # A tibble: 1 x 4
 #' #>       n  mean median    sd
 #' #>   <int> <dbl>  <dbl> <dbl>
-#' #> 1  1000  24.2     24  5.86
+#' #> 1  1000  32.6     32  11.2
 #'
-#' calc_summary(consumer_survey, demo_age, by = region)
+#' calc_summary(podracing_survey, demo_age, by = region)
 #' @export
 calc_summary <- function(data = NULL, column, by = NULL, na_rm = TRUE,
                          weights = NULL) {
-  data <- resolve_data(data)
-  col_sym <- rlang::ensym(column)
-  col_name <- rlang::as_name(col_sym)
+  r <- resolve_data_columns(rlang::enquo(data), list(rlang::enquo(column)),
+                            missing(column))
+  data <- r$data
+  col_name <- col_label(r$cols[[1]])
+  col_sym <- rlang::sym(col_name)
   by_q <- rlang::enquo(by)
   has_by <- !rlang::quo_is_null(by_q)
 
@@ -366,8 +399,9 @@ calc_summary <- function(data = NULL, column, by = NULL, na_rm = TRUE,
 #' @param data A data frame.
 #' @param ... Columns to tabulate, using tidyselect (e.g. `starts_with("demo_")`
 #'   or `demo_gender, demo_edu`).
-#' @param by,sort,digits,na_rm,weights Passed to [calc_percentage()] (so a
-#'   `wpct` column appears when weighting is active).
+#' @param by,sort,digits,na_rm,drop,weights Passed to [calc_percentage()] (so a
+#'   `wpct` column appears when weighting is active, and `drop` removes unwanted
+#'   answers from every question).
 #'
 #' @return A [tibble][tibble::tibble] with `variable`, `answer`, `n`, `pct`
 #'   (plus any `by` columns).
@@ -384,22 +418,24 @@ calc_summary <- function(data = NULL, column, by = NULL, na_rm = TRUE,
 #' @family summaries
 #' @seealso [calc_percentage()], [export_xlsx()].
 #' @examples
-#' calc_percentage_batch(consumer_survey, demo_gender, demo_job)
+#' calc_percentage_batch(podracing_survey, demo_gender, demo_job)
 #' #> # A tibble: 8 x 4
 #' #>   variable    answer                n   pct
 #' #>   <chr>       <chr>             <int> <dbl>
-#' #> 1 demo_gender As a man            648    70
-#' #> 2 demo_gender As a woman          228    24
+#' #> 1 demo_gender Female              399    42
+#' #> 2 demo_gender Male                525    55
 #' #> # ... and so on for each answer of each variable
 #'
-#' calc_percentage_batch(consumer_survey, dplyr::starts_with("demo_"))
+#' calc_percentage_batch(podracing_survey, starts_with("demo_"))
 #' @export
 calc_percentage_batch <- function(data = NULL, ..., by = NULL,
                                   sort = c("none", "desc", "asc"),
-                                  digits = 0, na_rm = TRUE, weights = NULL) {
-  data <- resolve_data(data)
+                                  digits = 0, na_rm = TRUE, drop = NULL,
+                                  weights = NULL) {
+  r <- resolve_data_dots(rlang::enquo(data), rlang::enquos(...))
+  data <- r$data
   sort <- match.arg(sort)
-  cols <- names(dplyr::select(data, ...))
+  cols <- names(dplyr::select(data, !!!r$dots))
   if (length(cols) == 0L) {
     stop("Select at least one column to tabulate.", call. = FALSE)
   }
@@ -409,7 +445,7 @@ calc_percentage_batch <- function(data = NULL, ..., by = NULL,
     res <- rlang::inject(
       calc_percentage(data, !!rlang::sym(col), by = !!by_q,
                       sort = sort, digits = digits, na_rm = na_rm,
-                      weights = weights)
+                      drop = drop, weights = weights)
     )
     names(res)[names(res) == col] <- "answer"
     res$answer <- as.character(res$answer)

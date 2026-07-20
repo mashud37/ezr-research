@@ -33,6 +33,7 @@ head(nps_drivers)
 \seealso{
 Other data:
 \code{\link{ecommerce}},
+\code{\link{personas}},
 \code{\link{reviews}}
 }
 \concept{data}

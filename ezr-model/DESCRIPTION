@@ -1,7 +1,7 @@
 Package: ezrmodel
 Type: Package
 Title: Single-Line Modelling and Clustering for Consumer Data
-Version: 0.3.0
+Version: 0.4.0
 Authors@R:
     person("Andreas", "Schellewald", email = "aschellewald@acm.org",
            role = c("aut", "cre"))

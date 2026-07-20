@@ -39,3 +39,12 @@ test_that("nps_group classifies 0-10 into groups", {
                c("Detractor", "Passive", "Promoter"))
   expect_true(is.na(nps_group(11)))
 })
+
+test_that("drop_items turns matched values into NA (case-insensitive)", {
+  expect_equal(drop_items(c("Yes", "No", "Other", "Don't know"),
+                          c("other", "Don't know")),
+               c("Yes", "No", NA, NA))
+  expect_equal(drop_items(c(" a ", "b"), "a"), c(NA, "b"))   # trims
+  expect_identical(drop_items(c("a", "b"), character(0)), c("a", "b"))
+  expect_identical(drop_items(c("a", "b"), NULL), c("a", "b"))
+})

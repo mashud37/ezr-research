@@ -44,6 +44,7 @@ chat$chat("Say hello in five words.")
 \code{\link[=ai_summarise]{ai_summarise()}}, \code{\link[=set_llm_key]{set_llm_key()}}.
 
 Other ai:
+\code{\link[=ai_context]{ai_context()}},
 \code{\link[=ai_report_sections]{ai_report_sections()}},
 \code{\link[=ai_summarise]{ai_summarise()}},
 \code{\link[=delete_llm_key]{delete_llm_key()}},

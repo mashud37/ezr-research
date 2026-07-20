@@ -10,20 +10,20 @@ normalize_bands <- function(bands) {
   bands
 }
 
-# Internal: best-effort inference of the opposite-axis position for the marker
-# line, by building the plot and reading its panel range.
-infer_at <- function(plot, axis) {
+# Internal: best-effort read of the opposite-axis panel range, by building the
+# plot. Returns NULL when the plot cannot be built.
+infer_panel_range <- function(plot, axis) {
   opp <- if (axis == "x") "y" else "x"
   built <- tryCatch(ggplot2::ggplot_build(plot), error = function(e) NULL)
   if (is.null(built)) {
-    stop("Could not infer `at`; please supply it explicitly.", call. = FALSE)
+    return(NULL)
   }
   pp <- built$layout$panel_params[[1]]
   rng <- pp[[paste0(opp, ".range")]]
   if (is.null(rng)) {
     rng <- range(pp[[opp]]$breaks, na.rm = TRUE)
   }
-  max(rng, na.rm = TRUE)
+  rng
 }
 
 #' Annotate a plot with labelled decision bands
@@ -44,10 +44,12 @@ infer_at <- function(plot, axis) {
 #'   labels (e.g. the top of a bar chart). If `NULL`, inferred from the plot's
 #'   panel range.
 #' @param label_offset Distance to nudge labels away from the marker line, in
-#'   data units of the opposite axis. Defaults to `0`.
+#'   data units of the opposite axis. If `NULL` (default), 4% of the opposite
+#'   axis range, so labels sit clear of the line instead of on top of it.
 #' @param labels Whether to draw the band labels. Defaults to `TRUE`.
 #' @param text_colour,text_size Label appearance. `text_colour = NULL` (default)
-#'   uses each band's own colour.
+#'   uses each band's own colour; `text_size = NULL` (default) matches the
+#'   theme's base font size (11 pt) instead of a fixed geom size.
 #' @param linewidth Marker line width. Defaults to `1`.
 #'
 #' @return The plot with the band layers added.
@@ -66,18 +68,26 @@ infer_at <- function(plot, axis) {
 #'
 #' @examples
 #' \dontrun{
-#' plot_ipm_base |>
+#' plot_ipm_base %>%
 #'   annotate_bands(bands_rating_3(), axis = "x", at = 30)
 #' }
 #' @export
 annotate_bands <- function(plot, bands, axis = c("x", "y"), at = NULL,
-                           label_offset = 0, labels = TRUE,
-                           text_colour = NULL, text_size = 4, linewidth = 1) {
+                           label_offset = NULL, labels = TRUE,
+                           text_colour = NULL, text_size = NULL, linewidth = 1) {
   axis <- match.arg(axis)
   bands <- normalize_bands(bands)
-  if (is.null(at)) {
-    at <- infer_at(plot, axis)
+  if (is.null(at) || is.null(label_offset)) {
+    rng <- infer_panel_range(plot, axis)
+    if (is.null(rng)) {
+      stop("Could not read the plot's panel range; please supply `at` ",
+           "(and `label_offset`) explicitly.", call. = FALSE)
+    }
+    if (is.null(at)) at <- max(rng, na.rm = TRUE)
+    if (is.null(label_offset)) label_offset <- 0.04 * diff(range(rng))
   }
+  # NULL sizes to the theme base font (11 pt); geom text sizes are in mm.
+  text_size <- text_size %||% (11 / ggplot2::.pt)
 
   layers <- list()
   for (i in seq_len(nrow(bands))) {
@@ -97,7 +107,8 @@ annotate_bands <- function(plot, bands, axis = c("x", "y"), at = NULL,
         layers <- c(layers, list(
           ggplot2::annotate("text", x = centre, y = at - label_offset,
                             label = bands$label[i], colour = lab_col,
-                            size = text_size, fontface = "bold")
+                            size = text_size, fontface = "bold",
+                            vjust = 1, lineheight = 0.9)
         ))
       }
     } else {
@@ -110,7 +121,8 @@ annotate_bands <- function(plot, bands, axis = c("x", "y"), at = NULL,
         layers <- c(layers, list(
           ggplot2::annotate("text", y = centre, x = at - label_offset,
                             label = bands$label[i], colour = lab_col,
-                            size = text_size, fontface = "bold")
+                            size = text_size, fontface = "bold",
+                            hjust = 1, lineheight = 0.9)
         ))
       }
     }
@@ -129,14 +141,16 @@ annotate_bands <- function(plot, bands, axis = c("x", "y"), at = NULL,
 #'   `"y"` (horizontal line).
 #' @param colour,linewidth Line appearance.
 #' @param label Optional text label drawn at the marker.
-#' @param ... Passed to [ggplot2::annotate()] for the label.
+#' @param ... Passed to [ggplot2::annotate()] for the label; overrides the
+#'   default justification, which keeps the label inside the panel next to the
+#'   marker line.
 #'
 #' @return The plot with the marker added.
 #' @family decisions
 #'
 #' @examples
 #' \dontrun{
-#' p |> mark_value(42, axis = "x", label = "NPS 42")
+#' p %>% mark_value(42, axis = "x", label = "NPS 42")
 #' }
 #' @export
 mark_value <- function(plot, value, axis = c("x", "y"),
@@ -149,15 +163,34 @@ mark_value <- function(plot, value, axis = c("x", "y"),
   }
   out <- plot + line
   if (!is.null(label)) {
-    out <- out + ggplot2::annotate(
-      "text",
+    # Justify the label into the panel so it isn't clipped at the Inf edge.
+    args <- list(
       x = if (axis == "x") value else Inf,
       y = if (axis == "x") Inf else value,
-      label = label, fontface = "bold", ...
+      label = label, fontface = "bold",
+      hjust = if (axis == "x") -0.15 else 1.1,
+      vjust = if (axis == "x") 1.5 else -0.5
     )
+    args <- utils::modifyList(args, list(...))
+    out <- out + do.call(ggplot2::annotate, c(list("text"), args))
   }
   out
 }
+
+# Internal: which band of `bands` each value falls into, as a colour and as a
+# label. Used so a marker drawn on a banded axis carries the colour of the band
+# it actually sits in -- a point at 2.4 on a BAD(1-3)/OK(3-4)/GOOD(4-5) scale
+# must read as BAD, never as the neighbouring band.
+band_index <- function(x, bands) {
+  i <- findInterval(x, bands$from)
+  i[is.na(i) | i < 1L] <- 1L
+  i[i > nrow(bands)] <- nrow(bands)
+  i
+}
+
+band_colour <- function(x, bands) bands$colour[band_index(x, bands)]
+
+band_label <- function(x, bands) bands$label[band_index(x, bands)]
 
 #' Built-in decision-band presets
 #'

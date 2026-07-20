@@ -38,13 +38,13 @@ measure of how precise the \code{mean} is, pair this with \code{\link[=diagnose]
 \code{\link[=se_mean]{se_mean()}}.
 }
 \examples{
-calc_summary(consumer_survey, demo_age)
+calc_summary(podracing_survey, demo_age)
 #> # A tibble: 1 x 4
 #>       n  mean median    sd
 #>   <int> <dbl>  <dbl> <dbl>
-#> 1  1000  24.2     24  5.86
+#> 1  1000  32.6     32  11.2
 
-calc_summary(consumer_survey, demo_age, by = region)
+calc_summary(podracing_survey, demo_age, by = region)
 }
 \seealso{
 \code{\link[=calc_percentage]{calc_percentage()}} for categorical variables, \code{\link[=diagnose]{diagnose()}} for

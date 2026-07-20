@@ -58,14 +58,14 @@ report-appendix "Data info" block; for the narrative bullet-point version see
 \code{\link[=precision_summary]{precision_summary()}}.
 }
 \examples{
-diagnose(consumer_survey, demo_gender, nps_value)
+diagnose(podracing_survey, demo_gender, nps_value)
 #> # A tibble: 2 x 9
 #>   variable    type  unit      n estimate    se   rse   moe precision
 #>   <chr>       <chr> <chr> <int>    <dbl> <dbl> <dbl> <dbl> <chr>
-#> 1 demo_gender prop  ppt     932     69.5  1.51  2.17  2.96 high precision
-#> 2 nps_value   mean  points 1000      7.6  0.06  0.79  0.12 high precision
+#> 1 demo_gender prop  ppt     951     55.2  1.61  2.92  3.16 high precision
+#> 2 nps_value   mean  points 1000      7.56 0.06  0.74  0.11 high precision
 
-diagnose(consumer_survey, dplyr::starts_with("ratings_"))
+diagnose(podracing_survey, starts_with("ratings_"))
 }
 \seealso{
 \code{\link[=precision_summary]{precision_summary()}}, \code{\link[=rse_rating]{rse_rating()}}, \code{\link[=se_mean]{se_mean()}}, \code{\link[=se_prop]{se_prop()}}.

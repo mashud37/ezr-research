@@ -33,24 +33,24 @@ test_that("calc_percentage applies a registered order automatically", {
   withr::defer(remove_order("edu_order"))
   register_order(
     "edu_order",
-    levels = c("Less than high school", "High school or equivalent",
-               "Some college but no degree", "Associate degree",
-               "Bachelor degree", "Masters degree or higher"),
+    levels = c("Primary or less", "Lower secondary", "Upper secondary",
+               "Short-cycle tertiary", "Bachelor or equivalent",
+               "Master or equivalent", "Doctoral or equivalent"),
     vars = "demo_edu"
   )
-  out <- calc_percentage(consumer_survey, demo_edu)
+  out <- calc_percentage(podracing_survey, demo_edu)
   expect_s3_class(out$demo_edu, "factor")
-  expect_equal(levels(out$demo_edu)[1], "Less than high school")
+  expect_equal(levels(out$demo_edu)[1], "Primary or less")
   # an explicit sort still overrides the registered order
-  out2 <- calc_percentage(consumer_survey, demo_edu, sort = "desc")
+  out2 <- calc_percentage(podracing_survey, demo_edu, sort = "desc")
   expect_equal(out2$pct, sort(out2$pct, decreasing = TRUE))
 })
 
 test_that("register_order_presets registers the expected names", {
   withr::defer(for (n in c("likert_bad_good", "likert_agree", "frequency",
-                           "likelihood", "education_us")) remove_order(n))
+                           "likelihood", "education_isced")) remove_order(n))
   register_order_presets()
-  expect_true(all(c("likert_bad_good", "education_us") %in% list_orders()$name))
+  expect_true(all(c("likert_bad_good", "education_isced") %in% list_orders()$name))
 })
 
 test_that("orders round-trip through a YAML profile", {

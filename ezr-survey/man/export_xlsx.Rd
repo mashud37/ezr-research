@@ -4,13 +4,15 @@
 \alias{export_xlsx}
 \title{Export several tables to one Excel workbook, a tab each}
 \usage{
-export_xlsx(..., path, sheet_names = NULL)
+export_xlsx(..., path = NULL, sheet_names = NULL)
 }
 \arguments{
 \item{...}{Data frames to write, one per tab. Name them to set tab names
 (e.g. \code{gender = calc_percentage(d, demo_gender)}).}
 
-\item{path}{Output \code{.xlsx} path.}
+\item{path}{Output \code{.xlsx} path. If \code{NULL} (default), the workbook is
+written to \code{outputs/tables.xlsx} in the working directory. Missing
+directories are created.}
 
 \item{sheet_names}{Optional character vector of tab names (overrides argument
 names).}
@@ -36,8 +38,8 @@ colleague. Requires the suggested \code{writexl} package.
 \examples{
 tmp <- tempfile(fileext = ".xlsx")
 export_xlsx(
-  gender = calc_percentage(consumer_survey, demo_gender),
-  calc_percentage(consumer_survey, demo_job),
+  gender = calc_percentage(podracing_survey, demo_gender),
+  calc_percentage(podracing_survey, demo_job),
   path = tmp
 )
 file.exists(tmp)

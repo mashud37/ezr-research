@@ -4,7 +4,7 @@
 \alias{plot_ipm}
 \title{Importance / performance matrix}
 \usage{
-plot_ipm(model, title = NULL, repel = TRUE)
+plot_ipm(model, title = NULL, repel = TRUE, bands = bands_rating_3())
 }
 \arguments{
 \item{model}{An \code{\link[=ipm_model]{ipm_model()}} output (\code{feature}, \code{importance}, \code{performance},
@@ -14,6 +14,9 @@ plot_ipm(model, title = NULL, repel = TRUE)
 
 \item{repel}{Use \code{ggrepel} for non-overlapping labels when available.
 Defaults to \code{TRUE}.}
+
+\item{bands}{Decision-band spec drawn across the top and used to colour the
+points. Defaults to \code{\link[=bands_rating_3]{bands_rating_3()}} (BAD 1-3, OK 3-4, GOOD 4-5).}
 }
 \value{
 A ggplot object.
@@ -26,7 +29,9 @@ top. Reproduces the IPM slide from the original report.
 \details{
 Each feature is a point: performance on the x-axis (mean 1--5 rating, with a
 reference line at the average) and importance on the y-axis (relative weight,
-as a percentage), coloured by performance band. Read it by quadrant --
+as a percentage). Each point takes the colour of the decision band it falls
+in, so a feature averaging 2.4 is red because it sits in the BAD band -- the
+point and the band behind it can never disagree. Read it by quadrant --
 high-importance, low-performance features (upper left) are the priorities to
 fix, while high-importance, high-performance features (upper right) are
 strengths to protect. Feed it an \code{\link[=ipm_model]{ipm_model()}} table; uses \code{ggrepel} for
@@ -34,7 +39,7 @@ non-overlapping labels when available.
 }
 \examples{
 \dontshow{if (requireNamespace("rwa", quietly = TRUE)) withAutoprint(\{ # examplesIf}
-ipm_model(consumer_survey, nps_value, "ratings_") |> plot_ipm()
+ipm_model(podracing_survey, nps_value, "ratings_") \%>\% plot_ipm()
 \dontshow{\}) # examplesIf}
 }
 \seealso{

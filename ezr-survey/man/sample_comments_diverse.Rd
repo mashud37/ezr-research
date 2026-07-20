@@ -22,7 +22,7 @@ sample_comments_diverse(
 \item{data}{A data frame.}
 
 \item{...}{One or more comment columns, using tidyselect (e.g. \code{nps_com},
-\code{show_com}, or \code{dplyr::ends_with("_com")}).}
+\code{show_com}, or \code{ends_with("_com")}).}
 
 \item{n}{Number of comments to sample. With \code{by_column = TRUE}, this is per
 column.}
@@ -67,7 +67,7 @@ randomised maximal-marginal-relevance pass trades off informativeness against
 similarity to already-picked comments.
 }
 \examples{
-sample_comments_diverse(consumer_survey, nps_com, show_com, n = 5, seed = 1)
+sample_comments_diverse(podracing_survey, nps_com, show_com, n = 5, seed = 1)
 }
 \seealso{
 \code{\link[=sample_comments]{sample_comments()}}, \code{\link[=plot_quotes_tree]{plot_quotes_tree()}}.

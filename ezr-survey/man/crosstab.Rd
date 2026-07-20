@@ -14,6 +14,7 @@ crosstab(
   wide = TRUE,
   digits = NULL,
   na_rm = TRUE,
+  drop = NULL,
   weights = NULL
 )
 }
@@ -40,6 +41,10 @@ for percentages, \code{2} when \code{value} is supplied.}
 
 \item{na_rm}{Drop blanks / non-answers in \code{x}, \code{y} (and \code{NA} in \code{value}).
 Default \code{TRUE}.}
+
+\item{drop}{Optional character vector of answer values to remove from both \code{x}
+and \code{y} before tabulating (e.g. \code{c("Other")}), matched case-insensitively.
+Defaults to the \code{drop_answers} option. See \code{\link[=drop_items]{drop_items()}}.}
 
 \item{weights}{Survey weighting: \code{NULL} (default) uses the session scheme from
 \code{\link[=set_weights]{set_weights()}} if set; \code{FALSE} forces unweighted; or pass an ad-hoc scheme.
@@ -69,13 +74,13 @@ orders (\code{\link[=register_order]{register_order()}}) set the row/column orde
 }
 \examples{
 # counts
-crosstab(consumer_survey, demo_gender, region)
+crosstab(podracing_survey, demo_gender, region)
 
 # row percentages: gender split within each region (each row ~ 100)
-crosstab(consumer_survey, region, demo_gender, cell = "row_pct")
+crosstab(podracing_survey, region, demo_gender, cell = "row_pct")
 
 # mean NPS for each region x gender cell
-crosstab(consumer_survey, region, demo_gender, value = nps_value, fn = mean)
+crosstab(podracing_survey, region, demo_gender, value = nps_value, fn = mean)
 }
 \seealso{
 \code{\link[=calc_percentage]{calc_percentage()}}, \code{\link[=compare_values]{compare_values()}}, \code{\link[=register_order]{register_order()}}.

@@ -23,6 +23,28 @@ resolve_stopwords <- function(stopwords = NULL) {
   .stopwords_fallback
 }
 
+# Internal: set the RNG seed and return a restore function for the caller's
+# on.exit(); a NULL seed is a no-op.
+push_seed <- function(seed) {
+  if (is.null(seed)) {
+    return(function() invisible(NULL))
+  }
+  old_seed <- if (exists(".Random.seed", envir = globalenv())) {
+    get(".Random.seed", envir = globalenv())
+  } else {
+    NULL
+  }
+  set.seed(seed)
+  function() {
+    if (is.null(old_seed)) {
+      rm(".Random.seed", envir = globalenv())
+    } else {
+      assign(".Random.seed", old_seed, envir = globalenv())
+    }
+    invisible(NULL)
+  }
+}
+
 # Internal: tidy, filter and truncate the comment columns into one long table.
 prep_comments <- function(data, cols, min_chars, max_chars, exclude) {
   if (length(cols) == 0L) {
@@ -31,7 +53,8 @@ prep_comments <- function(data, cols, min_chars, max_chars, exclude) {
   long <- data %>%
     dplyr::select(dplyr::all_of(cols)) %>%
     dplyr::mutate(dplyr::across(dplyr::everything(), as.character)) %>%
-    tidyr::pivot_longer(dplyr::everything(), names_to = "source",
+    tidyr::pivot_longer(dplyr::everything(),
+                        names_to = "source",
                         values_to = "comment") %>%
     dplyr::mutate(comment = na_blank(.data$comment)) %>%
     dplyr::filter(!is.na(.data$comment),
@@ -62,7 +85,7 @@ prep_comments <- function(data, cols, min_chars, max_chars, exclude) {
 #'
 #' @param data A data frame.
 #' @param ... One or more comment columns, using tidyselect (e.g. `nps_com`,
-#'   `show_com`, or `dplyr::ends_with("_com")`).
+#'   `show_com`, or `ends_with("_com")`).
 #' @param n Number of comments to sample. With `by_column = TRUE`, this is per
 #'   column.
 #' @param min_chars Drop comments with this many characters or fewer. Default
@@ -72,6 +95,8 @@ prep_comments <- function(data, cols, min_chars, max_chars, exclude) {
 #'   comments matching any are dropped (e.g. `c("friend", "recommend")`).
 #' @param by_column If `TRUE` (default), sample `n` from each column; if `FALSE`,
 #'   sample `n` from the pooled comments.
+#' @param seed Optional integer for reproducible sampling (the RNG state is
+#'   restored afterwards).
 #'
 #' @return A [tibble][tibble::tibble] with `source`, `comment` and `length`.
 #'
@@ -87,12 +112,16 @@ prep_comments <- function(data, cols, min_chars, max_chars, exclude) {
 #' @seealso [sample_comments_diverse()] for a diversity-aware sample,
 #'   [plot_quotes_tree()].
 #' @examples
-#' sample_comments(consumer_survey, nps_com, show_com, n = 3)
+#' sample_comments(podracing_survey, nps_com, show_com, n = 3)
 #' @export
 sample_comments <- function(data = NULL, ..., n = 8, min_chars = 30,
-                            max_chars = 400, exclude = NULL, by_column = TRUE) {
-  data <- resolve_data(data)
-  cols <- names(dplyr::select(data, ...))
+                            max_chars = 400, exclude = NULL, by_column = TRUE,
+                            seed = NULL) {
+  rd <- resolve_data_dots(rlang::enquo(data), rlang::enquos(...))
+  data <- rd$data
+  restore_seed <- push_seed(seed)
+  on.exit(restore_seed(), add = TRUE)
+  cols <- names(dplyr::select(data, !!!rd$dots))
   long <- prep_comments(data, cols, min_chars, max_chars, exclude)
   if (nrow(long) == 0L) {
     return(long)
@@ -204,7 +233,7 @@ select_diverse <- function(tfidf, info, n, lambda) {
 #' @family comments
 #' @seealso [sample_comments()], [plot_quotes_tree()].
 #' @examples
-#' sample_comments_diverse(consumer_survey, nps_com, show_com, n = 5, seed = 1)
+#' sample_comments_diverse(podracing_survey, nps_com, show_com, n = 5, seed = 1)
 #' @export
 sample_comments_diverse <- function(data = NULL, ..., n = 8, min_chars = 30,
                                     max_chars = 400, exclude = NULL,
@@ -213,19 +242,15 @@ sample_comments_diverse <- function(data = NULL, ..., n = 8, min_chars = 30,
                                     score = c("entropy", "tfidf"),
                                     stopwords = NULL,
                                     seed = NULL) {
-  data <- resolve_data(data)
+  rd <- resolve_data_dots(rlang::enquo(data), rlang::enquos(...))
+  data <- rd$data
   method <- match.arg(method)
   score <- match.arg(score)
 
-  if (!is.null(seed)) {
-    if (exists(".Random.seed", envir = globalenv())) {
-      old_seed <- get(".Random.seed", envir = globalenv())
-      on.exit(assign(".Random.seed", old_seed, envir = globalenv()), add = TRUE)
-    }
-    set.seed(seed)
-  }
+  restore_seed <- push_seed(seed)
+  on.exit(restore_seed(), add = TRUE)
 
-  cols <- names(dplyr::select(data, ...))
+  cols <- names(dplyr::select(data, !!!rd$dots))
   long <- prep_comments(data, cols, min_chars, max_chars, exclude)
   # A quote slide should never show the same sentence twice.
   long <- dplyr::distinct(long, .data$comment, .keep_all = TRUE)

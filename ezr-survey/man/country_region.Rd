@@ -33,8 +33,9 @@ recode_region("Germany")
 \code{\link[=recode_region]{recode_region()}}, \code{\link[=add_region]{add_region()}}.
 
 Other data:
-\code{\link{consumer_survey}},
-\code{\link{currency_rates}}
+\code{\link{currency_rates}},
+\code{\link{podracing_survey}},
+\code{\link{shopping_survey}}
 }
 \concept{data}
 \keyword{datasets}

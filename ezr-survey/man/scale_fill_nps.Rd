@@ -22,7 +22,6 @@ Maps the NPS-group coding from \code{\link[=nps_group]{nps_group()}} (\code{"-1"
 carry their usual meaning. Used by \code{\link[=plot_nps]{plot_nps()}}.
 }
 \examples{
-library(ggplot2)
 df <- data.frame(score = 0:2, pct = c(20, 30, 50), group = c(-1, 0, 1))
 ggplot(df, aes(score, pct, fill = factor(group))) +
   geom_col() +

@@ -18,16 +18,20 @@ be called without repeating \code{data} every time. Set it once at the top of a
 script or Quarto document and then omit \code{data} (or pass it by pipe).
 }
 \details{
-Because \code{data} is the first argument of the helpers and R evaluates it before
-the function runs, a \emph{bare} positional call like \code{calc_percentage(demo_gender)}
-cannot fall back to the default -- R would try to treat \code{demo_gender} as the
-data. So, with a default set, call the helpers in one of these equivalent
-ways:
+With a default set you can drop \code{data} entirely and name the column
+positionally, the way you would in the tidyverse:
 \itemize{
-\item pipe the data in once: \code{consumer_survey |> calc_percentage(demo_gender)};
-\item name the column: \code{calc_percentage(column = demo_gender)};
-\item or just keep passing \code{data} explicitly.
+\item \code{calc_percentage(demo_gender)} -- data taken from the default;
+\item \code{podracing_survey \%>\% calc_percentage(demo_gender)} -- explicit pipe;
+\item \code{calc_percentage(other_survey, demo_gender)} -- an explicit data frame
+always wins over the default.
 }
+
+The helpers tell a column from a data frame by looking at the first argument:
+a data frame is used as the data; anything else (a bare column name) is taken
+as the first column and the data comes from the default. Helpers that select
+several columns through \code{...} (e.g. \code{\link[=diagnose]{diagnose()}}, \code{\link[=calc_percentage_batch]{calc_percentage_batch()}})
+work the same way -- \code{diagnose(starts_with("ratings_"))} needs no \code{data}.
 
 The default applies to the analysis helpers that read a raw survey
 (\code{calc_percentage()}, \code{calc_summary()}, \code{calc_nps()}, \code{diagnose()},
@@ -36,9 +40,9 @@ to plot/report helpers that consume an already-summarised table. The setting
 lives only in the current R session; clear it with \code{\link[=clear_dataset]{clear_dataset()}}.
 }
 \examples{
-use_dataset(consumer_survey)
-calc_percentage(column = demo_gender)   # data taken from the default
-calc_nps(value = nps_value)
+use_dataset(podracing_survey)
+calc_percentage(demo_gender)   # data taken from the default
+calc_nps(nps_value)
 clear_dataset()
 }
 \seealso{

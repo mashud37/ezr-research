@@ -31,14 +31,15 @@ columns without naming every variable. Order is \code{keep} first, then the
 prefix-matching columns in their original order.
 }
 \examples{
-select_prefix(consumer_survey, "demo_", keep = "respondent_id")
-select_prefix(consumer_survey, c("ratings_", "partner_"))
+select_prefix(podracing_survey, "demo_", keep = "respondent_id")
+select_prefix(podracing_survey, c("ratings_", "partner_"))
 }
 \seealso{
 \code{\link[=read_folder]{read_folder()}}, \code{\link[=calc_percentage_multi]{calc_percentage_multi()}}.
 
 Other import:
 \code{\link[=parse_filename]{parse_filename()}},
-\code{\link[=read_folder]{read_folder()}}
+\code{\link[=read_folder]{read_folder()}},
+\code{\link[=select_suffix]{select_suffix()}}
 }
 \concept{import}

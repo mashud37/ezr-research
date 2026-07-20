@@ -82,6 +82,9 @@ ai_chat <- function(provider = "openai", model = NULL, system_prompt = NULL,
 #' @param chat An existing [ai_chat()] object to reuse. If `NULL` (default), a
 #'   fresh chat is created using the template's system prompt.
 #' @param title Optional context title for the table.
+#' @param context Optional survey context from [ai_context()] (or a character
+#'   vector), included in the prompt so the model can respect sample sizes and
+#'   margins of error.
 #' @param max_rows Maximum rows of `data` to include in the prompt. Defaults to
 #'   `50`.
 #' @param ... Passed to [ai_chat()].
@@ -101,19 +104,20 @@ ai_chat <- function(provider = "openai", model = NULL, system_prompt = NULL,
 #' @seealso [ai_report_sections()] to summarise many tables at once.
 #' @examples
 #' \dontrun{
-#' calc_percentage(consumer_survey, demo_gender, sort = "desc") |>
+#' calc_percentage(podracing_survey, demo_gender, sort = "desc") %>%
 #'   ai_summarise(template = "exec_summary", provider = "openai")
 #' }
 #' @export
 ai_summarise <- function(data, instructions = NULL, template = "key_findings",
                          provider = "openai", model = NULL, chat = NULL,
-                         title = NULL, max_rows = 50, ...) {
-  require_ellmer()
+                         title = NULL, context = NULL, max_rows = 50, ...) {
   spec <- get_prompt(template)
   user_msg <- build_prompt(template, data = data, instructions = instructions,
-                           max_rows = max_rows, title = title)
+                           max_rows = max_rows, title = title,
+                           context = context)
 
   if (is.null(chat)) {
+    require_ellmer()
     chat <- ai_chat(provider = provider, model = model,
                     system_prompt = spec$system, ...)
   }
@@ -124,29 +128,37 @@ ai_summarise <- function(data, instructions = NULL, template = "key_findings",
 #'
 #' Runs [ai_summarise()] over a named list of report sections, returning a named
 #' list of summaries -- a convenient way to draft every section of a report at
-#' once. Each section gets its own fresh chat so summaries stay independent.
+#' once. By default each section gets its own fresh chat so summaries stay
+#' independent; pass `chat` to reuse one connection for the whole run.
 #'
 #' @param sections A named list. Each element is either a data frame (summarised
 #'   with the default template) or a list with elements `data`, optional
-#'   `template`, `instructions` and `title`.
+#'   `template`, `instructions`, `title` and `context`.
 #' @param provider,model,... Passed to [ai_summarise()].
+#' @param chat An existing [ai_chat()] object reused across all sections. If
+#'   `NULL` (default), each section opens a fresh chat with its template's
+#'   system prompt.
+#' @param context Default survey context from [ai_context()] applied to every
+#'   section that does not carry its own.
 #'
 #' @return A named list of summary strings, one per section.
 #' @family ai
-#' @seealso [ai_summarise()].
+#' @seealso [ai_summarise()], [ai_context()].
 #' @examples
 #' \dontrun{
+#' ctx <- ai_context(podracing_survey, fieldwork = "Simulated data")
 #' ai_report_sections(
 #'   list(
-#'     gender = calc_percentage(consumer_survey, demo_gender),
-#'     nps = list(data = calc_nps(consumer_survey, nps_value),
+#'     gender = calc_percentage(podracing_survey, demo_gender),
+#'     nps = list(data = calc_nps(podracing_survey, nps_value),
 #'                template = "exec_summary")
 #'   ),
-#'   provider = "openai"
+#'   provider = "openai", context = ctx
 #' )
 #' }
 #' @export
-ai_report_sections <- function(sections, provider = "openai", model = NULL, ...) {
+ai_report_sections <- function(sections, provider = "openai", model = NULL,
+                               chat = NULL, context = NULL, ...) {
   if (is.null(names(sections)) || any(!nzchar(names(sections)))) {
     stop("`sections` must be a named list.", call. = FALSE)
   }
@@ -160,7 +172,8 @@ ai_report_sections <- function(sections, provider = "openai", model = NULL, ...)
       instructions = spec$instructions,
       template = spec$template %||% "key_findings",
       title = spec$title %||% name,
-      provider = provider, model = model, ...
+      context = spec$context %||% context,
+      provider = provider, model = model, chat = chat, ...
     )
   })
 }
