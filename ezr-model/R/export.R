@@ -1,6 +1,22 @@
 # Internal: lower-case file extension without the dot.
 file_ext <- function(path) tolower(tools::file_ext(path))
 
+# Internal: default output location -- a project-local "ezr-models" folder in
+# the working directory, never the session temp directory. Files land directly
+# in it; no per-type subfolders.
+default_output_path <- function(name, ext) {
+  file.path("ezr-models", paste0(name, ".", ext))
+}
+
+# Internal: create the parent directory of `path` if needed, and return `path`.
+ensure_output_dir <- function(path) {
+  dir <- dirname(path)
+  if (nzchar(dir) && dir != "." && !dir.exists(dir)) {
+    dir.create(dir, recursive = TRUE)
+  }
+  path
+}
+
 #' Quick-save a plot to PNG, SVG or PDF
 #'
 #' A thin, pipe-friendly wrapper around [ggplot2::ggsave()] that picks the device
@@ -10,7 +26,9 @@ file_ext <- function(path) tolower(tools::file_ext(path))
 #'
 #' @param plot A ggplot object.
 #' @param path Output path; the extension sets the format (`.png`, `.svg`,
-#'   `.pdf`, `.jpg`/`.jpeg`, `.tiff`).
+#'   `.pdf`, `.jpg`/`.jpeg`, `.tiff`). If `NULL` (default), the plot is written
+#'   to `ezr-models/plot.png` in the working directory. Missing directories are
+#'   created.
 #' @param width,height Size in inches. Default `8 x 4.5`.
 #' @param dpi Raster resolution for PNG/JPG/TIFF. Default `300`.
 #' @param bg Background fill. Default `"transparent"` (matches the ezrmodel
@@ -38,11 +56,12 @@ file_ext <- function(path) tolower(tools::file_ext(path))
 #' file.exists(tmp)
 #' }
 #' @export
-save_plot <- function(plot, path, width = 8, height = 4.5, dpi = 300,
+save_plot <- function(plot, path = NULL, width = 8, height = 4.5, dpi = 300,
                       bg = "transparent", ...) {
   if (!inherits(plot, "ggplot")) {
     stop("`plot` must be a ggplot object.", call. = FALSE)
   }
+  path <- ensure_output_dir(path %||% default_output_path("plot", "png"))
   ext <- file_ext(path)
   if (ext == "svg" && !requireNamespace("svglite", quietly = TRUE)) {
     stop("Saving SVG needs the 'svglite' package. ",
@@ -62,7 +81,8 @@ save_plot <- function(plot, path, width = 8, height = 4.5, dpi = 300,
 #'
 #' @param data A data frame / tibble, or (for `.xlsx`) a named list of them.
 #' @param path Output path; the extension sets the format (`.csv`, `.tsv`,
-#'   `.xlsx`).
+#'   `.xlsx`). If `NULL` (default), the table is written to `ezr-models/data.csv`
+#'   in the working directory. Missing directories are created.
 #' @param na String to write for missing values. Default `""`.
 #' @param ... Passed to the underlying writer ([readr::write_csv()] /
 #'   [readr::write_tsv()] / [writexl::write_xlsx()]).
@@ -84,7 +104,8 @@ save_plot <- function(plot, path, width = 8, height = 4.5, dpi = 300,
 #' save_data(tab, tmp)
 #' file.exists(tmp)
 #' @export
-save_data <- function(data, path, na = "", ...) {
+save_data <- function(data, path = NULL, na = "", ...) {
+  path <- ensure_output_dir(path %||% default_output_path("data", "csv"))
   ext <- file_ext(path)
   switch(
     ext,
@@ -110,7 +131,9 @@ save_data <- function(data, path, na = "", ...) {
 #' pipe when you do not want to think about which saver to call.
 #'
 #' @param x A ggplot, a data frame, or a (named) list of data frames.
-#' @param path Output path; the extension picks the format.
+#' @param path Output path; the extension picks the format. If `NULL` (default),
+#'   the file lands in the working directory's `ezr-models/` folder
+#'   (`ezr-models/plot.png` or `ezr-models/data.csv`).
 #' @param ... Passed to [save_plot()] or [save_data()].
 #'
 #' @return `x`, invisibly.
@@ -126,7 +149,7 @@ save_data <- function(data, path, na = "", ...) {
 #' (ggplot(nps_drivers, aes(value, nps)) + geom_point()) %>% save_output(tmp_png)
 #' }
 #' @export
-save_output <- function(x, path, ...) {
+save_output <- function(x, path = NULL, ...) {
   if (inherits(x, "ggplot")) {
     save_plot(x, path, ...)
   } else if (is.data.frame(x) || is.list(x)) {
@@ -171,7 +194,9 @@ derive_sheet_name <- function(df, i) {
 #'
 #' @param ... Data frames to write, one per tab. Name them to set tab names
 #'   (e.g. `drivers = tidy(drivers(d, y))`).
-#' @param path Output `.xlsx` path.
+#' @param path Output `.xlsx` path. If `NULL` (default), the workbook is written
+#'   to `ezr-models/tables.xlsx` in the working directory. Missing directories
+#'   are created.
 #' @param sheet_names Optional character vector of tab names (overrides argument
 #'   names).
 #'
@@ -196,11 +221,12 @@ derive_sheet_name <- function(df, i) {
 #' )
 #' file.exists(tmp)
 #' @export
-export_xlsx <- function(..., path, sheet_names = NULL) {
+export_xlsx <- function(..., path = NULL, sheet_names = NULL) {
   if (!requireNamespace("writexl", quietly = TRUE)) {
     stop("Exporting XLSX needs the 'writexl' package. ",
          "Install it with install.packages('writexl').", call. = FALSE)
   }
+  path <- ensure_output_dir(path %||% default_output_path("tables", "xlsx"))
   items <- list(...)
   if (length(items) == 0L) {
     stop("Provide at least one data frame to export.", call. = FALSE)

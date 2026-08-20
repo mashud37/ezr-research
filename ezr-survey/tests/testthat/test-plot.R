@@ -73,6 +73,17 @@ test_that("plot_nps_gauge builds for both scales", {
   expect_no_error(ggplot2::ggplot_build(plot_nps_gauge(3.8, scale = "rating")))
 })
 
+test_that("plot_gauges stacks scores and infers scales", {
+  p <- plot_gauges(c("Net Promoter Score" = 23, "Average quality rating" = 3.4))
+  expect_no_error(ggplot2::ggplot_build(p))
+  # explicit scales and a single gauge also build
+  expect_no_error(ggplot2::ggplot_build(
+    plot_gauges(c("Recommendation" = 5, "Quality" = 4.2),
+                scales = c("nps", "rating"))
+  ))
+  expect_error(plot_gauges(c(10, 20)), "named")
+})
+
 test_that("plot_ipm builds", {
   skip_if_not_installed("rwa")
   m <- ipm_model(podracing_survey, nps_value, "ratings_")

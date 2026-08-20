@@ -10,13 +10,7 @@ report_deck(
   format = c("pptx", "docx"),
   title = NULL,
   template = NULL,
-  style = c("elevated", "plain"),
-  ai = FALSE,
-  ai_titles = FALSE,
-  chat = NULL,
-  provider = "openai",
-  model = NULL,
-  context = NULL
+  style = c("elevated", "plain")
 )
 }
 \arguments{
@@ -24,7 +18,8 @@ report_deck(
 a ggplot (added as a plot) or a data frame (added as a table).}
 
 \item{path}{Output file path. If \code{NULL} (default), the deck is written to
-\code{outputs/report.pptx} / \code{outputs/report.docx} in the working directory.}
+\code{ezrsurvey-outputs/report.pptx} / \code{ezrsurvey-outputs/report.docx} in the
+working directory.}
 
 \item{format}{\code{"pptx"} (default) or \code{"docx"}.}
 
@@ -35,48 +30,24 @@ template registered by \code{\link[=use_brand]{use_brand()}}, see \code{\link[=r
 
 \item{style}{Built-in template to fall back on: \code{"elevated"} (default, the
 styled deck) or \code{"plain"} (undecorated white). See \code{\link[=report_new]{report_new()}}.}
-
-\item{ai}{If \code{TRUE}, draft 3-4 takeaway bullets per slide with an LLM (the
-\code{slide_bullets} prompt template). Defaults to \code{FALSE}.}
-
-\item{ai_titles}{If \code{TRUE}, also let the LLM write a headline-style title
-for every slide. Your own item names are never overwritten unless you set
-this; unnamed items always get an AI title when \code{ai = TRUE}.}
-
-\item{chat}{An existing \code{\link[=ai_chat]{ai_chat()}} object reused for all slides. If \code{NULL},
-one is created from \code{provider} / \code{model}.}
-
-\item{provider, model}{Passed to \code{\link[=ai_chat]{ai_chat()}} when \code{chat} is not supplied.}
-
-\item{context}{Optional survey context from \code{\link[=ai_context]{ai_context()}}, given to the
-model with every slide's data.}
 }
 \value{
 Invisibly \code{path}.
 }
 \description{
 Turns a named list of ggplots / data frames into a titled-slide deck (or
-Word document) and saves it. With \code{ai = TRUE}, an LLM drafts takeaway
-bullets -- and, on request, headline titles -- for every slide from the data
-behind it.
+Word document) and saves it. Names become slide titles; each item lands on
+its own slide, sized to the template's content placeholder.
 }
 \details{
-Where the AI text lands depends on the template: if it offers a
-two-content layout (title plus two content placeholders), the chart goes
-left and the bullets right; otherwise the bullets are written into the
-slide's speaker notes, which works on any template and survives import into
-Google Slides. In Word, bullets become paragraphs under the section
-heading. One chat connection is reused across all slides, and any failed
-call is reported and skipped, so a network hiccup degrades to a plain slide
-rather than killing the build.
-
 Every chart is rendered at the exact size of the template's content
 placeholder and centred in it, and \code{\link[=plot_bars]{plot_bars()}} draws bars to a constant
 thickness whatever the category count, so the deck reads consistently as you
 flick through it.
 
-Privacy: with \code{ai = TRUE}, the summary tables behind the items (never raw
-respondent rows) are sent to the LLM provider.
+For a deck built a slide at a time, with section dividers and per-slide
+control over the layout, use \code{\link[=report_new]{report_new()}} and the \verb{report_add_*()} family
+instead.
 }
 \examples{
 \dontrun{
@@ -87,20 +58,10 @@ report_deck(
   ),
   path = "overview.pptx"
 )
-
-# the same deck with AI takeaway bullets on every slide
-report_deck(
-  list(
-    "Gender" = plot_bars(calc_percentage(podracing_survey, demo_gender)),
-    "NPS"    = calc_nps(podracing_survey, nps_value)
-  ),
-  path = "overview.pptx", ai = TRUE, provider = "openai",
-  context = ai_context(podracing_survey)
-)
 }
 }
 \seealso{
-\code{\link[=report_new]{report_new()}}, \code{\link[=ai_context]{ai_context()}}, \code{\link[=use_brand]{use_brand()}}.
+\code{\link[=report_new]{report_new()}}, \code{\link[=use_brand]{use_brand()}}.
 
 Other reporting:
 \code{\link[=example_report]{example_report()}},
@@ -112,6 +73,9 @@ Other reporting:
 \code{\link[=report_layouts]{report_layouts()}},
 \code{\link[=report_new]{report_new()}},
 \code{\link[=report_save]{report_save()}},
+\code{\link[=report_section]{report_section()}},
+\code{\link[=report_slide]{report_slide()}},
+\code{\link[=report_title_slide]{report_title_slide()}},
 \code{\link[=scaffold_report]{scaffold_report()}}
 }
 \concept{reporting}

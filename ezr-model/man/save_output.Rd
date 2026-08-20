@@ -4,12 +4,14 @@
 \alias{save_output}
 \title{Quick-save any ezrmodel output (plot or table)}
 \usage{
-save_output(x, path, ...)
+save_output(x, path = NULL, ...)
 }
 \arguments{
 \item{x}{A ggplot, a data frame, or a (named) list of data frames.}
 
-\item{path}{Output path; the extension picks the format.}
+\item{path}{Output path; the extension picks the format. If \code{NULL} (default),
+the file lands in the working directory's \verb{ezr-models/} folder
+(\code{ezr-models/plot.png} or \code{ezr-models/data.csv}).}
 
 \item{...}{Passed to \code{\link[=save_plot]{save_plot()}} or \code{\link[=save_data]{save_data()}}.}
 }
@@ -23,12 +25,12 @@ pipe when you do not want to think about which saver to call.
 }
 \examples{
 tmp_csv <- tempfile(fileext = ".csv")
-tidy(correlations(nps_drivers, nps)) |> save_output(tmp_csv)
+tidy(correlations(nps_drivers, nps)) \%>\% save_output(tmp_csv)
 
 \donttest{
 library(ggplot2)
 tmp_png <- tempfile(fileext = ".png")
-(ggplot(nps_drivers, aes(value, nps)) + geom_point()) |> save_output(tmp_png)
+(ggplot(nps_drivers, aes(value, nps)) + geom_point()) \%>\% save_output(tmp_png)
 }
 }
 \seealso{

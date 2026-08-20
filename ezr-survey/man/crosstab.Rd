@@ -89,6 +89,7 @@ Other summaries:
 \code{\link[=calc_percentage]{calc_percentage()}},
 \code{\link[=calc_percentage_batch]{calc_percentage_batch()}},
 \code{\link[=calc_percentage_multi]{calc_percentage_multi()}},
-\code{\link[=calc_summary]{calc_summary()}}
+\code{\link[=calc_summary]{calc_summary()}},
+\code{\link[=crosstab_banner]{crosstab_banner()}}
 }
 \concept{summaries}

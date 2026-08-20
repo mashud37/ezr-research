@@ -7,7 +7,6 @@ format:
 {{REFERENCE_DOC}}
 params:
   data: ""
-  ai: false
 ---
 
 ```{r setup, include=FALSE}
@@ -26,14 +25,9 @@ d <- if (nzchar(params$data)) {
 
 ## Executive summary
 
-```{r}
-#| eval: !expr params$ai
-#| output: asis
-# AI draft (render with -P ai:true; needs ellmer + a stored key).
-# Rewrite before circulating -- it is a draft, not a finding.
-cat(ai_summarise(calc_nps(d, nps_value), template = "exec_summary",
-                 context = ai_context(d)))
-```
+- Replace these with the three things the room must remember
+- One number each, with what it means for the business
+- Write them last, once the rest of the deck is settled
 
 ::: {.notes}
 One message per slide. Replace this deck's placeholder titles with takeaway

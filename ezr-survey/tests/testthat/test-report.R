@@ -95,45 +95,6 @@ test_that("report_deck builds a pptx file", {
   expect_gt(file.info(out)$size, 0)
 })
 
-test_that("report_deck with a stub chat writes AI bullets", {
-  skip_if_not_installed("officer")
-  skip_if_not_installed("flextable")
-  dir <- withr::local_tempdir()
-  path <- file.path(dir, "deck-ai.pptx")
-  calls <- 0L
-  fake_chat <- list(chat = function(msg) {
-    calls <<- calls + 1L
-    "- First takeaway\n- Second takeaway\n- Third takeaway"
-  })
-  p <- calc_percentage(podracing_survey, demo_gender) %>% plot_bars()
-  out <- report_deck(list("Gender" = p), path = path, ai = TRUE,
-                     chat = fake_chat)
-  expect_true(file.exists(out))
-  expect_equal(calls, 1L)
-})
-
-test_that("report_deck survives a failing chat", {
-  skip_if_not_installed("officer")
-  skip_if_not_installed("flextable")
-  dir <- withr::local_tempdir()
-  path <- file.path(dir, "deck-fail.pptx")
-  broken_chat <- list(chat = function(msg) stop("provider down"))
-  p <- calc_percentage(podracing_survey, demo_gender) %>% plot_bars()
-  expect_message(
-    out <- report_deck(list("Gender" = p), path = path, ai = TRUE,
-                       chat = broken_chat),
-    "provider down"
-  )
-  expect_true(file.exists(out))
-})
-
-test_that("parse_markdown_bullets strips markers and blanks", {
-  expect_equal(
-    parse_markdown_bullets("- a\n* b\n\n1. c\n2) d"),
-    c("a", "b", "c", "d")
-  )
-})
-
 test_that("report builders add plots and tables to a docx", {
   skip_if_not_installed("officer")
   skip_if_not_installed("flextable")
@@ -212,6 +173,49 @@ test_that("report_deck builds a multi-chart deck", {
   )
   out <- report_deck(items, path = file.path(dir, "deck.pptx"))
   expect_true(file.exists(out))
+})
+
+test_that("report_slide/report_section/report_title_slide build a deck in one line each", {
+  skip_if_not_installed("officer")
+  skip_if_not_installed("flextable")
+  dir <- withr::local_tempdir()
+  p <- calc_percentage(podracing_survey, demo_gender) %>% plot_bars()
+  doc <- report_new("pptx") %>%
+    report_title_slide("Pod-Racing Fan Survey") %>%
+    report_section("DEMOGRAPHICS") %>%
+    report_slide("What is your gender?", p) %>%
+    report_slide("Where from?", calc_nps(podracing_survey, nps_value, by = region)) %>%
+    report_slide("How to read this", c("First point", "Second point"))
+  out <- report_save(doc, file.path(dir, "wrappers.pptx"))
+  expect_true(file.exists(out))
+  expect_gt(file.info(out)$size, 0)
+})
+
+test_that("report_title_slide places a subtitle when given one", {
+  skip_if_not_installed("officer")
+  skip_if_not_installed("xml2")
+  dir <- withr::local_tempdir()
+  doc <- report_new("pptx") %>%
+    report_title_slide("Deck", subtitle = "1,000 fans | Fieldwork 2026")
+  path <- report_save(doc, file.path(dir, "cover.pptx"))
+  ex <- file.path(dir, "unz")
+  utils::unzip(path, exdir = ex)
+  slide <- paste(readLines(file.path(ex, "ppt", "slides", "slide1.xml"),
+                           warn = FALSE), collapse = "")
+  expect_match(slide, "Fieldwork 2026")
+})
+
+test_that("report_section falls back to a content slide when the layout is absent", {
+  skip_if_not_installed("officer")
+  doc <- report_new("pptx")
+  expect_s3_class(report_section(doc, "RATINGS"), "rpptx")
+  expect_s3_class(report_section(doc, "NOPE", layout = "No Such Layout"), "rpptx")
+})
+
+test_that("report_slide rejects unsupported content", {
+  skip_if_not_installed("officer")
+  doc <- report_new("pptx")
+  expect_error(report_slide(doc, "T", content = 42), "ggplot")
 })
 
 test_that("example_report copies the worked example", {

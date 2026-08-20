@@ -4,13 +4,14 @@
 \alias{save_data}
 \title{Quick-save a table to CSV, TSV or XLSX}
 \usage{
-save_data(data, path, na = "", ...)
+save_data(data, path = NULL, na = "", ...)
 }
 \arguments{
 \item{data}{A data frame / tibble, or (for \code{.xlsx}) a named list of them.}
 
 \item{path}{Output path; the extension sets the format (\code{.csv}, \code{.tsv},
-\code{.xlsx}).}
+\code{.xlsx}). If \code{NULL} (default), the table is written to \code{ezr-models/data.csv}
+in the working directory. Missing directories are created.}
 
 \item{na}{String to write for missing values. Default \code{""}.}
 
@@ -34,7 +35,7 @@ Returns its input invisibly so it can sit mid-pipeline. To send several
 separate calls to their own tabs in one line, see \code{\link[=export_xlsx]{export_xlsx()}}.
 }
 \examples{
-tab <- correlations(nps_drivers, nps) |> tidy()
+tab <- correlations(nps_drivers, nps) \%>\% tidy()
 tmp <- tempfile(fileext = ".csv")
 save_data(tab, tmp)
 file.exists(tmp)

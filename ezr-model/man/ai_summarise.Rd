@@ -57,7 +57,7 @@ steer a single call. A fresh chat is created per call unless you pass one via
 }
 \examples{
 \dontrun{
-tidy(drivers(nps_drivers, nps)) |>
+tidy(drivers(nps_drivers, nps)) \%>\%
   ai_summarise(template = "exec_summary", provider = "openai")
 }
 }

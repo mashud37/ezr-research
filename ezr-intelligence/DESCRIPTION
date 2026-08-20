@@ -1,0 +1,38 @@
+Package: ezrintelligence
+Type: Package
+Title: Single-Line Language-Model Summaries for Analysis Tables
+Version: 0.1.0
+Authors@R:
+    person("Andreas", "Schellewald", email = "aschellewald@acm.org",
+           role = c("aut", "cre"))
+Description: Turns a finished analysis table into written findings with one
+    call to a large language model. Provides a registry of named prompt
+    templates written to an analyst standard (quote only figures present in
+    the data, treat differences inside the margin of error as noise, name the
+    base), a context object carrying sample size, question wording and
+    precision alongside the table, helpers that summarise one table or a whole
+    named list of report sections, and slide title and bullet drafting for
+    presentation decks. API keys are read from the operating system credential
+    store or the conventional environment variable, so secrets never appear in
+    scripts. Model access is through the 'ellmer' package, which supports
+    commercial providers and locally served open-weight models alike.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Depends:
+    R (>= 4.1.0)
+Imports:
+    dplyr (>= 1.1.0),
+    purrr,
+    tibble
+Suggests:
+    ellmer,
+    keyring,
+    yaml,
+    withr,
+    knitr,
+    rmarkdown,
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+Roxygen: list(markdown = TRUE)
+Config/roxygen2/version: 8.0.0
+VignetteBuilder: knitr

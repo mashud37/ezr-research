@@ -19,15 +19,15 @@ Invisibly the paths written.
 \description{
 Drops the package's complete worked example next to your data: a full
 Quarto report over the bundled \code{podracing_survey} (every chart type, real
-narrative, optional AI sections) plus the matching slide-deck script on
-the officer path. Render / run them as they are, then swap in your own
-data.
+narrative) plus the matching slide-deck script on the officer path. Render
+/ run them as they are, then swap in your own data.
 }
 \details{
 Two files are copied: \code{podracing-report.qmd} (render with
-\verb{quarto render podracing-report.qmd}; add \verb{-P ai:true} for the AI-drafted
-sections) and \code{podracing-deck.R} (run with \verb{Rscript podracing-deck.R};
-writes a 16:9 deck to \verb{outputs/}). Unlike the blank \code{\link[=scaffold_report]{scaffold_report()}}
+\verb{quarto render podracing-report.qmd}) and \code{podracing-deck.R}
+(run with \verb{Rscript podracing-deck.R};
+writes a 16:9 deck to \verb{ezrsurvey-outputs/}). Unlike the blank
+\code{\link[=scaffold_report]{scaffold_report()}}
 skeletons, the example ships finished narrative over the bundled data, so
 you can see every visual and slide element in a finished state before
 adapting it.
@@ -51,6 +51,9 @@ Other reporting:
 \code{\link[=report_layouts]{report_layouts()}},
 \code{\link[=report_new]{report_new()}},
 \code{\link[=report_save]{report_save()}},
+\code{\link[=report_section]{report_section()}},
+\code{\link[=report_slide]{report_slide()}},
+\code{\link[=report_title_slide]{report_title_slide()}},
 \code{\link[=scaffold_report]{scaffold_report()}}
 }
 \concept{reporting}

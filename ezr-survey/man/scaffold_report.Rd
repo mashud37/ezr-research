@@ -38,17 +38,15 @@ Invisibly the path written.
 \description{
 Copies a ready-to-render Quarto report skeleton into your project, wired up
 with ezrsurvey helpers against the bundled \code{podracing_survey} data: an
-executive summary, per-question sections with placeholder narrative,
-optional AI-drafted text, and a methodology appendix built from the
+executive summary, per-question sections with placeholder narrative, and a
+methodology appendix built from the
 precision diagnostics. Swap in your own data via the \code{data} parameter (or
 at the top of the file) and render with Quarto. This is the document-driven
 counterpart to the \code{\link[=report_new]{report_new()}} / \code{\link[=report_deck]{report_deck()}} officer builders.
 }
 \details{
-Each scaffold declares two Quarto parameters: \code{data} (path to a CSV of your
-survey; empty means the bundled example data) and \code{ai} (default \code{false};
-set \code{true} to render the AI-drafted narrative chunks, which needs the
-\code{ellmer} package and a stored key, see \code{\link[=set_llm_key]{set_llm_key()}}).
+Each scaffold declares one Quarto parameter: \code{data}, the path to a CSV of
+your survey; empty means the bundled example data.
 
 \strong{Corporate templates:} Quarto/Pandoc fills a \code{reference-doc} by looking
 for the \emph{standard} layout names ("Title Slide", "Title and Content", "Two
@@ -79,6 +77,9 @@ Other reporting:
 \code{\link[=report_deck]{report_deck()}},
 \code{\link[=report_layouts]{report_layouts()}},
 \code{\link[=report_new]{report_new()}},
-\code{\link[=report_save]{report_save()}}
+\code{\link[=report_save]{report_save()}},
+\code{\link[=report_section]{report_section()}},
+\code{\link[=report_slide]{report_slide()}},
+\code{\link[=report_title_slide]{report_title_slide()}}
 }
 \concept{reporting}

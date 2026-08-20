@@ -40,6 +40,7 @@ sample_comments(podracing_survey, nps_com, show_com, n = 5) \%>\%
 
 Other plots:
 \code{\link[=plot_bars]{plot_bars()}},
+\code{\link[=plot_gauges]{plot_gauges()}},
 \code{\link[=plot_ipm]{plot_ipm()}},
 \code{\link[=plot_nps]{plot_nps()}},
 \code{\link[=plot_nps_gauge]{plot_nps_gauge()}},

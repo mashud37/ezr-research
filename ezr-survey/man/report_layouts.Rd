@@ -50,6 +50,9 @@ Other reporting:
 \code{\link[=report_deck]{report_deck()}},
 \code{\link[=report_new]{report_new()}},
 \code{\link[=report_save]{report_save()}},
+\code{\link[=report_section]{report_section()}},
+\code{\link[=report_slide]{report_slide()}},
+\code{\link[=report_title_slide]{report_title_slide()}},
 \code{\link[=scaffold_report]{scaffold_report()}}
 }
 \concept{reporting}

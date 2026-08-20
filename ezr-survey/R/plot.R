@@ -387,6 +387,146 @@ plot_nps_gauge <- function(score, scale = c("nps", "rating"),
   p
 }
 
+# Internal: band layout, axis limits and score formatter for one gauge scale.
+gauge_scale <- function(scale) {
+  if (scale == "nps") {
+    list(
+      bands = tibble::tibble(
+        label = c("NEEDS WORK", "GOOD", "GREAT", "EXCELLENT"),
+        from = c(-100, 0, 30, 70),
+        to = c(0, 30, 70, 100),
+        colour = unname(pal_rating[c("1", "3", "4", "5")])
+      ),
+      lo = -100, hi = 100,
+      fmt = function(s) sprintf("%+d", as.integer(round(s)))
+    )
+  } else {
+    list(bands = bands_rating_3(), lo = 1, hi = 5,
+         fmt = function(s) sprintf("%.2f / 5", s))
+  }
+}
+
+# Internal: guess a gauge scale from a score's range (an NPS spans well past the
+# 1-5 rating range). Used only when `scales` is not supplied.
+infer_gauge_scale <- function(score) {
+  if (!is.finite(score) || score < 1 || score > 5) "nps" else "rating"
+}
+
+#' Stacked score gauges (NPS over average quality, etc.)
+#'
+#' Draws two or more scores as thin banded gauge bars stacked one above another,
+#' each on its own scale with a "you are here" marker. The headline summary
+#' slide: the Net Promoter Score on top and the average feature quality rating
+#' below it, so both key numbers sit together instead of one fat bar filling the
+#' slide.
+#'
+#' @param scores A **named** numeric vector; each name labels a gauge and each
+#'   value is placed on its scale. The first is drawn at the top.
+#' @param scales Which band scale each gauge uses: `"nps"` (a -100..100 Net
+#'   Promoter scale) or `"rating"` (a 1..5 quality scale). Length 1 (recycled)
+#'   or one per score. `NULL` (default) infers `"rating"` for a value in 1..5
+#'   and `"nps"` otherwise.
+#' @param title Optional title. `NULL` (default) draws none, so a slide title can
+#'   carry the wording instead.
+#' @param height Bar thickness in plot units (row spacing is 1). Defaults to
+#'   `0.5`, keeping each bar deliberately thin so several share the panel.
+#' @param label_size Band-label text size. `NULL` (default) is a compact
+#'   `10 / .pt`.
+#'
+#' @return A ggplot object.
+#'
+#' @details
+#' Each gauge is normalised to its own scale, so an NPS of `+23` and a quality
+#' rating of `3.4` line up on a shared 0..1 panel with the band boundaries drawn
+#' where each scale puts them (the NPS gauge reuses the [plot_nps_gauge()] bands;
+#' the rating gauge uses [bands_rating_3()]). The score for each gauge is printed
+#' beside its label, and a black marker shows where it lands. Because the bars
+#' are thin and stacked, this is the summary-slide companion to the detailed
+#' [plot_nps()] distribution and the [plot_ipm()] driver matrix.
+#'
+#' @family plots
+#' @seealso [plot_nps_gauge()], [calc_nps()], [ipm_model()].
+#' @examples
+#' nps <- calc_nps(podracing_survey, nps_value)$nps
+#' quality <- 3.4
+#' p <- plot_gauges(c("Net Promoter Score" = nps,
+#'                    "Average quality rating" = quality))
+#' @export
+plot_gauges <- function(scores, scales = NULL, title = NULL, height = 0.5,
+                        label_size = NULL) {
+  if (!is.numeric(scores) || is.null(names(scores)) ||
+      any(!nzchar(names(scores)))) {
+    stop("`scores` must be a named numeric vector; the names label the gauges.",
+         call. = FALSE)
+  }
+  n <- length(scores)
+  scales <- if (is.null(scales)) {
+    vapply(unname(scores), infer_gauge_scale, character(1))
+  } else {
+    rep_len(scales, n)
+  }
+  label_size <- label_size %||% (10 / ggplot2::.pt)
+  norm <- function(v, lo, hi) (v - lo) / (hi - lo)
+
+  rects <- vector("list", n)
+  markers <- vector("list", n)
+  ybreaks <- numeric(n)
+  ylabels <- character(n)
+  for (i in seq_len(n)) {
+    yc <- n - i + 1                         # first gauge on top
+    sc <- gauge_scale(scales[[i]])
+    b <- sc$bands
+    xmin <- pmax(0, norm(b$from, sc$lo, sc$hi))
+    xmax <- pmin(1, norm(b$to, sc$lo, sc$hi))
+    rects[[i]] <- data.frame(
+      xmin = xmin, xmax = xmax, xmid = (xmin + xmax) / 2,
+      ymin = yc - height / 2, ymax = yc + height / 2,
+      colour = b$colour, label = b$label,
+      wide = (xmax - xmin) > 0.14,
+      stringsAsFactors = FALSE
+    )
+    mx <- min(1, max(0, norm(scores[[i]], sc$lo, sc$hi)))
+    markers[[i]] <- data.frame(x = mx,
+                               ymin = yc - height / 2 - 0.06,
+                               ymax = yc + height / 2 + 0.06)
+    ybreaks[i] <- yc
+    ylabels[i] <- paste0(names(scores)[i], "\n", sc$fmt(scores[[i]]))
+  }
+  rects <- do.call(rbind, rects)
+  markers <- do.call(rbind, markers)
+
+  ggplot2::ggplot() +
+    ggplot2::geom_rect(
+      data = rects,
+      ggplot2::aes(xmin = .data$xmin, xmax = .data$xmax,
+                   ymin = .data$ymin, ymax = .data$ymax, fill = .data$colour)
+    ) +
+    ggplot2::geom_text(
+      data = rects[rects$wide, , drop = FALSE],
+      ggplot2::aes(x = .data$xmid, y = (.data$ymin + .data$ymax) / 2,
+                   label = .data$label),
+      colour = "white", fontface = "bold", size = label_size
+    ) +
+    ggplot2::geom_segment(
+      data = markers,
+      ggplot2::aes(x = .data$x, xend = .data$x, y = .data$ymin,
+                   yend = .data$ymax),
+      colour = "black", linewidth = 1.2
+    ) +
+    ggplot2::scale_fill_identity() +
+    ggplot2::scale_x_continuous(limits = c(0, 1), expand = c(0, 0)) +
+    ggplot2::scale_y_continuous(breaks = ybreaks, labels = ylabels,
+                                limits = c(min(ybreaks) - height,
+                                           max(ybreaks) + height)) +
+    ggplot2::labs(title = title, x = "", y = "") +
+    theme_ezrsurvey(transparent = TRUE) +
+    ggplot2::theme(
+      axis.text.x = ggplot2::element_blank(),
+      axis.text.y = ggplot2::element_text(face = "bold", hjust = 1),
+      panel.grid = ggplot2::element_blank()
+    )
+}
+
 #' NPS distribution slide (0-10 scale with group labels)
 #'
 #' The canonical Net Promoter Score chart: the full 0-10 recommendation

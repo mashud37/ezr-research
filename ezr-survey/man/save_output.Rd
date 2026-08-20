@@ -10,8 +10,8 @@ save_output(x, path = NULL, ...)
 \item{x}{A ggplot, a data frame, or a (named) list of data frames.}
 
 \item{path}{Output path; the extension picks the format. If \code{NULL}
-(default), the file lands in the working directory's \verb{outputs/} folder
-(\code{outputs/plot.png} or \code{outputs/data.csv}).}
+(default), the file lands in the working directory's \verb{ezrsurvey-outputs/}
+folder (\code{ezrsurvey-outputs/plot.png} or \code{ezrsurvey-outputs/data.csv}).}
 
 \item{...}{Passed to \code{\link[=save_plot]{save_plot()}} or \code{\link[=save_data]{save_data()}}.}
 }
@@ -36,6 +36,7 @@ plot_bars(calc_percentage(podracing_survey, demo_gender)) \%>\% save_output(tmp_
 \code{\link[=save_plot]{save_plot()}}, \code{\link[=save_data]{save_data()}}.
 
 Other save:
+\code{\link[=export_summary_xlsx]{export_summary_xlsx()}},
 \code{\link[=export_xlsx]{export_xlsx()}},
 \code{\link[=save_data]{save_data()}},
 \code{\link[=save_plot]{save_plot()}}

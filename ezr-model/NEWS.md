@@ -1,5 +1,14 @@
 # ezrmodel 0.4.0
 
+## Output location
+
+* The savers now default to a project-local **`ezr-models/`** folder in the
+  working directory when no `path` is given: `save_plot()`
+  (`ezr-models/plot.png`), `save_data()` (`ezr-models/data.csv`),
+  `save_output()` and `export_xlsx()` (`ezr-models/tables.xlsx`). Files land
+  straight in the folder with no per-type subfolders; missing directories are
+  created, and explicit paths behave as before.
+
 ## Data
 
 * New **`personas`** dataset: five consumer segments generated from explicit

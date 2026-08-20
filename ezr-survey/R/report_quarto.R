@@ -17,8 +17,8 @@ list_report_templates <- function() {
 #'
 #' Copies a ready-to-render Quarto report skeleton into your project, wired up
 #' with ezrsurvey helpers against the bundled `podracing_survey` data: an
-#' executive summary, per-question sections with placeholder narrative,
-#' optional AI-drafted text, and a methodology appendix built from the
+#' executive summary, per-question sections with placeholder narrative, and a
+#' methodology appendix built from the
 #' precision diagnostics. Swap in your own data via the `data` parameter (or
 #' at the top of the file) and render with Quarto. This is the document-driven
 #' counterpart to the [report_new()] / [report_deck()] officer builders.
@@ -39,10 +39,8 @@ list_report_templates <- function() {
 #' @return Invisibly the path written.
 #'
 #' @details
-#' Each scaffold declares two Quarto parameters: `data` (path to a CSV of your
-#' survey; empty means the bundled example data) and `ai` (default `false`;
-#' set `true` to render the AI-drafted narrative chunks, which needs the
-#' `ellmer` package and a stored key, see [set_llm_key()]).
+#' Each scaffold declares one Quarto parameter: `data`, the path to a CSV of
+#' your survey; empty means the bundled example data.
 #'
 #' **Corporate templates:** Quarto/Pandoc fills a `reference-doc` by looking
 #' for the *standard* layout names ("Title Slide", "Title and Content", "Two
@@ -112,9 +110,8 @@ scaffold_report <- function(format = c("pptx", "html", "pdf", "docx"),
 #'
 #' Drops the package's complete worked example next to your data: a full
 #' Quarto report over the bundled `podracing_survey` (every chart type, real
-#' narrative, optional AI sections) plus the matching slide-deck script on
-#' the officer path. Render / run them as they are, then swap in your own
-#' data.
+#' narrative) plus the matching slide-deck script on the officer path. Render
+#' / run them as they are, then swap in your own data.
 #'
 #' @param dir Destination folder. Defaults to `"ezrsurvey-example"` in the
 #'   working directory; created if missing.
@@ -125,9 +122,10 @@ scaffold_report <- function(format = c("pptx", "html", "pdf", "docx"),
 #'
 #' @details
 #' Two files are copied: `podracing-report.qmd` (render with
-#' `quarto render podracing-report.qmd`; add `-P ai:true` for the AI-drafted
-#' sections) and `podracing-deck.R` (run with `Rscript podracing-deck.R`;
-#' writes a 16:9 deck to `outputs/`). Unlike the blank [scaffold_report()]
+#' `quarto render podracing-report.qmd`) and `podracing-deck.R`
+#' (run with `Rscript podracing-deck.R`;
+#' writes a 16:9 deck to `ezrsurvey-outputs/`). Unlike the blank
+#' [scaffold_report()]
 #' skeletons, the example ships finished narrative over the bundled data, so
 #' you can see every visual and slide element in a finished state before
 #' adapting it.

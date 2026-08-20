@@ -166,10 +166,10 @@ export_xlsx(
 
 * Set persistent defaults with `ezrsurvey_options()` and a profile
   (`use_ezrsurvey_profile()`).
-* Draft narrative summaries with `ai_summarise()` (needs an API key via
-  `set_llm_key()`).
 * Build a deck with `report_deck()` or scaffold a Quarto report with
   `scaffold_report()`.
+* Draft the narrative around the tables with the companion `ezrintelligence`
+  package.
 
 ```{r, include = FALSE}
 remove_order("education")
