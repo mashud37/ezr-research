@@ -1,0 +1,27 @@
+url: ~
+
+template:
+  bootstrap: 5
+
+reference:
+- title: Summarise
+  desc: Turn a finished table into written findings.
+  contents:
+  - has_concept("ai")
+- title: Prompts
+  desc: The named templates that decide how an answer is written.
+  contents:
+  - has_concept("prompts")
+- title: Keys
+  desc: API keys in the operating system credential store.
+  contents:
+  - has_concept("keys")
+- title: Configuration
+  desc: Options and profiles.
+  contents:
+  - has_concept("config")
+
+articles:
+- title: Get started
+  contents:
+  - ezrintelligence

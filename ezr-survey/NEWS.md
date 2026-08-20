@@ -1,4 +1,53 @@
+# ezrsurvey 0.5.0
+
+## AI summaries move to ezrintelligence
+
+* The language-model helpers are **removed** from ezrsurvey and now live in the
+  companion `ezrintelligence` package: `ai_chat()`, `ai_summarise()`,
+  `ai_report_sections()`, `ai_context()`, the prompt-template registry
+  (`list_prompts()`, `get_prompt()`, `register_prompt()`) and key management
+  (`set_llm_key()`, `get_llm_key()`, `has_llm_key()`, `delete_llm_key()`,
+  `list_llm_keys()`). Install it alongside ezrsurvey and pass it any summary
+  table ezrsurvey produces. `ellmer` and `keyring` are no longer suggested
+  dependencies.
+* **`report_deck()`** loses its `ai`, `ai_titles`, `chat`, `provider`, `model`
+  and `context` arguments. For AI slide text, call
+  `ezrintelligence::ai_slide_text()` on the table behind a slide and place the
+  title and bullets it returns yourself.
+* The Quarto scaffolds and the worked example lose their `ai` parameter and
+  the eval-gated AI chunks; they render with placeholder narrative and their
+  `data` parameter as before.
 # ezrsurvey 0.4.0
+
+## Cross-tabs and summary workbooks
+
+* **`crosstab_banner()`** builds the market-research banner table: a stack of
+  question variables down the side (`rows`) and one or more grouping variables
+  across the top (`cols`), plus a whole-sample **Overall** column. Categorical
+  questions become column-percentage blocks (each column sums to ~100 within a
+  block); numeric questions turn into a mean/median/sd/quartile block
+  automatically. `cell = "diff"` shows each cell's distance from the Overall
+  column, `long = TRUE` returns the tidy form, and `flextable = TRUE` renders the
+  two-row spanning header for a slide or Word report. It generalises `crosstab()`
+  from a single pair to a whole table. **Pass only the data frame** to cross every
+  variable against every variable; identifier and free-text columns are skipped,
+  and check-all-that-apply blocks (e.g. `motivations_*`) are folded into a single
+  multi-select stub question with the correct question-level base.
+* **`export_summary_xlsx()`** writes a tabbed Excel workbook with one worksheet
+  per question, each holding that question's summary table and its chart
+  (percentages and a bar chart for categorical questions, a `calc_summary()`
+  table and a histogram for numeric ones, a `calc_percentage_multi()` table for a
+  check-all-that-apply block). **Called with just the data frame** it writes every
+  question at once, one multi-select block to a single sheet, skipping identifier
+  and free-text columns. The Excel counterpart of the slide/Word `report_deck()`.
+  Needs the suggested `openxlsx2` package.
+
+## Output location
+
+* The auto-output folder is now **`ezrsurvey-outputs/`** (was `outputs/`).
+  `save_plot()`, `save_data()`, `save_output()`, `export_xlsx()`,
+  `report_save()` and `report_deck()` write straight into it with no per-type
+  subfolders when no `path` is given; explicit paths behave as before.
 
 ## Working without repeating the data
 
@@ -13,6 +62,13 @@
   an explicit data frame or a pipe still wins. Previously only the much longer
   `calc_percentage(column = demo_gender)` worked, which saved nothing over just
   passing the data.
+
+## Charts
+
+* **`plot_gauges()`** draws several scores as thin banded gauge bars stacked one
+  above another -- the summary-slide staple of the Net Promoter Score over the
+  average feature quality rating, each on its own scale with a marker, instead
+  of one fat single bar. `plot_nps_gauge()` remains for a single score.
 
 ## Colour correctness
 
@@ -40,16 +96,40 @@
 
 ## Reporting
 
-* **Decks are 16:9 by default, and styled.** Without a brand template,
-  `report_new()`, `report_deck()` and the Quarto pptx scaffold use a built-in
-  widescreen template carrying the furniture a corporate deck is expected to
-  have: an accent lead-in over a full-width hairline under every title, a
-  hairline above the footer strip, a full-bleed accent band across the foot of
-  the title slide, and live slide numbers on every content slide. Pass
-  `style = "plain"` for the same deck with no decoration at all, or
-  `slide_numbers = FALSE` to drop the numbering. Both templates keep the
-  standard PowerPoint layout names (plus "Content with Caption"), so Quarto
-  renders against either without falling back to Pandoc's own template.
+* **One line per slide.** New wrappers collapse `calc -> plot -> add` onto a
+  single pipe step so a deck script reads as one line per slide:
+  `report_slide(title, content)` starts a titled slide and places its content
+  (a ggplot becomes a chart, a data frame a table, a character vector a bullet
+  list); `report_section("DEMOGRAPHICS")` drops a single-word divider; and
+  `report_title_slide(title, subtitle)` opens the deck. The rewritten
+  `example_report()` deck is built this way as a full agency read-out -- cover,
+  chaptered sections and every question block in the questionnaire
+  (recommendation, the six experience ratings and their drivers, motivations,
+  the three sponsor brands, the whole respondent profile, favourite drivers,
+  open-text comments and a methods appendix) -- with each slide title the survey
+  question it answers.
+* **Slide tables fill the slide.** `report_add_table()` now styles the table
+  (banded header, centred cells, a readable 12pt font) and widens its columns
+  to span the content placeholder, so a summary table fills the slide instead
+  of sitting tiny in a corner.
+* **Headlines and bullets no longer overflow.** The bundled templates bring the
+  master title/body font sizes down to deck-appropriate values and give every
+  text placeholder shrink-to-fit, so a descriptive question headline or a long
+  bullet list is scaled to its box rather than spilling out of it.
+
+* **Decks are 16:9 by default, and properly designed.** Without a brand
+  template, `report_new()`, `report_deck()` and the Quarto pptx scaffold use a
+  built-in widescreen template with a coherent navy/gold identity in place of
+  the dated default Office colours: a full-bleed navy cover with a large
+  left-aligned title, gold accent rule and a subtitle strapline; full-bleed
+  navy section dividers carrying a single large section word; and content
+  slides with a navy 24pt title over one slim rule (no stray hairlines) and a
+  live slide number in the corner. `report_title_slide()` gains a `subtitle`
+  argument for the cover strapline. Pass `style = "plain"` for the same
+  palette with no decoration, or `slide_numbers = FALSE` to drop the numbering.
+  Both templates keep the standard PowerPoint layout names (plus "Content with
+  Caption"), so Quarto renders against either without falling back to Pandoc's
+  own template.
 * **Bars are a constant thickness across charts.** `geom_col()` widths are a
   fraction of a category slot, so a three-answer chart used to draw bars over
   twice as thick as a ten-answer one and a deck looked incoherent as you

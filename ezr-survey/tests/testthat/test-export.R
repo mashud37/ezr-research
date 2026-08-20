@@ -1,3 +1,12 @@
+test_that("the default output folder is ezrsurvey-outputs, written to flat", {
+  expect_equal(default_output_path("plot", "png"),
+               file.path("ezrsurvey-outputs", "plot.png"))
+  dir <- withr::local_tempdir()
+  withr::local_dir(dir)
+  save_data(calc_percentage(podracing_survey, demo_gender))
+  expect_true(file.exists(file.path("ezrsurvey-outputs", "data.csv")))
+})
+
 test_that("save_data writes csv and tsv and returns its input", {
   dir <- withr::local_tempdir()
   tab <- calc_percentage(podracing_survey, demo_gender)

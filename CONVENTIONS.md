@@ -49,7 +49,14 @@ files to copy:
 | Options + YAML profiles: `ezr<pkg>_options()`, `reset/use/edit/save/load_*_profile()` | `config.R` | **yes** (option prefix `ezr<pkg>.`, profile `~/.ezr<pkg>.yml`) |
 | Themes + palettes: `theme_ezr<pkg>*()`, `scale_*` | `theme.R`, `palettes.R` | **yes** (theme names) |
 | Save/export: `save_plot()`, `save_data()`, `save_output()`, `export_xlsx()` | `export.R` | no |
-| AI + keys + prompts: `set_llm_key()`, `ai_chat()`, `ai_summarise()`, prompt registry | `keys.R`, `ai.R`, `prompts.R` | **yes** (keyring service `"ezr<pkg>"`) |
+
+**AI is not an ezr core primitive.** Language-model summaries, API-key storage
+and the prompt registry live in **`ezrintelligence`** alone; no other package
+duplicates them, suggests `ellmer`/`keyring`, or takes an `ai =` argument. An
+analysis package must be installable and fully useful with no model dependency
+at all, which is also what keeps its CRAN submission simple. `ezrintelligence`
+takes any summary table the analysis packages produce, so the split costs the
+user one extra `library()` call and nothing else.
 
 **Masking caveat (document it):** when a user attaches two `ezr*` packages, R
 masks the identically-named primitive from the earlier one — harmless, since the

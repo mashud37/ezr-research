@@ -11,7 +11,6 @@ format:
     number-sections: true
 params:
   data: ""
-  ai: false
 ---
 
 ```{r setup, include=FALSE}
@@ -26,7 +25,6 @@ d <- if (nzchar(params$data)) {
 } else {
   podracing_survey
 }
-ctx <- ai_context(d)
 ```
 
 # Executive summary
@@ -34,15 +32,6 @@ ctx <- ai_context(d)
 Replace this paragraph with the story of the survey in four sentences: the
 headline number, what drives it, the one surprise, and what you recommend
 doing about it. Write it last -- it is the only section many readers open.
-
-```{r}
-#| eval: !expr params$ai
-#| output: asis
-# AI draft (render with -P ai:true; needs ellmer + a stored key).
-# Rewrite before circulating -- it is a draft, not a finding.
-cat(ai_summarise(calc_nps(d, nps_value), template = "exec_summary",
-                 context = ctx))
-```
 
 # Who answered
 
@@ -78,22 +67,8 @@ to-do list; top-right (important, delivered well) is what to protect.
 ipm_model(d, nps_value, "ratings_") %>% plot_ipm()
 ```
 
-```{r}
-#| eval: !expr params$ai
-#| output: asis
-cat(ai_summarise(ipm_model(d, nps_value, "ratings_"),
-                 template = "drivers_barriers", context = ctx))
-```
-
 # Methodology and precision
 
 ```{r}
 precision_summary(d, demo_gender, dplyr::starts_with("ratings_"))
-```
-
-```{r}
-#| eval: !expr params$ai
-#| output: asis
-cat(ai_summarise(diagnose(d, demo_gender, dplyr::starts_with("ratings_")),
-                 template = "methodology", context = ctx))
 ```

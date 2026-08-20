@@ -1,0 +1,116 @@
+---
+title: "Getting started with ezrintelligence"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting started with ezrintelligence}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+library(ezrintelligence)
+```
+
+`ezrintelligence` writes the findings that go next to a table. You do the
+analysis in whatever package you already use, then hand the finished summary
+table to a language model together with a prompt template and the study's
+context. Nothing here re-analyses your data: the table you pass is the table
+the model sees.
+
+## Store a key once
+
+Keys live in the operating system credential store, never in your scripts.
+
+```r
+set_llm_key("openai")          # prompts, without echoing
+has_llm_key("openai")
+```
+
+A conventional environment variable (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`,
+...) is used as a fallback, and `"ollama"` needs no key at all: point it at a
+locally served open-weight model when the tables must not leave the machine.
+
+## Summarise a table
+
+```r
+answers <- data.frame(
+  answer = c("Very satisfied", "Satisfied", "Neither", "Dissatisfied"),
+  pct = c(31, 42, 18, 9)
+)
+
+ai_summarise(answers, template = "exec_summary")
+```
+
+`template` picks how the answer is written. The registry ships nine:
+
+```{r}
+list_prompts()
+```
+
+Each one carries a system prompt, a default instruction and an output
+contract, all written to the same ground rules: quote only figures present in
+the data, treat differences smaller than the margin of error as noise, name
+the base. Add your own with `register_prompt()`.
+
+## Give the model the study, not just the table
+
+A percentage without a sample size behind it invites the model to narrate
+noise. `ai_context()` bundles the facts an analyst would state alongside the
+figures, and derives a margin-of-error note from the sample size:
+
+```{r}
+ctx <- ai_context(
+  n = 1000,
+  question = "How satisfied are you overall?",
+  base = "All respondents",
+  fieldwork = "12-19 May 2026, online panel"
+)
+ctx
+```
+
+Pass it to every call for the same study:
+
+```r
+ai_summarise(answers, template = "key_findings", context = ctx)
+```
+
+## Draft a whole report, or a slide
+
+`ai_report_sections()` runs over a named list, one summary per section:
+
+```r
+ai_report_sections(
+  list(
+    satisfaction = answers,
+    nps = list(data = nps_table, template = "exec_summary")
+  ),
+  context = ctx
+)
+```
+
+`ai_slide_text()` returns the two pieces of text a chart slide needs, a
+headline title and three or four takeaway bullets, as plain strings you place
+in whatever deck builder you use:
+
+```r
+chat <- ai_chat()
+text <- ai_slide_text(answers, title = "Satisfaction", chat = chat,
+                      context = ctx)
+text$title
+text$bullets
+```
+
+Reusing one `chat` across slides reuses the connection. A failed call messages
+and returns `NULL` in that slot, so a network hiccup leaves you with a plain
+slide rather than a broken deck.
+
+## Set defaults once
+
+```{r}
+ezrintelligence_options()
+```
+
+Set them for the session with `ezrintelligence_options(provider =
+"anthropic")`, or persist them in a YAML profile with
+`use_ezrintelligence_profile()`. Keys are never written to a profile.

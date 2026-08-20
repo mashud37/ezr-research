@@ -11,8 +11,8 @@ export_xlsx(..., path = NULL, sheet_names = NULL)
 (e.g. \code{gender = calc_percentage(d, demo_gender)}).}
 
 \item{path}{Output \code{.xlsx} path. If \code{NULL} (default), the workbook is
-written to \code{outputs/tables.xlsx} in the working directory. Missing
-directories are created.}
+written to \code{ezrsurvey-outputs/tables.xlsx} in the working directory.
+Missing directories are created.}
 
 \item{sheet_names}{Optional character vector of tab names (overrides argument
 names).}
@@ -48,6 +48,7 @@ file.exists(tmp)
 \code{\link[=save_data]{save_data()}} for a single table or a pre-named list.
 
 Other save:
+\code{\link[=export_summary_xlsx]{export_summary_xlsx()}},
 \code{\link[=save_data]{save_data()}},
 \code{\link[=save_output]{save_output()}},
 \code{\link[=save_plot]{save_plot()}}

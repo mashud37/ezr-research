@@ -4,14 +4,17 @@
 \alias{report_add_table}
 \title{Add a table to a report}
 \usage{
-report_add_table(doc, data, autofit = TRUE)
+report_add_table(doc, data, font_size = 12, autofit = TRUE)
 }
 \arguments{
 \item{doc}{A document from \code{\link[=report_new]{report_new()}}.}
 
 \item{data}{A data frame / tibble.}
 
-\item{autofit}{Auto-size columns to content. Defaults to \code{TRUE}.}
+\item{font_size}{Cell font size in points. Defaults to \code{12}.}
+
+\item{autofit}{Word only: auto-size columns to content. Defaults to \code{TRUE}.
+On slides the table is always sized to fill the content placeholder.}
 }
 \value{
 The updated document.
@@ -19,6 +22,13 @@ The updated document.
 \description{
 Adds a data frame as a \pkg{flextable} -- in the current slide's content
 placeholder (pptx) or as a new table (docx).
+}
+\details{
+On a slide the table is styled (a clean banded header, centred cells, a
+readable font) and its columns are widened to span the content placeholder
+-- roughly in proportion to each column's contents -- so it fills the slide
+meaningfully instead of sitting tiny in a corner. In Word it is added as a
+plain auto-fitted \pkg{flextable}.
 }
 \examples{
 \dontrun{
@@ -39,6 +49,9 @@ Other reporting:
 \code{\link[=report_layouts]{report_layouts()}},
 \code{\link[=report_new]{report_new()}},
 \code{\link[=report_save]{report_save()}},
+\code{\link[=report_section]{report_section()}},
+\code{\link[=report_slide]{report_slide()}},
+\code{\link[=report_title_slide]{report_title_slide()}},
 \code{\link[=scaffold_report]{scaffold_report()}}
 }
 \concept{reporting}

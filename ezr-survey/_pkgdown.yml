@@ -55,10 +55,6 @@ reference:
   contents:
   - has_concept("save")
   - has_concept("reporting")
-- title: AI summaries
-  desc: Summarise tables with a commercial LLM.
-  contents:
-  - has_concept("ai")
 - title: Configuration
   desc: Options, reusable orders and profiles.
   contents:

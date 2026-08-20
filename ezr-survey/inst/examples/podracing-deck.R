@@ -1,176 +1,172 @@
-# A finished management deck from the bundled podracing_survey data.
+# A full management read-out of the bundled podracing_survey, the way an agency
+# would present it back to a client: a cover, chaptered sections, and every
+# question block in the questionnaire worked through in turn.
 #
-#   Rscript podracing-deck.R      # writes outputs/podracing-deck.pptx
+#   Rscript podracing-deck.R      # writes ezrsurvey-outputs/podracing-deck.pptx
 #
-# The point of this example is the shape of a deck that survives a real
-# readout: a story that runs headline -> cause -> segment -> evidence, slide
-# titles that state the finding rather than name the chart, and every number
-# in the prose computed from the data rather than typed in. Change the survey
-# and the narrative re-writes itself.
+# The point of this example is two things at once:
+#
+#   1. The SHAPE of a deck script -- one line per slide. Each report_slide()
+#      call does the whole job (calculate, plot, place), so reordering the
+#      read-out is reordering the lines, and every content title is the survey
+#      question the slide answers. report_section() drops a single-word divider
+#      between chapters.
+#
+#   2. A REAL read-out, not an illustration. It covers recommendation, the six
+#      experience ratings and their drivers, motivations, the three sponsor
+#      brands, the full respondent profile, favourite drivers, open-text
+#      comments and a methods appendix -- the whole questionnaire, not a
+#      token chart or two.
 #
 # Swap in an organisation template with use_brand("org-template.pptx") before
-# building; otherwise the deck uses the bundled 16:9 template. For plain white
-# slides, pass style = "plain" to report_new().
+# building; otherwise the deck uses the bundled styled 16:9 template. For plain
+# white slides, pass style = "plain" to report_new().
 
 library(ezrsurvey)
 
-use_dataset(podracing_survey)
+# One brand call so single-series bars carry the deck's navy identity. In real
+# use this points at your PowerPoint template -- use_brand("brand/org.pptx") --
+# and reads the palette straight out of it.
+use_brand(colors = c("#12314E", "#3E6E8E", "#C9A227"))
 
-# ---- figures the narrative is written from ---------------------------------
-# Computed once, then quoted in titles and commentary, so the words can never
-# drift away from the chart beside them.
+# Derive the one profile column that is not in the raw export: age bands. Real
+# workflows prepare a handful of columns like this up front, then read them as
+# plain columns on the slides.
+use_dataset(podracing_survey %>% mutate(age_band = recode_age(demo_age)))
 
-n_total <- nrow(podracing_survey)
-nps <- calc_nps(nps_value)$nps
-
-grp <- nps_group(podracing_survey$nps_value)
-share_promoter <- mean(grp == 1, na.rm = TRUE) * 100
-share_detractor <- mean(grp == -1, na.rm = TRUE) * 100
-
+# The importance/performance model is referenced by the summary gauge and the
+# driver matrix, so it is built once; everything else is calculated inline, on
+# the slide that shows it.
 ipm <- ipm_model(nps_value, "ratings_")
-strongest <- ipm[order(-ipm$performance), ][1, ]
-top_driver <- ipm[order(-ipm$importance), ][1, ]
+quality <- mean(ipm$performance, na.rm = TRUE)
 
-# "Fix first" is the upper-left quadrant: features below the OK threshold that
-# also carry weight in the model. Ranking by performance alone would nominate
-# whatever scores worst even if nobody decides on it.
-bad_band <- bands_rating_3()$to[1]                    # 3 on a 1-5 scale
-underperforming <- ipm[ipm$performance < bad_band, ]
-priority <- underperforming[order(-underperforming$importance), ]
+# Three charts want a long, per-level percentage table -- the only preparation
+# that does not fit on a single slide line. Each is a small named step.
+rating_mix <- function() {
+  podracing_survey %>%
+    select(starts_with("ratings_")) %>%
+    pivot_longer(everything(), names_to = "feature", values_to = "level") %>%
+    filter(level != "") %>%
+    mutate(feature = sub("^ratings_", "", feature),
+           level = paste0(recode_likert(level), " - ", level)) %>%
+    count(feature, level) %>%
+    group_by(feature) %>%
+    mutate(pct = n / sum(n) * 100) %>%
+    ungroup()
+}
 
-demo <- calc_percentage(demo_gender, sort = "desc")
-mean_age <- calc_summary(demo_age)$mean
+like_levels <- c("Very unlikeable", "Unlikeable", "Likeable", "Very likeable")
+sponsor_likeability <- function() {
+  podracing_survey %>%
+    select(starts_with("partner_likeability_")) %>%
+    pivot_longer(everything(), names_to = "brand", values_to = "level") %>%
+    filter(level != "") %>%
+    mutate(brand = sub("^partner_likeability_", "", brand),
+           level = paste0(recode_likert(level, levels = like_levels),
+                          " - ", level)) %>%
+    count(brand, level) %>%
+    group_by(brand) %>%
+    mutate(pct = n / sum(n) * 100) %>%
+    ungroup()
+}
 
-by_region <- calc_nps(nps_value, by = region)
-by_region <- by_region[order(-by_region$nps), ]
-best_region <- by_region[1, ]
-worst_region <- by_region[nrow(by_region), ]
+sponsor_recall <- function() {
+  podracing_survey %>%
+    select(starts_with("partner_recall_")) %>%
+    pivot_longer(everything(), names_to = "brand", values_to = "answer") %>%
+    filter(answer != "") %>%
+    mutate(brand = sub("^partner_recall_", "", brand)) %>%
+    group_by(brand) %>%
+    summarise(pct = round(mean(answer == "Sponsor") * 100), .groups = "drop")
+}
 
-motiv <- calc_percentage_multi("motivations_", id = respondent_id,
-                               sort = "desc")
-top_motive <- motiv[1, ]
+# ---- the deck: one line per slide ------------------------------------------
 
-pct <- function(x) sprintf("%.0f%%", x)
+doc <- report_new("pptx") %>%
+  report_title_slide(
+    "Pod-Racing Fan Survey 2026",
+    subtitle = "1,000 fans surveyed after the Boonta Eve meeting  |  Fieldwork 2026") %>%
 
-# ---- charts ----------------------------------------------------------------
+  report_section("SUMMARY") %>%
+  report_slide("Executive summary", c(
+    "Fans are strong advocates: the Net Promoter Score sits firmly positive.",
+    "Atmosphere and speed are the standout strengths and the biggest draw.",
+    "Commentary and value for money lag, and are the clearest places to improve.",
+    "Sponsor recognition is uneven, leaving room to strengthen partner visibility.")) %>%
+  report_slide(
+    "Overall, how do fans rate pod racing and how likely are they to recommend it?",
+    plot_gauges(c("Net Promoter Score" = calc_nps(nps_value)$nps,
+                  "Average quality rating" = quality),
+                scales = c("nps", "rating"))) %>%
 
-chart_gender <- calc_percentage(demo_gender, sort = "desc") %>% plot_bars()
+  report_section("RECOMMENDATION") %>%
+  report_slide("How likely are you to recommend pod racing to a friend?",
+               plot_nps(nps_value)) %>%
+  report_slide("Does advocacy hold up across the fan base?",
+               calc_nps(nps_value, by = region)) %>%
+  report_slide("How likely are you to attend another meeting?",
+               plot_bars(calc_percentage(satis_return, sort = "desc"))) %>%
 
-chart_motivations <- motiv %>% plot_bars(label = option)
+  report_section("RATINGS") %>%
+  report_slide("How would you rate each aspect of the pod-racing experience?",
+               plot_stacked_rating(rating_mix(), feature, level)) %>%
+  report_slide("Which aspects matter most for recommendation, and which fall short?",
+               plot_ipm(ipm)) %>%
 
-chart_gauge <- plot_nps_gauge(nps)
+  report_section("MOTIVATIONS") %>%
+  report_slide("What draws you to pod racing?",
+               plot_bars(calc_percentage_multi("motivations_", id = respondent_id,
+                                               sort = "desc"), label = option)) %>%
 
-chart_nps <- plot_nps(nps_value)
+  report_section("SPONSORS") %>%
+  report_slide("Which race sponsors do fans correctly recognise?",
+               plot_bars(sponsor_recall(), label = brand, sort = "desc")) %>%
+  report_slide("How likeable are the race sponsors?",
+               plot_stacked_rating(sponsor_likeability(), brand, level)) %>%
 
-chart_ratings <- podracing_survey %>%
-  select(starts_with("ratings_")) %>%
-  pivot_longer(everything(), names_to = "feature", values_to = "level") %>%
-  filter(level != "") %>%
-  mutate(feature = sub("^ratings_", "", feature),
-         level = paste0(recode_likert(level), " - ", level)) %>%
-  count(feature, level) %>%
-  group_by(feature) %>%
-  mutate(pct = n / sum(n) * 100) %>%
-  ungroup() %>%
-  plot_stacked_rating(feature, level)
+  report_section("DEMOGRAPHICS") %>%
+  report_slide("What is your gender?",
+               plot_bars(calc_percentage(demo_gender, sort = "desc"))) %>%
+  report_slide("How old are you?",
+               plot_bars(calc_percentage(age_band), sort = "none")) %>%
+  report_slide("What is your highest level of education?",
+               plot_bars(calc_percentage(demo_edu, sort = "desc"))) %>%
+  report_slide("What is your employment status?",
+               plot_bars(calc_percentage(demo_job, sort = "desc"))) %>%
+  report_slide("Which sector do you work in?",
+               plot_bars(calc_percentage(demo_sector, sort = "desc"))) %>%
+  report_slide("Where in the world do you follow pod racing from?",
+               plot_bars(calc_percentage(region, sort = "desc"))) %>%
 
-chart_ipm <- plot_ipm(ipm)
+  report_section("FANDOM") %>%
+  report_slide("Which race meeting did you attend?",
+               plot_bars(calc_percentage(race_attended, sort = "desc"))) %>%
+  report_slide("Who is your favourite pod-racing driver?",
+               plot_bars(calc_percentage(fav_driver, sort = "desc"))) %>%
 
-chart_quotes <- sample_comments_diverse(nps_com, show_com, n = 8, seed = 42) %>%
-  plot_quotes_tree()
+  report_section("COMMENTS") %>%
+  report_slide("In your own words, what do you think of pod racing?",
+               plot_quotes_tree(sample_comments_diverse(nps_com, show_com,
+                                                        n = 9, seed = 42))) %>%
 
-# ---- the deck --------------------------------------------------------------
+  report_section("APPENDIX") %>%
+  report_slide("How was the survey run?",
+               plot_bars(calc_percentage(collector, sort = "desc"))) %>%
+  report_slide("How to read this report",
+               precision_summary(demo_gender, starts_with("ratings_"))$bullets)
 
-doc <- report_new("pptx")
+report_save(doc, "ezrsurvey-outputs/podracing-deck.pptx")
 
-doc <- doc %>%
-  report_add_slide("Pod-Racing Fan Survey",
-                   layout = "Title Slide") %>%
-  report_add_slide("Executive summary") %>%
-  report_add_text(c(
-    sprintf("The fan base recommends pod racing, but narrowly: a Net Promoter Score of %+d across %s respondents.",
-            nps, format(n_total, big.mark = ",")),
-    sprintf("Enthusiasm is built on the spectacle. %s come for %s, and %s is the best-rated part of the experience at %.2f out of 5.",
-            pct(top_motive$pct), top_motive$option, strongest$feature,
-            strongest$performance),
-    sprintf("%d of %d rated features sit below the acceptable threshold: %s.",
-            nrow(priority), nrow(ipm),
-            paste(priority$feature, collapse = ", ")),
-    sprintf("The problem is regional, not universal: %s scores %+d against %s at %+d.",
-            best_region$region, best_region$nps,
-            worst_region$region, worst_region$nps),
-    sprintf("%s is the highest-return fix: it is the weightiest driver in the model at %s of explained importance and still rated only %.2f.",
-            priority$feature[1], pct(priority$importance[1]),
-            priority$performance[1])
-  ))
-
-# --- 1. the headline
-doc <- doc %>%
-  report_add_slide("The headline", layout = "Section Header") %>%
-  report_add_slide(sprintf("Fans recommend pod racing, but only just: NPS %+d",
-                           nps)) %>%
-  report_add_plot(chart_gauge) %>%
-  report_add_slide(sprintf("A split audience, not a lukewarm one: %s promoters against %s detractors",
-                           pct(share_promoter), pct(share_detractor))) %>%
-  report_add_plot(chart_nps)
-
-# --- 2. what moves the score
-doc <- doc %>%
-  report_add_slide("What moves the score", layout = "Section Header") %>%
-  report_add_slide(sprintf("%s is the fix-first driver: weightiest in the model, rated only %.2f",
-                           priority$feature[1], priority$performance[1])) %>%
-  report_add_plot(chart_ipm) %>%
-  report_add_slide(sprintf("%d of %d features rate below the acceptable threshold",
-                           nrow(priority), nrow(ipm))) %>%
-  report_add_plot(chart_ratings) %>%
-  report_add_slide("Reading the driver matrix") %>%
-  report_add_text(c(
-    sprintf("%s carries the most weight in the recommendation model, at %s of explained importance.",
-            top_driver$feature, pct(top_driver$importance)),
-    sprintf("Below the 3.0 threshold: %s.",
-            paste(sprintf("%s (%.2f)", priority$feature, priority$performance),
-                  collapse = ", ")),
-    sprintf("%s is the strength to protect at %.2f: it is what fans already come for.",
-            strongest$feature, strongest$performance),
-    "Priority is the upper-left quadrant: high importance, low performance. Features that score badly but drive nothing can wait."
-  ))
-
-# --- 3. who and where
-doc <- doc %>%
-  report_add_slide("Who and where", layout = "Section Header") %>%
-  report_add_slide(sprintf("%s leads on advocacy, %s lags by %d points",
-                           best_region$region, worst_region$region,
-                           best_region$nps - worst_region$nps)) %>%
-  report_add_table(by_region) %>%
-  report_add_slide(sprintf("%s of fans come for the %s",
-                           pct(top_motive$pct), top_motive$option)) %>%
-  report_add_plot(chart_motivations) %>%
-  report_add_slide(sprintf("%s of respondents are %s, average age %.0f",
-                           pct(demo$pct[1]), tolower(as.character(demo[[1]][1])),
-                           mean_age)) %>%
-  report_add_plot(chart_gender)
-
-# --- 4. evidence and method
-doc <- doc %>%
-  report_add_slide("In their own words", layout = "Section Header") %>%
-  report_add_slide("Fans praise the spectacle and question the cost") %>%
-  report_add_plot(chart_quotes) %>%
-  report_add_slide("How to read this report") %>%
-  report_add_text(precision_summary(demo_gender,
-                                    starts_with("ratings_"))$bullets)
-
-report_save(doc, "outputs/podracing-deck.pptx")
+clear_dataset()
+clear_brand()
 
 # ---- the one-call route ----------------------------------------------------
 # When the deck is just "these charts, one per slide", report_deck() does the
-# whole thing; with ai = TRUE it also drafts takeaway bullets per slide.
+# whole thing in one call.
 #
 #   report_deck(
-#     list("Recommendation" = chart_gauge,
-#          "Drivers"        = chart_ipm,
-#          "Motivations"    = chart_motivations),
-#     path = "outputs/quick-deck.pptx",
+#     list("How likely to recommend?" = plot_nps(podracing_survey, nps_value),
+#          "Which aspects fall short?" = plot_ipm(ipm)),
+#     path = "ezrsurvey-outputs/quick-deck.pptx",
 #     title = "Pod-Racing Fan Survey"
 #   )
-
-clear_dataset()

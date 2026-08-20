@@ -20,12 +20,12 @@ registered by \code{\link[=use_brand]{use_brand()}}, falling back to one of the 
 16:9 templates (see \code{style}).}
 
 \item{style}{Which built-in template to fall back on when no \code{template} and
-no brand template are set. \code{"elevated"} (default) is the styled deck: an
-accent lead-in over a hairline under every title, a hairline above the
-footer strip, a full-bleed accent band across the foot of the title slide
-and slide numbers in the corner. \code{"plain"} is the same widescreen deck
-with no decoration at all -- plain white slides. Ignored when a template
-is supplied.}
+no brand template are set. \code{"elevated"} (default) is the styled deck: a
+navy/gold identity with a full-bleed navy cover, full-bleed navy section
+dividers, a navy title over one slim rule on every content slide and slide
+numbers in the corner. \code{"plain"} is the same widescreen deck with the same
+palette but no decoration -- plain white slides. Ignored when a template is
+supplied.}
 
 \item{slide_numbers}{If \code{TRUE} (default), every content slide added with
 \code{\link[=report_add_slide]{report_add_slide()}} shows the template's slide-number placeholder in
@@ -71,6 +71,9 @@ Other reporting:
 \code{\link[=report_deck]{report_deck()}},
 \code{\link[=report_layouts]{report_layouts()}},
 \code{\link[=report_save]{report_save()}},
+\code{\link[=report_section]{report_section()}},
+\code{\link[=report_slide]{report_slide()}},
+\code{\link[=report_title_slide]{report_title_slide()}},
 \code{\link[=scaffold_report]{scaffold_report()}}
 }
 \concept{reporting}

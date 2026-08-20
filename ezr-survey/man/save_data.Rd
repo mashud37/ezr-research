@@ -10,8 +10,9 @@ save_data(data, path = NULL, na = "", ...)
 \item{data}{A data frame / tibble, or (for \code{.xlsx}) a named list of them.}
 
 \item{path}{Output path; the extension sets the format (\code{.csv}, \code{.tsv},
-\code{.xlsx}). If \code{NULL} (default), the table is written to \code{outputs/data.csv}
-in the working directory. Missing directories are created.}
+\code{.xlsx}). If \code{NULL} (default), the table is written to
+\code{ezrsurvey-outputs/data.csv} in the working directory. Missing directories
+are created.}
 
 \item{na}{String to write for missing values. Default \code{""}.}
 
@@ -44,6 +45,7 @@ file.exists(tmp)
 \code{\link[=save_plot]{save_plot()}}, \code{\link[=save_output]{save_output()}}, \code{\link[=export_xlsx]{export_xlsx()}}.
 
 Other save:
+\code{\link[=export_summary_xlsx]{export_summary_xlsx()}},
 \code{\link[=export_xlsx]{export_xlsx()}},
 \code{\link[=save_output]{save_output()}},
 \code{\link[=save_plot]{save_plot()}}

@@ -19,8 +19,8 @@ save_plot(
 
 \item{path}{Output path; the extension sets the format (\code{.png}, \code{.svg},
 \code{.pdf}, \code{.jpg}/\code{.jpeg}, \code{.tiff}). If \code{NULL} (default), the plot is written
-to \code{outputs/plot.png} in the working directory. Missing directories are
-created.}
+to \code{ezrsurvey-outputs/plot.png} in the working directory. Missing
+directories are created.}
 
 \item{width, height}{Size in inches. Default \verb{8 x 4.5}.}
 
@@ -58,6 +58,7 @@ file.exists(tmp)
 \code{\link[=save_data]{save_data()}}, \code{\link[=save_output]{save_output()}}.
 
 Other save:
+\code{\link[=export_summary_xlsx]{export_summary_xlsx()}},
 \code{\link[=export_xlsx]{export_xlsx()}},
 \code{\link[=save_data]{save_data()}},
 \code{\link[=save_output]{save_output()}}

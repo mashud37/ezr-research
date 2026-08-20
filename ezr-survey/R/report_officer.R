@@ -254,12 +254,12 @@ report_layouts <- function(template = NULL, style = c("elevated", "plain")) {
 #'   registered by [use_brand()], falling back to one of the package's built-in
 #'   16:9 templates (see `style`).
 #' @param style Which built-in template to fall back on when no `template` and
-#'   no brand template are set. `"elevated"` (default) is the styled deck: an
-#'   accent lead-in over a hairline under every title, a hairline above the
-#'   footer strip, a full-bleed accent band across the foot of the title slide
-#'   and slide numbers in the corner. `"plain"` is the same widescreen deck
-#'   with no decoration at all -- plain white slides. Ignored when a template
-#'   is supplied.
+#'   no brand template are set. `"elevated"` (default) is the styled deck: a
+#'   navy/gold identity with a full-bleed navy cover, full-bleed navy section
+#'   dividers, a navy title over one slim rule on every content slide and slide
+#'   numbers in the corner. `"plain"` is the same widescreen deck with the same
+#'   palette but no decoration -- plain white slides. Ignored when a template is
+#'   supplied.
 #' @param slide_numbers If `TRUE` (default), every content slide added with
 #'   [report_add_slide()] shows the template's slide-number placeholder in
 #'   its usual corner. Requires the suggested `xml2` package (silently skipped
@@ -438,9 +438,19 @@ report_add_plot <- function(doc, plot, width = NULL, height = NULL, dpi = 150) {
 #'
 #' @param doc A document from [report_new()].
 #' @param data A data frame / tibble.
-#' @param autofit Auto-size columns to content. Defaults to `TRUE`.
+#' @param font_size Cell font size in points. Defaults to `12`.
+#' @param autofit Word only: auto-size columns to content. Defaults to `TRUE`.
+#'   On slides the table is always sized to fill the content placeholder.
 #'
 #' @return The updated document.
+#'
+#' @details
+#' On a slide the table is styled (a clean banded header, centred cells, a
+#' readable font) and its columns are widened to span the content placeholder
+#' -- roughly in proportion to each column's contents -- so it fills the slide
+#' meaningfully instead of sitting tiny in a corner. In Word it is added as a
+#' plain auto-fitted \pkg{flextable}.
+#'
 #' @family reporting
 #' @seealso [report_add_plot()].
 #' @examples
@@ -449,15 +459,30 @@ report_add_plot <- function(doc, plot, width = NULL, height = NULL, dpi = 150) {
 #' report_new("docx") %>% report_add_table(tbl)
 #' }
 #' @export
-report_add_table <- function(doc, data, autofit = TRUE) {
+report_add_table <- function(doc, data, font_size = 12, autofit = TRUE) {
   check_doc(doc)
   require_flextable()
-  ft <- flextable::flextable(as.data.frame(data))
-  if (autofit) ft <- flextable::autofit(ft)
+  df <- as.data.frame(data)
+  ft <- flextable::flextable(df)
+  ft <- flextable::theme_booktabs(ft)
+  ft <- flextable::fontsize(ft, size = font_size, part = "all")
+  ft <- flextable::bold(ft, part = "header")
+  ft <- flextable::align(ft, align = "center", part = "all")
+  ft <- flextable::padding(ft, padding = 4, part = "all")
 
   if (is_pptx(doc)) {
-    officer::ph_with(doc, value = ft, location = content_slot(doc)$location)
+    slot <- content_slot(doc)
+    # Widen columns to span the placeholder, roughly proportional to how much
+    # text each holds, so a summary table fills the slide instead of clustering
+    # at its natural (tiny) content width.
+    wt <- vapply(names(df), function(k) {
+      cells <- suppressWarnings(max(nchar(format(df[[k]])), na.rm = TRUE))
+      max(nchar(k), if (is.finite(cells)) cells else 0L, 3L)
+    }, numeric(1))
+    ft <- flextable::width(ft, width = slot$width * wt / sum(wt))
+    officer::ph_with(doc, value = ft, location = slot$location)
   } else {
+    if (autofit) ft <- flextable::autofit(ft)
     flextable::body_add_flextable(doc, ft)
   }
 }
@@ -486,12 +511,145 @@ report_add_text <- function(doc, text, ...) {
   }
 }
 
+#' Add a whole slide in one call (title plus its content)
+#'
+#' The one-line-per-slide wrapper: starts a new slide, sets its title, and
+#' places `content` on it in a single call, so a deck script reads as one line
+#' per slide. `content` is dispatched by type -- a ggplot becomes a chart, a
+#' data frame a table, a character vector a bulleted text box.
+#'
+#' @param doc A document from [report_new()].
+#' @param title Slide title (typically the survey question the slide answers).
+#' @param content A ggplot, a data frame / tibble, or a character vector. `NULL`
+#'   (default) adds an empty titled slide.
+#' @param layout,master Passed to [report_add_slide()]; `NULL` auto-selects.
+#' @param ... Passed on to [report_add_plot()], [report_add_table()] or
+#'   [report_add_text()] depending on `content`.
+#'
+#' @return The updated document.
+#'
+#' @details
+#' Equivalent to [report_add_slide()] followed by the matching `report_add_*()`
+#' call, but as one pipe-friendly step so `calc -> plot -> add` collapses onto a
+#' single line:
+#' `report_slide("How likely to recommend?", plot_nps(nps_value))`.
+#'
+#' @family reporting
+#' @seealso [report_section()], [report_title_slide()], [report_add_slide()].
+#' @examples
+#' \dontrun{
+#' report_new("pptx") %>%
+#'   report_slide("Who follows pod racing?",
+#'                plot_bars(calc_percentage(podracing_survey, demo_gender)))
+#' }
+#' @export
+report_slide <- function(doc, title = NULL, content = NULL, layout = NULL,
+                         master = NULL, ...) {
+  check_doc(doc)
+  doc <- report_add_slide(doc, title = title, layout = layout, master = master)
+  if (is.null(content)) return(doc)
+  if (inherits(content, "ggplot")) {
+    report_add_plot(doc, content, ...)
+  } else if (is.data.frame(content)) {
+    report_add_table(doc, content, ...)
+  } else if (is.character(content)) {
+    report_add_text(doc, content, ...)
+  } else {
+    stop("`content` must be a ggplot, a data frame, or a character vector.",
+         call. = FALSE)
+  }
+}
+
+#' Add a section-divider slide
+#'
+#' A one-line section break: a slide on the template's "Section Header" layout
+#' (falling back to a plain titled slide when the template has none). Use a
+#' short, single-word label -- `"DEMOGRAPHICS"`, `"RATINGS"`, `"APPENDIX"` -- to
+#' chapter a deck.
+#'
+#' @param doc A document from [report_new()].
+#' @param title Section label.
+#' @param layout Section layout name. Defaults to `"Section Header"`.
+#' @param master Optional master name.
+#'
+#' @return The updated document.
+#' @family reporting
+#' @seealso [report_slide()], [report_title_slide()].
+#' @examples
+#' \dontrun{
+#' report_new("pptx") %>% report_section("DEMOGRAPHICS")
+#' }
+#' @export
+report_section <- function(doc, title, layout = "Section Header",
+                           master = NULL) {
+  check_doc(doc)
+  if (!is_pptx(doc)) {
+    return(report_add_slide(doc, title, heading_level = 1))
+  }
+  has_layout <- layout %in% officer::layout_summary(doc)$layout
+  if (has_layout) {
+    report_add_slide(doc, title, layout = layout, master = master)
+  } else {
+    report_add_slide(doc, title)
+  }
+}
+
+#' Add the opening title slide
+#'
+#' A one-line title slide, placed on the template's title layout (the one with a
+#' centre-title placeholder).
+#'
+#' @param doc A document from [report_new()].
+#' @param title Deck title.
+#' @param subtitle Optional strapline placed in the layout's subtitle
+#'   placeholder -- the respondent base and fieldwork period, say. `NULL`
+#'   (default) leaves it empty.
+#' @param layout,master Optional overrides; `NULL` auto-selects the title
+#'   layout.
+#'
+#' @return The updated document.
+#' @family reporting
+#' @seealso [report_slide()], [report_section()].
+#' @examples
+#' \dontrun{
+#' report_new("pptx") %>%
+#'   report_title_slide("Pod-Racing Fan Survey",
+#'                      subtitle = "1,000 fans | Fieldwork 2026")
+#' }
+#' @export
+report_title_slide <- function(doc, title, subtitle = NULL, layout = NULL,
+                               master = NULL) {
+  check_doc(doc)
+  if (!is_pptx(doc)) {
+    doc <- report_add_slide(doc, title, heading_level = 1)
+    if (!is.null(subtitle)) doc <- officer::body_add_par(doc, subtitle)
+    return(doc)
+  }
+  if (is.null(layout)) {
+    sel <- select_layout(doc, "title")
+    layout <- sel$layout
+    master <- master %||% sel$master
+  }
+  doc <- report_add_slide(doc, title, layout = layout, master = master)
+  if (!is.null(subtitle)) {
+    subs <- layout_placeholders(doc, layout, master, c("subTitle", "body"))
+    if (nrow(subs)) {
+      doc <- officer::ph_with(
+        doc, value = subtitle,
+        location = officer::ph_location_type(type = subs$type[[1]])
+      )
+    }
+  }
+  doc
+}
+
 #' Save a report to disk
 #'
 #' @param doc A document from [report_new()].
 #' @param path Output file path (`.pptx` or `.docx`). If `NULL` (default), the
-#'   report is written to `outputs/report.pptx` / `outputs/report.docx` in the
-#'   working directory. Missing directories are created.
+#'   report is written to `ezrsurvey-outputs/report.pptx` /
+#'   `ezrsurvey-outputs/report.docx` in the working directory. Missing
+#'   directories are created.
 #'
 #' @return Invisibly `path`.
 #' @family reporting

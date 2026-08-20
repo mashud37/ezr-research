@@ -40,6 +40,7 @@ p <- plot_nps(podracing_survey, nps_value)
 
 Other plots:
 \code{\link[=plot_bars]{plot_bars()}},
+\code{\link[=plot_gauges]{plot_gauges()}},
 \code{\link[=plot_ipm]{plot_ipm()}},
 \code{\link[=plot_nps_gauge]{plot_nps_gauge()}},
 \code{\link[=plot_quotes_tree]{plot_quotes_tree()}},

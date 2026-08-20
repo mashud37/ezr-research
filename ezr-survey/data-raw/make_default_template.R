@@ -4,14 +4,20 @@
 #   inst/templates/ezrsurvey-16x9-plain.pptx  undecorated white
 #
 # Both convert the base template to widescreen the way PowerPoint itself does
-# (uniform horizontal scale) and add the "Content with Caption" layout Pandoc
-# expects. Layout names stay the PowerPoint standards ("Title Slide", "Title
-# and Content", ...) so either file also works as a Quarto reference-doc.
+# (uniform horizontal scale), add the "Content with Caption" layout Pandoc
+# expects, replace the dated Office colour scheme with a navy/gold identity, and
+# bring the title/body sizes down to deck-appropriate values with shrink-to-fit
+# on every text placeholder so descriptive question headlines never overflow.
+# Layout names stay the PowerPoint standards ("Title Slide", "Title and
+# Content", ...) so either file also works as a Quarto reference-doc.
 #
-# The styled one adds the furniture a corporate deck is expected to have: an
-# accent lead-in over a full-width hairline under each title, a hairline above
-# the footer strip, and a full-bleed accent band across the foot of the title
-# slide. Every added shape is a plain drawing, never a placeholder, so
+# The styled one is a proper report design, not white slides with rules on top:
+#   - a full-bleed navy cover with a large left-aligned white title, a gold
+#     accent rule and a white subtitle;
+#   - full-bleed navy section dividers with a large white section word;
+#   - content slides with a navy title over one slim navy rule (nothing else),
+#     and the template's slide number in the corner.
+# Every added shape is a plain drawing, never a placeholder, so
 # report_layouts() and the content-slot picker ignore them.
 #
 # Run from the package root: Rscript data-raw/make_default_template.R
@@ -27,7 +33,15 @@ EMU_IN <- 914400
 WIDE_CX <- 12192000            # 13.333in
 SLIDE_CY <- 6858000            # 7.5in
 BASE_CX <- 9144000             # officer's 4:3 width
-HAIRLINE <- "D6D6D6"
+
+# ---- brand identity ------------------------------------------------------
+
+NAVY <- "12314E"               # primary: chrome, cover, dividers, bars
+GOLD <- "C9A227"               # accent: cover / divider rules
+STEEL <- "3E6E8E"
+SLATE <- "6E7C8C"
+LSLATE <- "A9B4C0"
+BGOLD <- "D8B04A"
 
 emu <- function(x) format(round(x), scientific = FALSE)
 
@@ -55,9 +69,23 @@ rect_sp <- function(x, y, cx, cy, fill, id, name) {
   emu(x), emu(y), emu(cx), emu(cy), colour)
 }
 
+# Append a shape (drawn in front of everything already on the slide/layout).
 add_shape <- function(doc, fragment) {
   tree <- xml_find_first(doc, "//p:cSld/p:spTree", ns)
   xml_add_child(tree, read_xml(fragment))
+  invisible(doc)
+}
+
+# Insert a shape at the back (behind the placeholders), for full-bleed
+# backgrounds that must not cover the title text.
+add_background <- function(doc, fragment) {
+  tree <- xml_find_first(doc, "//p:cSld/p:spTree", ns)
+  first <- xml_find_first(tree, "./p:sp | ./p:pic | ./p:graphicFrame | ./p:grpSp", ns)
+  if (inherits(first, "xml_missing")) {
+    xml_add_child(tree, read_xml(fragment))
+  } else {
+    xml_add_sibling(first, read_xml(fragment), .where = "before")
+  }
   invisible(doc)
 }
 
@@ -90,6 +118,143 @@ title_box <- function(doc, master_box) {
               cy = as.numeric(xml_attr(ext, "cy")))
   if (!all(vapply(box, is.finite, logical(1)))) return(master_box)
   box
+}
+
+master_title_box <- function(master_path) {
+  master <- read_xml(master_path)
+  xfrm <- xml_find_first(master, "//p:sp[.//p:ph[@type='title']]//a:xfrm", ns)
+  off <- xml_find_first(xfrm, "./a:off", ns)
+  ext <- xml_find_first(xfrm, "./a:ext", ns)
+  box <- list(x = as.numeric(xml_attr(off, "x")),
+              y = as.numeric(xml_attr(off, "y")),
+              cx = as.numeric(xml_attr(ext, "cx")),
+              cy = as.numeric(xml_attr(ext, "cy")))
+  stopifnot(all(vapply(box, is.finite, logical(1))))
+  box
+}
+
+# ---- colour scheme -------------------------------------------------------
+
+# Replace the dated Office palette with the navy/gold identity. accent1 is the
+# primary (what use_brand() reads as brand_color_primary and single-series bars
+# pick up); dk2 doubles the navy so schemeClr references cohere.
+set_clrscheme <- function(theme_path) {
+  doc <- read_xml(theme_path)
+  set_one <- function(tag, hex) {
+    node <- xml_find_first(doc, sprintf("//a:clrScheme/a:%s/a:srgbClr", tag), ns)
+    if (!inherits(node, "xml_missing")) xml_set_attr(node, "val", hex)
+  }
+  set_one("dk2", NAVY)
+  set_one("lt2", "EEF1F5")
+  set_one("accent1", NAVY)
+  set_one("accent2", GOLD)
+  set_one("accent3", STEEL)
+  set_one("accent4", SLATE)
+  set_one("accent5", LSLATE)
+  set_one("accent6", BGOLD)
+  write_xml(doc, theme_path)
+  invisible(theme_path)
+}
+
+# ---- typography ----------------------------------------------------------
+
+# Officer's base master sets a 44pt title in theme-text colour, which turns a
+# descriptive survey-question headline into overflowing lines. Bring the master
+# defaults down and colour titles navy, so every content slide reads as branded.
+set_master_style <- function(master_path) {
+  doc <- read_xml(master_path)
+  title_ppr <- xml_find_first(doc, "//p:txStyles/p:titleStyle/a:lvl1pPr", ns)
+  if (!inherits(title_ppr, "xml_missing")) {
+    xml_set_attr(title_ppr, "algn", "l")   # left-align content titles
+  }
+  title <- xml_find_first(
+    doc, "//p:txStyles/p:titleStyle/a:lvl1pPr/a:defRPr", ns
+  )
+  if (!inherits(title, "xml_missing")) {
+    xml_set_attr(title, "sz", "2400")
+    fill <- xml_find_first(title, "./a:solidFill", ns)
+    if (!inherits(fill, "xml_missing")) xml_remove(fill)
+    xml_add_child(title, read_xml(sprintf(
+      '<a:solidFill xmlns:a="%s"><a:srgbClr val="%s"/></a:solidFill>',
+      ns[["a"]], NAVY)), .where = 0)
+  }
+  body <- xml_find_first(doc, "//p:txStyles/p:bodyStyle/a:lvl1pPr/a:defRPr", ns)
+  if (!inherits(body, "xml_missing")) xml_set_attr(body, "sz", "1400")
+  write_xml(doc, master_path)
+  invisible(master_path)
+}
+
+# Style a layout's placeholder text (size / colour / alignment / weight) by
+# editing its txBody list style, so cover and divider titles differ from the
+# content default without touching the master.
+style_ph <- function(path, ph_type, sz = NULL, colour = NULL,
+                     algn = NULL, bold = NULL) {
+  doc <- read_xml(path)
+  sp <- xml_find_first(doc, sprintf("//p:sp[.//p:ph[@type='%s']]", ph_type), ns)
+  if (inherits(sp, "xml_missing")) return(invisible(path))
+  txbody <- xml_find_first(sp, ".//p:txBody", ns)
+  lst <- xml_find_first(txbody, "./a:lstStyle", ns)
+  if (inherits(lst, "xml_missing")) {
+    bodypr <- xml_find_first(txbody, "./a:bodyPr", ns)
+    xml_add_sibling(bodypr, read_xml(sprintf('<a:lstStyle xmlns:a="%s"/>',
+                                             ns[["a"]])), .where = "after")
+    lst <- xml_find_first(txbody, "./a:lstStyle", ns)
+  }
+  lvl <- xml_find_first(lst, "./a:lvl1pPr", ns)
+  if (inherits(lvl, "xml_missing")) {
+    xml_add_child(lst, read_xml(sprintf('<a:lvl1pPr xmlns:a="%s"/>', ns[["a"]])))
+    lvl <- xml_find_first(lst, "./a:lvl1pPr", ns)
+  }
+  if (!is.null(algn)) xml_set_attr(lvl, "algn", algn)
+  defrpr <- xml_find_first(lvl, "./a:defRPr", ns)
+  if (inherits(defrpr, "xml_missing")) {
+    xml_add_child(lvl, read_xml(sprintf('<a:defRPr xmlns:a="%s"/>', ns[["a"]])))
+    defrpr <- xml_find_first(lvl, "./a:defRPr", ns)
+  }
+  if (!is.null(sz)) xml_set_attr(defrpr, "sz", as.character(sz))
+  if (!is.null(bold)) xml_set_attr(defrpr, "b", if (bold) "1" else "0")
+  if (!is.null(colour)) {
+    old <- xml_find_first(defrpr, "./a:solidFill", ns)
+    if (!inherits(old, "xml_missing")) xml_remove(old)
+    xml_add_child(defrpr, read_xml(sprintf(
+      '<a:solidFill xmlns:a="%s"><a:srgbClr val="%s"/></a:solidFill>',
+      ns[["a"]], colour)), .where = 0)
+  }
+  write_xml(doc, path)
+  invisible(path)
+}
+
+# Move a layout placeholder's left edge and width (keeps its vertical box), so
+# the cover subtitle lines up under the title instead of sitting inset.
+set_ph_x <- function(path, ph_type, x, cx) {
+  doc <- read_xml(path)
+  xfrm <- xml_find_first(
+    doc, sprintf("//p:sp[.//p:ph[@type='%s']]//a:xfrm", ph_type), ns
+  )
+  if (inherits(xfrm, "xml_missing")) return(invisible(path))
+  off <- xml_find_first(xfrm, "./a:off", ns)
+  ext <- xml_find_first(xfrm, "./a:ext", ns)
+  if (!inherits(off, "xml_missing")) xml_set_attr(off, "x", emu(x))
+  if (!inherits(ext, "xml_missing")) xml_set_attr(ext, "cx", emu(cx))
+  write_xml(doc, path)
+  invisible(path)
+}
+
+# Give every text placeholder shrink-to-fit, so text that still runs long is
+# scaled down by the viewer rather than spilling out of its box.
+ensure_autofit <- function(path) {
+  doc <- read_xml(path)
+  for (bodypr in xml_find_all(doc, "//p:sp[.//p:ph]//p:txBody/a:bodyPr", ns)) {
+    for (af in xml_find_all(
+      bodypr, "./a:normAutofit | ./a:spAutoFit | ./a:noAutofit", ns
+    )) {
+      xml_remove(af)
+    }
+    xml_add_child(bodypr, read_xml(sprintf('<a:normAutofit xmlns:a="%s"/>',
+                                           ns[["a"]])))
+  }
+  write_xml(doc, path)
+  invisible(path)
 }
 
 # ---- build ---------------------------------------------------------------
@@ -163,51 +328,69 @@ build_template <- function(out, decorate) {
   )))
   write_xml(master, master_path)
 
-  # 3. styling
+  # 3. brand palette (both templates), so charts, chrome and any use_brand()
+  # extraction share the same navy/gold identity.
+  set_clrscheme(file.path(work, "ppt", "theme", "theme1.xml"))
+
+  # 4. typography: navy 24pt titles, 14pt body, shrink-to-fit everywhere, and
+  # larger cover / section wording. Applies to both templates.
+  set_master_style(master_path)
+  # cover title + subtitle
+  style_ph(file.path(lay_dir, "slideLayout1.xml"), "ctrTitle",
+           sz = 4000, algn = "l", bold = TRUE)
+  style_ph(file.path(lay_dir, "slideLayout1.xml"), "subTitle",
+           sz = 1800, algn = "l")
+  # section-divider word
+  style_ph(file.path(lay_dir, "slideLayout3.xml"), "title",
+           sz = 4000, algn = "l", bold = TRUE)
+  for (f in c(master_path,
+              list.files(lay_dir, pattern = "^slideLayout[0-9]+[.]xml$",
+                         full.names = TRUE))) {
+    ensure_autofit(f)
+  }
+
+  # 5. styling: full-bleed navy cover and dividers with white text, one slim
+  # navy rule under every content title.
   if (decorate) {
-    master <- read_xml(master_path)
-    mxfrm <- xml_find_first(master, "//p:sp[.//p:ph[@type='title']]//a:xfrm", ns)
-    moff <- xml_find_first(mxfrm, "./a:off", ns)
-    mext <- xml_find_first(mxfrm, "./a:ext", ns)
-    master_box <- list(x = as.numeric(xml_attr(moff, "x")),
-                       y = as.numeric(xml_attr(moff, "y")),
-                       cx = as.numeric(xml_attr(mext, "cx")),
-                       cy = as.numeric(xml_attr(mext, "cy")))
-    stopifnot(all(vapply(master_box, is.finite, logical(1))))
+    master_box <- master_title_box(master_path)
+    rule_h <- 25400               # 2pt
+    gap <- round(0.06 * EMU_IN)
+    accent_cx <- round(2.0 * EMU_IN)
 
-    rule_h <- 12700               # 1pt hairline
-    lead_h <- 38100               # 3pt accent lead-in
-    lead_cx <- round(1.1 * EMU_IN)
-    gap <- round(0.05 * EMU_IN)
-    foot_y <- SLIDE_CY - round(0.60 * EMU_IN)
-
-    # Content-bearing layouts: accent lead-in over a full-width hairline under
-    # the title, plus a hairline above the footer strip.
-    content <- c("slideLayout2.xml", "slideLayout3.xml", "slideLayout4.xml",
-                 "slideLayout5.xml", "slideLayout6.xml", "slideLayout8.xml")
+    # Content-bearing layouts: a single navy rule under the title, nothing else.
+    content <- c("slideLayout2.xml", "slideLayout4.xml", "slideLayout5.xml",
+                 "slideLayout6.xml", "slideLayout8.xml")
     for (f in content) {
       path <- file.path(lay_dir, f)
       doc <- read_xml(path)
       box <- title_box(doc, master_box)
-      y <- box$y + box$cy + gap
-      add_shape(doc, rect_sp(box$x, y, box$cx, rule_h, HAIRLINE,
-                             900, "Title Hairline"))
-      add_shape(doc, rect_sp(box$x, y - (lead_h - rule_h) / 2, lead_cx, lead_h,
-                             "accent1", 901, "Title Accent"))
-      add_shape(doc, rect_sp(box$x, foot_y, box$cx, rule_h, HAIRLINE,
-                             902, "Footer Hairline"))
+      add_shape(doc, rect_sp(box$x, box$y + box$cy + gap, box$cx, rule_h,
+                             NAVY, 900, "Title Rule"))
       write_xml(doc, path)
     }
 
-    # Title slide: a full-bleed accent band across the foot.
+    # Cover: full-bleed navy with white title (styled above), gold accent rule
+    # under the title and a white subtitle.
+    style_ph(file.path(lay_dir, "slideLayout1.xml"), "ctrTitle", colour = "FFFFFF")
+    style_ph(file.path(lay_dir, "slideLayout1.xml"), "subTitle", colour = "DCE4EE")
     path <- file.path(lay_dir, "slideLayout1.xml")
+    box <- title_box(read_xml(path), master_box)
+    set_ph_x(path, "subTitle", box$x, box$cx)   # subtitle left edge under title
     doc <- read_xml(path)
-    band_cy <- round(0.42 * EMU_IN)
-    add_shape(doc, rect_sp(0, SLIDE_CY - band_cy, WIDE_CX, band_cy,
-                           "accent1", 903, "Title Band"))
+    add_background(doc, rect_sp(0, 0, WIDE_CX, SLIDE_CY, NAVY, 890, "Cover"))
+    add_shape(doc, rect_sp(box$x, box$y + box$cy + gap, accent_cx, 38100,
+                           GOLD, 891, "Cover Accent"))
+    write_xml(doc, path)
+
+    # Section dividers: full-bleed navy with a large white section word and a
+    # gold accent rule above it.
+    style_ph(file.path(lay_dir, "slideLayout3.xml"), "title", colour = "FFFFFF")
+    path <- file.path(lay_dir, "slideLayout3.xml")
+    doc <- read_xml(path)
+    add_background(doc, rect_sp(0, 0, WIDE_CX, SLIDE_CY, NAVY, 892, "Divider"))
     box <- title_box(doc, master_box)
-    add_shape(doc, rect_sp(box$x, box$y + box$cy + gap, lead_cx, lead_h,
-                           "accent1", 904, "Title Accent"))
+    add_shape(doc, rect_sp(box$x, box$y - gap - 38100, accent_cx, 38100,
+                           GOLD, 893, "Divider Accent"))
     write_xml(doc, path)
   }
 

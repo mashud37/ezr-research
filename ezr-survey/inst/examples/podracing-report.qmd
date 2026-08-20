@@ -11,7 +11,6 @@ format:
     embed-resources: true
     fig-format: svg
 params:
-  ai: false
 ---
 
 ```{r setup, include=FALSE}
@@ -20,12 +19,6 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE,
                       fig.width = 9, fig.height = 5, dpi = 150)
 
 use_dataset(podracing_survey)
-
-ctx <- ai_context(
-  podracing_survey,
-  question = "Annual fan survey after the pod-racing season",
-  fieldwork = "Example data bundled with ezrsurvey"
-)
 
 # Every figure quoted in the prose is computed here and interpolated inline, so
 # the narrative cannot drift away from the charts when the data changes.
@@ -93,13 +86,6 @@ The weakness is also regional rather than universal:
 `r worst_region$region` at `r sprintf("%+d", worst_region$nps)`, a spread of
 `r best_region$nps - worst_region$nps` points that no single global programme
 will close.
-
-```{r}
-#| eval: !expr params$ai
-#| output: asis
-#| echo: false
-cat(ai_summarise(calc_nps(nps_value), template = "exec_summary", context = ctx))
-```
 
 ## The headline: willingness to recommend
 
@@ -179,13 +165,6 @@ rating_long <- podracing_survey %>%
 plot_stacked_rating(rating_long, feature, level)
 ```
 
-```{r}
-#| eval: !expr params$ai
-#| output: asis
-#| echo: false
-cat(ai_summarise(ipm, template = "drivers_barriers", context = ctx))
-```
-
 ### Movement against a benchmark
 
 With a previous wave, `compare_values()` and `plot_diff()` show the shift.
@@ -248,14 +227,6 @@ sample_comments_diverse(nps_com, show_com, n = 8, seed = 42) %>%
   plot_quotes_tree()
 ```
 
-```{r}
-#| eval: !expr params$ai
-#| output: asis
-#| echo: false
-cat(ai_summarise(sample_comments_diverse(nps_com, show_com, n = 20, seed = 42),
-                 template = "thematic_analysis", context = ctx))
-```
-
 ## Weighting the sample
 
 The achieved sample is `r round(demo$pct[1])`%
@@ -281,19 +252,10 @@ because differences smaller than the margin are not differences.
 precision_summary(demo_gender, starts_with("ratings_"))
 ```
 
-```{r}
-#| eval: !expr params$ai
-#| output: asis
-#| echo: false
-cat(ai_summarise(diagnose(demo_gender, starts_with("ratings_")),
-                 template = "methodology", context = ctx))
-```
-
 ```{r cleanup, include=FALSE}
 clear_dataset()
 ```
 
-> Rendered with `quarto render podracing-report.qmd`. Add `-P ai:true` to
-> draft the AI narrative sections (needs `ellmer` and a stored key, see
-> `set_llm_key()`). The matching slide deck is built by `podracing-deck.R` in
-> the same folder.
+> Rendered with `quarto render podracing-report.qmd`. Render against your own
+> data with `-P data:my-survey.csv`. The matching slide deck is built by
+> `podracing-deck.R` in the same folder.

@@ -10,8 +10,9 @@ report_save(doc, path = NULL)
 \item{doc}{A document from \code{\link[=report_new]{report_new()}}.}
 
 \item{path}{Output file path (\code{.pptx} or \code{.docx}). If \code{NULL} (default), the
-report is written to \code{outputs/report.pptx} / \code{outputs/report.docx} in the
-working directory. Missing directories are created.}
+report is written to \code{ezrsurvey-outputs/report.pptx} /
+\code{ezrsurvey-outputs/report.docx} in the working directory. Missing
+directories are created.}
 }
 \value{
 Invisibly \code{path}.
@@ -35,6 +36,9 @@ Other reporting:
 \code{\link[=report_deck]{report_deck()}},
 \code{\link[=report_layouts]{report_layouts()}},
 \code{\link[=report_new]{report_new()}},
+\code{\link[=report_section]{report_section()}},
+\code{\link[=report_slide]{report_slide()}},
+\code{\link[=report_title_slide]{report_title_slide()}},
 \code{\link[=scaffold_report]{scaffold_report()}}
 }
 \concept{reporting}

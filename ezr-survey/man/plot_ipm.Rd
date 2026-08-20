@@ -47,6 +47,7 @@ ipm_model(podracing_survey, nps_value, "ratings_") \%>\% plot_ipm()
 
 Other plots:
 \code{\link[=plot_bars]{plot_bars()}},
+\code{\link[=plot_gauges]{plot_gauges()}},
 \code{\link[=plot_nps]{plot_nps()}},
 \code{\link[=plot_nps_gauge]{plot_nps_gauge()}},
 \code{\link[=plot_quotes_tree]{plot_quotes_tree()}},

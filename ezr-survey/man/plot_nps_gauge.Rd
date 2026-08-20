@@ -49,6 +49,7 @@ p_rating <- plot_nps_gauge(3.8, scale = "rating")
 
 Other plots:
 \code{\link[=plot_bars]{plot_bars()}},
+\code{\link[=plot_gauges]{plot_gauges()}},
 \code{\link[=plot_ipm]{plot_ipm()}},
 \code{\link[=plot_nps]{plot_nps()}},
 \code{\link[=plot_quotes_tree]{plot_quotes_tree()}},

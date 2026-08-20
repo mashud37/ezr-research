@@ -23,7 +23,7 @@ the function runs, a \emph{bare} positional call like \code{drivers(nps)} cannot
 back to the default -- R would try to treat \code{nps} as the data. So, with a
 default set, call the helpers in one of these equivalent ways:
 \itemize{
-\item pipe the data in once: \code{nps_drivers |> drivers(nps)};
+\item pipe the data in once: \code{nps_drivers \%>\% drivers(nps)};
 \item name the argument: \code{drivers(target = nps)};
 \item or just keep passing \code{data} explicitly.
 }

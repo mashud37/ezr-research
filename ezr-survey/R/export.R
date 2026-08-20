@@ -1,10 +1,11 @@
 # Internal: lower-case file extension without the dot.
 file_ext <- function(path) tolower(tools::file_ext(path))
 
-# Internal: default output location -- a project-local "outputs" folder in the
-# working directory, never the session temp directory.
+# Internal: default output location -- a project-local "ezrsurvey-outputs"
+# folder in the working directory, never the session temp directory. Files land
+# directly in it; no per-type subfolders.
 default_output_path <- function(name, ext) {
-  file.path("outputs", paste0(name, ".", ext))
+  file.path("ezrsurvey-outputs", paste0(name, ".", ext))
 }
 
 # Internal: create the parent directory of `path` if needed, and return `path`.
@@ -26,8 +27,8 @@ ensure_output_dir <- function(path) {
 #' @param plot A ggplot object.
 #' @param path Output path; the extension sets the format (`.png`, `.svg`,
 #'   `.pdf`, `.jpg`/`.jpeg`, `.tiff`). If `NULL` (default), the plot is written
-#'   to `outputs/plot.png` in the working directory. Missing directories are
-#'   created.
+#'   to `ezrsurvey-outputs/plot.png` in the working directory. Missing
+#'   directories are created.
 #' @param width,height Size in inches. Default `8 x 4.5`.
 #' @param dpi Raster resolution for PNG/JPG/TIFF. Default `300`.
 #' @param bg Background fill. Default `"transparent"` (matches the ezrsurvey
@@ -77,8 +78,9 @@ save_plot <- function(plot, path = NULL, width = 8, height = 4.5, dpi = 300,
 #'
 #' @param data A data frame / tibble, or (for `.xlsx`) a named list of them.
 #' @param path Output path; the extension sets the format (`.csv`, `.tsv`,
-#'   `.xlsx`). If `NULL` (default), the table is written to `outputs/data.csv`
-#'   in the working directory. Missing directories are created.
+#'   `.xlsx`). If `NULL` (default), the table is written to
+#'   `ezrsurvey-outputs/data.csv` in the working directory. Missing directories
+#'   are created.
 #' @param na String to write for missing values. Default `""`.
 #' @param ... Passed to the underlying writer ([readr::write_csv()] /
 #'   [readr::write_tsv()] / [writexl::write_xlsx()]).
@@ -128,8 +130,8 @@ save_data <- function(data, path = NULL, na = "", ...) {
 #'
 #' @param x A ggplot, a data frame, or a (named) list of data frames.
 #' @param path Output path; the extension picks the format. If `NULL`
-#'   (default), the file lands in the working directory's `outputs/` folder
-#'   (`outputs/plot.png` or `outputs/data.csv`).
+#'   (default), the file lands in the working directory's `ezrsurvey-outputs/`
+#'   folder (`ezrsurvey-outputs/plot.png` or `ezrsurvey-outputs/data.csv`).
 #' @param ... Passed to [save_plot()] or [save_data()].
 #'
 #' @return `x`, invisibly.
@@ -190,8 +192,8 @@ derive_sheet_name <- function(df, i) {
 #' @param ... Data frames to write, one per tab. Name them to set tab names
 #'   (e.g. `gender = calc_percentage(d, demo_gender)`).
 #' @param path Output `.xlsx` path. If `NULL` (default), the workbook is
-#'   written to `outputs/tables.xlsx` in the working directory. Missing
-#'   directories are created.
+#'   written to `ezrsurvey-outputs/tables.xlsx` in the working directory.
+#'   Missing directories are created.
 #' @param sheet_names Optional character vector of tab names (overrides argument
 #'   names).
 #'

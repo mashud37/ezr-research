@@ -110,6 +110,7 @@ p3 <- calc_percentage(podracing_survey, demo_edu) \%>\%
 \code{\link[=calc_percentage]{calc_percentage()}}, \code{\link[=scale_y_pct]{scale_y_pct()}}, \code{\link[=annotate_bands]{annotate_bands()}}.
 
 Other plots:
+\code{\link[=plot_gauges]{plot_gauges()}},
 \code{\link[=plot_ipm]{plot_ipm()}},
 \code{\link[=plot_nps]{plot_nps()}},
 \code{\link[=plot_nps_gauge]{plot_nps_gauge()}},
