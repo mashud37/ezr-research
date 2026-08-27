@@ -36,6 +36,7 @@ clear_weights()
 \code{\link[=set_weights]{set_weights()}}, \code{\link[=weight_vector]{weight_vector()}}.
 
 Other weighting:
+\code{\link[=clear_weights_cache]{clear_weights_cache()}},
 \code{\link[=set_weights]{set_weights()}},
 \code{\link[=weight_vector]{weight_vector()}}
 }

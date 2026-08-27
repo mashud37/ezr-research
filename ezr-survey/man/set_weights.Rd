@@ -51,6 +51,7 @@ clear_weights()
 \code{\link[=calc_percentage]{calc_percentage()}}.
 
 Other weighting:
+\code{\link[=clear_weights_cache]{clear_weights_cache()}},
 \code{\link[=get_weights]{get_weights()}},
 \code{\link[=weight_vector]{weight_vector()}}
 }

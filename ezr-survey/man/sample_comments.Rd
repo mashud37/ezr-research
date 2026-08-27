@@ -12,6 +12,7 @@ sample_comments(
   max_chars = 400,
   exclude = NULL,
   by_column = TRUE,
+  by = NULL,
   seed = NULL
 )
 }
@@ -35,11 +36,16 @@ comments matching any are dropped (e.g. \code{c("friend", "recommend")}).}
 \item{by_column}{If \code{TRUE} (default), sample \code{n} from each column; if \code{FALSE},
 sample \code{n} from the pooled comments.}
 
+\item{by}{Optional grouping column (unquoted), e.g. an NPS group. Sampling
+then takes \code{n} from each group, and the group is kept as a column of the
+result so a slide can filter on it.}
+
 \item{seed}{Optional integer for reproducible sampling (the RNG state is
 restored afterwards).}
 }
 \value{
-A \link[tibble:tibble]{tibble} with \code{source}, \code{comment} and \code{length}.
+A \link[tibble:tibble]{tibble} with \code{source}, \code{comment} and \code{length},
+plus the \code{by} column when one is given.
 }
 \description{
 Pulls a tidy, presentation-ready sample of comments out of one or more
@@ -57,6 +63,12 @@ set that is varied rather than uniformly random, use \code{\link[=sample_comment
 }
 \examples{
 sample_comments(podracing_survey, nps_com, show_com, n = 3)
+
+# three quotes per NPS group, with the group kept as a column
+podracing_survey \%>\%
+  mutate(group = nps_group(nps_value, labels = TRUE)) \%>\%
+  filter(!is.na(group)) \%>\%
+  sample_comments(nps_com, n = 3, by = group)
 }
 \seealso{
 \code{\link[=sample_comments_diverse]{sample_comments_diverse()}} for a diversity-aware sample,

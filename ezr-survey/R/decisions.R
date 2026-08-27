@@ -198,43 +198,95 @@ band_label <- function(x, bands) bands$label[band_index(x, bands)]
 #'
 #' * `bands_rating_3()` -- BAD / OK / GOOD over a 1-5 rating axis.
 #' * `bands_rating_5()` -- per-point labels (1 Very bad .. 5 Very good) over 1-5.
-#' * `bands_nps()` -- Detractor / Passive / Promoter over a 0-10 axis.
+#' * `bands_nps()` -- Detractor / Passive / Promoter over a 0-10 answer axis.
+#' * `bands_nps_score()` -- Needs work / Good / Great / Excellent over a
+#'   -100..100 Net Promoter Score axis (the scale a headline NPS sits on, not
+#'   the 0-10 answers it is computed from).
+#'
+#' @param from,to Optional axis limits. A band reaching past them is trimmed and
+#'   a band entirely outside them is dropped, so a preset can be reused on a
+#'   chart that shows only part of the scale.
 #'
 #' @return A [tibble][tibble::tibble] with `from`, `to`, `label` and `colour`.
 #' @family decisions
 #'
+#' @details
+#' Pass `from` / `to` when the chart's panel is narrower than the full scale.
+#' Plotting a 2-5 range with the untrimmed `bands_rating_3()` would open the BAD
+#' band at 1, off the left edge, and stretch the panel to reach it.
+#'
 #' @examples
 #' bands_rating_3()
-#' bands_nps()
+#'
+#' # only the part of the scale a 2-5 panel actually shows
+#' bands_rating_3(from = 2)
+#'
+#' bands_nps_score()
 #' @rdname band_presets
 #' @export
-bands_rating_3 <- function() {
-  tibble::tibble(
-    label = c("BAD", "OK", "GOOD"),
-    from = c(1, 3, 4),
-    to = c(3, 4, 5),
-    colour = c("#FF3300", "#FFCB3E", "#86A33B")
+bands_rating_3 <- function(from = NULL, to = NULL) {
+  clip_bands(
+    tibble::tibble(
+      label = c("BAD", "OK", "GOOD"),
+      from = c(1, 3, 4),
+      to = c(3, 4, 5),
+      colour = c("#FF3300", "#FFCB3E", "#86A33B")
+    ),
+    from, to
   )
 }
 
 #' @rdname band_presets
 #' @export
-bands_rating_5 <- function() {
-  tibble::tibble(
-    label = c("1\nVery bad", "2", "3\nOk", "4", "5\nVery good"),
-    from = c(0.5, 1.5, 2.5, 3.5, 4.5),
-    to = c(1.5, 2.5, 3.5, 4.5, 5.5),
-    colour = unname(pal_rating5)
+bands_rating_5 <- function(from = NULL, to = NULL) {
+  clip_bands(
+    tibble::tibble(
+      label = c("1\nVery bad", "2", "3\nOk", "4", "5\nVery good"),
+      from = c(0.5, 1.5, 2.5, 3.5, 4.5),
+      to = c(1.5, 2.5, 3.5, 4.5, 5.5),
+      colour = unname(pal_rating5)
+    ),
+    from, to
   )
 }
 
 #' @rdname band_presets
 #' @export
-bands_nps <- function() {
-  tibble::tibble(
-    label = c("DETRACTOR", "PASSIVE", "PROMOTER"),
-    from = c(-0.5, 6.5, 8.5),
-    to = c(6.5, 8.5, 10.5),
-    colour = unname(pal_nps)
+bands_nps <- function(from = NULL, to = NULL) {
+  clip_bands(
+    tibble::tibble(
+      label = c("DETRACTOR", "PASSIVE", "PROMOTER"),
+      from = c(-0.5, 6.5, 8.5),
+      to = c(6.5, 8.5, 10.5),
+      colour = unname(pal_nps)
+    ),
+    from, to
   )
+}
+
+#' @rdname band_presets
+#' @export
+bands_nps_score <- function(from = NULL, to = NULL) {
+  clip_bands(
+    tibble::tibble(
+      label = c("NEEDS WORK", "GOOD", "GREAT", "EXCELLENT"),
+      from = c(-100, 0, 30, 70),
+      to = c(0, 30, 70, 100),
+      colour = unname(pal_rating[c("1", "3", "4", "5")])
+    ),
+    from, to
+  )
+}
+
+# Internal: keep only the part of a band set the chart's axis actually shows.
+clip_bands <- function(bands, from = NULL, to = NULL) {
+  if (!is.null(from)) {
+    bands <- bands[bands$to > from, , drop = FALSE]
+    bands$from <- pmax(bands$from, from)
+  }
+  if (!is.null(to)) {
+    bands <- bands[bands$from < to, , drop = FALSE]
+    bands$to <- pmin(bands$to, to)
+  }
+  bands
 }

@@ -27,7 +27,8 @@ ezrsurvey_defaults <- function() {
     brand_font_minor = NULL,   # body typeface; feeds theme_ezrsurvey()
     brand_fonts_enabled = TRUE,   # apply brand fonts to ggplot text
     brand_template_pptx = NULL,   # default reference .pptx for reports
-    brand_template_docx = NULL    # default reference .docx for reports
+    brand_template_docx = NULL,   # default reference .docx for reports
+    progress = "auto"          # "auto" = report progress when interactive()
   )
 }
 
@@ -96,6 +97,10 @@ ezrsurvey_default <- function(name) {
 #'     [report_new()], [report_deck()] and [scaffold_report()]. These are
 #'     machine-specific absolute paths -- if you persist them, prefer the
 #'     project-level `.ezrsurvey.yml` profile over the user-level one.}
+#'   \item{`progress`}{Whether the slow helpers report which item they are on.
+#'     `"auto"` (default) reports in an interactive session and stays silent in
+#'     scripts, vignettes and `R CMD check`; `TRUE` or `FALSE` force it either
+#'     way. See [crosstab_banner()].}
 #' }
 #'
 #' @param ... Either nothing (to read all values) or named `option = value`
@@ -270,6 +275,7 @@ use_ezrsurvey_profile <- function(path = NULL, overwrite = FALSE) {
     "# pct_axis_max: 100       # fix every percentage y-axis at 100",
     "# generation_scheme: pew  # cohort scheme for recode_generation()",
     "# current_year: 2026      # reference year for age -> cohort",
+    "# progress: auto          # auto | true | false: per-item progress lines",
     "# na_answers:",
     "#   - Prefer not to answer",
     "#   - Don't know",

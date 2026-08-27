@@ -264,6 +264,10 @@ report_layouts <- function(template = NULL, style = c("elevated", "plain")) {
 #'   [report_add_slide()] shows the template's slide-number placeholder in
 #'   its usual corner. Requires the suggested `xml2` package (silently skipped
 #'   without it, or when the template has no slide-number placeholder).
+#' @param keep_slides PowerPoint only. If `TRUE` (default), any slides already
+#'   in the template stay and your first slide is added after them. Set `FALSE`
+#'   to start from an empty deck, which is what you want when the template
+#'   carries example or boilerplate slides you do not intend to ship.
 #'
 #' @return An officer document object (`rpptx` or `rdocx`).
 #'
@@ -288,7 +292,8 @@ report_layouts <- function(template = NULL, style = c("elevated", "plain")) {
 #' }
 #' @export
 report_new <- function(format = c("pptx", "docx"), template = NULL,
-                       style = c("elevated", "plain"), slide_numbers = TRUE) {
+                       style = c("elevated", "plain"), slide_numbers = TRUE,
+                       keep_slides = TRUE) {
   require_officer()
   format <- match.arg(format)
   style <- match.arg(style)
@@ -297,6 +302,11 @@ report_new <- function(format = c("pptx", "docx"), template = NULL,
   if (format == "pptx") {
     template <- template %||% default_pptx_template(style)
     doc <- officer::read_pptx(path = template)
+    if (!isTRUE(keep_slides)) {
+      for (i in seq_len(length(doc))) {
+        doc <- officer::remove_slide(doc, 1)
+      }
+    }
     set_report_state(doc, slide_numbers = isTRUE(slide_numbers))
     doc
   } else {

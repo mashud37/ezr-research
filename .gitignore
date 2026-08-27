@@ -27,6 +27,10 @@ ezr-learning/book/_bookdown_files/
 ezr-learning/book/*.rds
 ezr-learning/book/libs/
 
+# Job checkpoints (resumable runs; run-specific state, never commit)
+*checkpoint*
+data/checkpoints/
+
 # OS / editor cruft
 .DS_Store
 Thumbs.db

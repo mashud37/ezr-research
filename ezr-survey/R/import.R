@@ -55,7 +55,11 @@ read_folder <- function(path, pattern = "\\.csv$", id = "file",
 
   col_types <- if (all_character) readr::cols(.default = readr::col_character()) else NULL
 
-  pieces <- purrr::map(files, function(f) {
+  run <- progress_start(length(files),
+                        paste0("Reading ", length(files), " file(s) from ", path))
+  pieces <- purrr::map(seq_along(files), function(i) {
+    f <- files[[i]]
+    progress_item(run, i, f)
     inp <- readr::read_csv(
       file.path(path, f),
       col_types = col_types,
@@ -68,6 +72,7 @@ read_folder <- function(path, pattern = "\\.csv$", id = "file",
     }
     inp
   })
+  progress_done(run)
 
   dplyr::bind_rows(pieces)
 }

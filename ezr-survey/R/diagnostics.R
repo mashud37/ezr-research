@@ -267,12 +267,17 @@ diagnose <- function(data = NULL, ..., type = c("auto", "mean", "prop"),
   has_by <- !rlang::quo_is_null(by_q)
 
   run_one <- function(df) {
-    purrr::map_dfr(vars, function(v) {
+    run <- progress_start(length(vars))
+    out <- purrr::map_dfr(seq_along(vars), function(i) {
+      v <- vars[[i]]
+      progress_item(run, i, v)
       dplyr::bind_cols(
         tibble::tibble(variable = v),
         diagnose_one(df[[v]], type = type, z = z)
       )
     })
+    progress_done(run)
+    out
   }
 
   if (has_by) {

@@ -101,6 +101,7 @@ drop_items <- function(x, items, trim = TRUE) {
 #' @param labels Character vector of group labels, length `length(breaks) - 1`.
 #' @param right If `TRUE`, intervals are closed on the right; if `FALSE`
 #'   (default) closed on the left. Left-closed matches "18 to 21" style bands.
+#' @param quiet If `TRUE`, do not report values that fell outside `breaks`.
 #'
 #' @return A character vector of group labels (values outside the range or `NA`
 #'   become `NA`).
@@ -115,6 +116,11 @@ drop_items <- function(x, items, trim = TRUE) {
 #' or pass `levels =` to [calc_percentage()] if you need a specific display
 #' order.
 #'
+#' A value below the first break or above the last becomes `NA` and drops out of
+#' every chart built from the result, so the function says how many did and what
+#' their range was. A closed top band such as `35` to `40.5` under a label of
+#' "35 to 40+" is the usual cause; `Inf` is what that label means.
+#'
 #' @family recode
 #' @seealso [recode_age()] for a ready-made age-band wrapper, [ensure_numeric()].
 #' @examples
@@ -123,17 +129,25 @@ drop_items <- function(x, items, trim = TRUE) {
 #'             labels = c("<18", "18-24", "25-34", "35+"))
 #' #> [1] "<18"   "18-24" "25-34" "35+"
 #' @export
-bin_numeric <- function(x, breaks, labels, right = FALSE) {
+bin_numeric <- function(x, breaks, labels, right = FALSE, quiet = FALSE) {
   if (length(labels) != length(breaks) - 1L) {
     stop("`labels` must have length `length(breaks) - 1`.", call. = FALSE)
   }
+  values <- ensure_numeric(x, quiet = TRUE)
   out <- cut(
-    ensure_numeric(x, quiet = TRUE),
+    values,
     breaks = breaks,
     labels = labels,
     right = right,
     include.lowest = TRUE
   )
+  dropped <- !is.na(values) & is.na(out)
+  if (!quiet && any(dropped)) {
+    outside <- range(values[dropped])
+    message("bin_numeric: ", sum(dropped), " value(s) fell outside the breaks ",
+            "and became NA (range ", outside[1], " to ", outside[2],
+            "). Widen `breaks`, e.g. with -Inf / Inf at the ends.")
+  }
   as.character(out)
 }
 
@@ -197,6 +211,12 @@ recode_age <- function(x,
 #' "Dissatisfied" vs "Bad"). Turning ratings into integers is the first step of
 #' [ipm_model()] and lets you average a scale with [calc_summary()].
 #'
+#' The substring passes try the longest wording first, so a scale whose levels
+#' nest inside one another ("Likeable" inside "Very likeable", "Good" inside
+#' "Very good") resolves to the level the answer actually names. Without that,
+#' any answer the exact pass misses, such as one carrying an emoji or a stray
+#' character, would quietly land on the shorter level.
+#'
 #' @family recode
 #' @seealso [nps_group()], [ipm_model()], [calc_summary()].
 #' @examples
@@ -206,6 +226,10 @@ recode_age <- function(x,
 #' # substring fallback copes with numbered labels
 #' recode_likert("4 - Good")
 #' #> [1] 4
+#'
+#' # nested wordings resolve to the level the answer names, not the shorter one
+#' recode_likert(c("\U0001F642 Very good", "\U0001F610 Good"))
+#' #> [1] 5 4
 #'
 #' # map another tool's wording onto the same scale
 #' recode_likert(c("Dissatisfied", "Satisfied"),
@@ -224,10 +248,12 @@ recode_likert <- function(x,
   match_idx <- match(tolower(stringr::str_trim(x_chr)), lower_levels)
   out <- match_idx
 
-  # Substring fallback for the canonical wordings (handles "1 - Very good" etc.)
+  # Substring fallback for the canonical wordings (handles "1 - Very good" etc.).
+  # Longest level first, or "Very good" would match the "good" nested inside it.
   still_na <- is.na(out)
   if (any(still_na)) {
-    for (i in seq_along(levels)) {
+    longest_first <- order(nchar(lower_levels), decreasing = TRUE)
+    for (i in longest_first) {
       hit <- still_na &
         stringr::str_detect(tolower(x_chr), stringr::fixed(lower_levels[i]))
       out[hit] <- i
@@ -235,19 +261,26 @@ recode_likert <- function(x,
     }
   }
 
-  # User-supplied synonyms.
+  # User-supplied synonyms, gathered first so every target is checked up front.
   if (!is.null(synonyms)) {
+    alternatives <- character(0)
+    targets <- integer(0)
     for (canon in names(synonyms)) {
       idx <- match(tolower(canon), lower_levels)
       if (is.na(idx)) {
         stop("Synonym target '", canon, "' is not one of `levels`.",
              call. = FALSE)
       }
-      for (alt in synonyms[[canon]]) {
-        hit <- is.na(out) &
-          stringr::str_detect(tolower(x_chr), stringr::fixed(tolower(alt)))
-        out[hit] <- idx
-      }
+      alternatives <- c(alternatives, synonyms[[canon]])
+      targets <- c(targets, rep(idx, length(synonyms[[canon]])))
+    }
+    # Longest first, for the same reason as the level fallback above.
+    longest_first <- order(nchar(alternatives), decreasing = TRUE)
+    for (j in longest_first) {
+      hit <- is.na(out) &
+        stringr::str_detect(tolower(x_chr),
+                            stringr::fixed(tolower(alternatives[j])))
+      out[hit] <- targets[j]
     }
   }
 

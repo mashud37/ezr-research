@@ -16,7 +16,7 @@ Edwardian shopping survey) -- so every example runs out of the box.
 
 ```r
 # install.packages("pak")
-pak::pak("aschellewald/ezrsurvey")
+pak::pak("mashud37/ezrsurvey")
 ```
 
 The analysis core depends only on the tidyverse packages. A few extras unlock
@@ -65,6 +65,10 @@ crosstab_banner(podracing_survey)
 calc_percentage(podracing_survey, fav_driver) %>%
   plot_bars()
 
+# A whole block of rating questions as one stacked chart, features ordered
+# by their average and coloured worst-to-best
+plot_rating_grid(podracing_survey, "ratings_")
+
 # 3. NPS and the gauge
 nps <- calc_nps(podracing_survey, nps_value)$nps
 plot_nps_gauge(nps)
@@ -89,7 +93,7 @@ export_summary_xlsx(podracing_survey, demo_gender, satis_return, nps_value)
 | Area | Functions |
 | --- | --- |
 | **Import** | `read_folder()`, `select_prefix()`, `select_suffix()`, `parse_filename()` |
-| **Recode** | `na_blank()`, `drop_items()`, `ensure_numeric()`, `bin_numeric()`, `recode_age()`, `recode_generation()`, `recode_likert()`, `nps_group()` |
+| **Recode** | `na_blank()`, `drop_items()`, `ensure_numeric()`, `bin_numeric()`, `recode_age()`, `recode_generation()`, `recode_likert()`, `nps_group()`, `clean_label()` |
 | **Country → region** | `add_region()`, `recode_region()`, `recode_subregion()`, `country_region` |
 | **Config / profile** | `ezrsurvey_options()`, `reset_ezrsurvey_options()`, `use_ezrsurvey_profile()`, `load_ezrsurvey_profile()` |
 | **Comments** | `sample_comments()`, `sample_comments_diverse()` |
@@ -97,10 +101,10 @@ export_summary_xlsx(podracing_survey, demo_gender, satis_return, nps_value)
 | **Modelling** | `calc_nps()`, `calc_importance()`, `ipm_model()` |
 | **Diagnostics** | `se_mean()`, `se_prop()`, `rse()`, `margin_of_error()`, `diagnose()` |
 | **Scales** | `nice_max()`, `scale_y_pct()`, `label_pct()` |
-| **Decisions** | `annotate_bands()`, `mark_value()`, `bands_rating_3()`, `bands_rating_5()`, `bands_nps()` |
+| **Decisions** | `annotate_bands()`, `mark_value()`, `bands_rating_3()`, `bands_rating_5()`, `bands_nps()`, `bands_nps_score()` |
 | **Themes & palettes** | `theme_ezrsurvey()` (+ `_x`/`_y`/`_xy`, `transparent`), `pal_rating`, `pal_nps`, `scale_fill_rating()`, `scale_fill_nps()` |
 | **Branding** | `use_brand()`, `brand_info()`, `clear_brand()`, `pal_brand()`, `scale_fill_brand()`/`scale_colour_brand()` |
-| **Plots** | `plot_bars()`, `plot_stacked_rating()`, `plot_nps()`, `plot_nps_gauge()`, `plot_gauges()`, `plot_ipm()`, `plot_quotes_tree()` |
+| **Plots** | `plot_bars()`, `plot_stacked_rating()`, `plot_rating_grid()`, `plot_nps()`, `plot_nps_gauge()`, `plot_gauges()`, `plot_ipm()`, `plot_quotes_tree()` |
 | **Reporting** | `report_new()`, `report_layouts()`, `report_slide()`/`report_section()`/`report_title_slide()`, `report_add_slide()`/`_plot()`/`_table()`, `report_deck()`, `scaffold_report()` (Quarto pptx/html/pdf/docx), `example_report()` |
 | **Quick save** | `save_plot()` (png/svg/pdf), `save_data()` (csv/tsv/xlsx), `save_output()` (auto-dispatch), `export_xlsx()` (multi-tab), `export_summary_xlsx()` (table + chart per question) |
 | **Data** | `podracing_survey` (1,000 simulated pod-racing fans), `shopping_survey` (800 Edwardian shoppers) |
@@ -123,7 +127,41 @@ export_summary_xlsx(podracing_survey, demo_gender, satis_return, nps_value)
   `scale_y_pct()` and the plot wrappers.
 - **Decision bands.** `annotate_bands()` adds consistent "where's good, where's
   bad" guidance to any chart from a small band spec — the presets
-  `bands_rating_3()` / `bands_nps()` cover the common cases.
+  `bands_rating_3()` / `bands_nps()` cover the common cases. Pass `from` / `to`
+  to trim a preset to the part of the scale your chart shows.
+
+## Long runs
+
+A full every-variable `crosstab_banner()` is one cross-tab per question per
+grouping variable, so on a wide survey it takes minutes. The helpers that can
+run that long say where they are:
+
+```
+Banner table: 34 question(s) across 12 grouping variable(s)
+[7/34] satis_return  (about 2m left)
+```
+
+The estimate comes from the throughput measured so far, not a guess. Reporting
+is on in an interactive session and silent in scripts, vignettes and `R CMD
+check`; `ezrsurvey_options(progress = FALSE)` turns it off everywhere and
+`TRUE` forces it on.
+
+For a table long enough that losing it hurts, ask for a checkpoint:
+
+```r
+crosstab_banner(survey, checkpoint = TRUE)        # managed for you
+crosstab_banner(survey, checkpoint = "banner.rds")  # or choose the location
+```
+
+Each question is saved as it finishes, so re-running the identical call after a
+crash or an interrupt carries on from where it stopped. The managed file is
+named after the run's own fingerprint, so a call finds its own interrupted run,
+and a call on different data or different arguments never sees it: a stale file
+cannot quietly corrupt a table. Nothing is written unless you ask, and the file
+is yours to delete.
+
+Weights are worked out once per dataset and scheme and reused, rather than
+re-running the raking loop for every cell; `clear_weights_cache()` empties that.
 
 ## Branding
 

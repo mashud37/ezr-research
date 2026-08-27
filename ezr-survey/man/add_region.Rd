@@ -54,6 +54,7 @@ add_region(df, demo_country, subregion = TRUE)
 
 Other recode:
 \code{\link[=bin_numeric]{bin_numeric()}},
+\code{\link[=clean_label]{clean_label()}},
 \code{\link[=drop_items]{drop_items()}},
 \code{\link[=ensure_numeric]{ensure_numeric()}},
 \code{\link[=generation_scheme]{generation_scheme()}},

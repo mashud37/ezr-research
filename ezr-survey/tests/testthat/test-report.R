@@ -228,3 +228,11 @@ test_that("example_report copies the worked example", {
   expect_error(suppressMessages(example_report(dest)), "overwrite")
   expect_silent(suppressMessages(example_report(dest, overwrite = TRUE)))
 })
+
+test_that("report_new can start from an empty deck", {
+  skip_if_not_installed("officer")
+  kept <- report_new("pptx")
+  emptied <- report_new("pptx", keep_slides = FALSE)
+  expect_equal(length(emptied), 0)
+  expect_gte(length(kept), length(emptied))
+})

@@ -44,6 +44,7 @@ Other plots:
 \code{\link[=plot_ipm]{plot_ipm()}},
 \code{\link[=plot_nps]{plot_nps()}},
 \code{\link[=plot_nps_gauge]{plot_nps_gauge()}},
+\code{\link[=plot_rating_grid]{plot_rating_grid()}},
 \code{\link[=plot_stacked_rating]{plot_stacked_rating()}}
 }
 \concept{plots}

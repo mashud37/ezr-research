@@ -33,6 +33,33 @@ test_that("recode_likert maps wordings and synonyms to integers", {
   expect_equal(recode_likert("4 - Good"), 4L)
 })
 
+test_that("recode_likert prefers the longest matching level", {
+  # "Good" nests inside "Very good": an answer the exact pass misses (here an
+  # emoji prefix) must still resolve to the level it names, not the shorter one.
+  expect_equal(recode_likert(c("\U0001F642 Very good", "\U0001F610 Good")),
+               c(5L, 4L))
+
+  likeability <- c("Very unlikeable", "Unlikeable", "Likeable", "Very likeable")
+  expect_equal(
+    recode_likert(paste("*", likeability), levels = likeability),
+    c(1L, 2L, 3L, 4L)
+  )
+
+  likelihood <- c("Very unlikely", "Unlikely", "Likely", "Very likely")
+  expect_equal(
+    recode_likert(paste("*", likelihood), levels = likelihood),
+    c(1L, 2L, 3L, 4L)
+  )
+
+  # nested synonyms follow the same longest-first rule
+  expect_equal(
+    recode_likert(c("* Satisfied", "* Very satisfied"),
+                  synonyms = list(Good = "Satisfied",
+                                  "Very good" = "Very satisfied")),
+    c(4L, 5L)
+  )
+})
+
 test_that("nps_group classifies 0-10 into groups", {
   expect_equal(nps_group(c(0, 6, 7, 8, 9, 10)), c(-1L, -1L, 0L, 0L, 1L, 1L))
   expect_equal(nps_group(c(3, 8, 10), labels = TRUE),

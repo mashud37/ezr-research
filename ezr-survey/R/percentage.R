@@ -1,6 +1,39 @@
-# Internal: tidy a multi-select column name into a readable label.
-# Survey exporters mangle "Option A / B" into "Option.A...B"; undo that.
-clean_label <- function(x) {
+#' Tidy an exported column name into a readable label
+#'
+#' Turns the mangled column names survey tools produce back into the wording a
+#' reader expects: `"Broadcast.quality...audio"` becomes
+#' `"Broadcast quality / audio"`. Drop a question prefix at the same time with
+#' `prefix`, so a block of `ratings_*` columns becomes plain feature names.
+#'
+#' @param x A character vector of column names.
+#' @param prefix Optional prefix to strip from the start of each name before
+#'   tidying, e.g. `"ratings_"`. Names that do not start with it are left alone.
+#'
+#' @return A character vector of labels, the same length as `x`.
+#'
+#' @details
+#' Exporters replace every character they cannot put in a column name with a
+#' dot, so a slash surrounded by spaces arrives as three dots and a space
+#' arrives as one. This restores both, in that order, then squishes the result.
+#' It is the same cleaning [calc_percentage_multi()] and [ipm_model()] apply to
+#' their own output, exported so a hand-built table can match them: labels that
+#' disagree will not join, which is what silently empties a comparison chart.
+#'
+#' @family recode
+#' @seealso [calc_percentage_batch()], [calc_percentage_multi()].
+#' @examples
+#' clean_label("Broadcast.quality...audio")
+#' #> [1] "Broadcast quality / audio"
+#'
+#' clean_label(c("ratings_Camera.work", "ratings_Talent...analysis"),
+#'             prefix = "ratings_")
+#' #> [1] "Camera work"       "Talent / analysis"
+#' @export
+clean_label <- function(x, prefix = NULL) {
+  if (!is.null(prefix)) {
+    starts <- startsWith(x, prefix)
+    x[starts] <- substring(x[starts], nchar(prefix) + 1L)
+  }
   x %>%
     stringr::str_replace_all("\\.{3}", " / ") %>%
     stringr::str_replace_all("\\.", " ") %>%
@@ -26,6 +59,16 @@ order_factor <- function(df, key, sort = c("none", "desc", "asc"),
                          levels = NULL) {
   sort <- match.arg(sort)
   if (!is.null(levels)) {
+    # An answer the order does not list would silently become an NA bar, so name
+    # the ones that did before they reach a chart.
+    answers <- as.character(df[[key]])
+    unmatched <- setdiff(stats::na.omit(unique(answers)), levels)
+    if (length(unmatched)) {
+      message("Order for '", key, "' does not list ", length(unmatched),
+              " answer(s), which become NA: ",
+              paste(unmatched, collapse = ", "),
+              ". Add them to register_order() or pass `levels =`.")
+    }
     # An explicit / registered order is intentional and ordinal: mark it ordered
     # so downstream helpers (e.g. plot_bars) leave it alone instead of resorting.
     df[[key]] <- factor(df[[key]], levels = levels, ordered = TRUE)
@@ -402,6 +445,10 @@ calc_summary <- function(data = NULL, column, by = NULL, na_rm = TRUE,
 #' @param by,sort,digits,na_rm,drop,weights Passed to [calc_percentage()] (so a
 #'   `wpct` column appears when weighting is active, and `drop` removes unwanted
 #'   answers from every question).
+#' @param clean_names If `TRUE`, tidy each `variable` with [clean_label()]
+#'   instead of reporting the raw column name.
+#' @param prefix Optional question prefix to strip from `variable`, e.g.
+#'   `"ratings_"`. Implies `clean_names`.
 #'
 #' @return A [tibble][tibble::tibble] with `variable`, `answer`, `n`, `pct`
 #'   (plus any `by` columns).
@@ -415,8 +462,13 @@ calc_summary <- function(data = NULL, column, by = NULL, na_rm = TRUE,
 #' question block. To send each question to its own Excel tab instead, see
 #' [export_xlsx()].
 #'
+#' `variable` is the raw column name by default. Set `clean_names = TRUE` (or
+#' name a `prefix`) to get the same tidied wording [calc_percentage_multi()] and
+#' [ipm_model()] produce, which is what lets a batch table join to a model table
+#' on the question name.
+#'
 #' @family summaries
-#' @seealso [calc_percentage()], [export_xlsx()].
+#' @seealso [calc_percentage()], [clean_label()], [export_xlsx()].
 #' @examples
 #' calc_percentage_batch(podracing_survey, demo_gender, demo_job)
 #' #> # A tibble: 8 x 4
@@ -427,11 +479,16 @@ calc_summary <- function(data = NULL, column, by = NULL, na_rm = TRUE,
 #' #> # ... and so on for each answer of each variable
 #'
 #' calc_percentage_batch(podracing_survey, starts_with("demo_"))
+#'
+#' # tidy question names, with the block's prefix removed
+#' calc_percentage_batch(podracing_survey, starts_with("ratings_"),
+#'                       prefix = "ratings_")
 #' @export
 calc_percentage_batch <- function(data = NULL, ..., by = NULL,
                                   sort = c("none", "desc", "asc"),
                                   digits = 0, na_rm = TRUE, drop = NULL,
-                                  weights = NULL) {
+                                  weights = NULL, clean_names = FALSE,
+                                  prefix = NULL) {
   r <- resolve_data_dots(rlang::enquo(data), rlang::enquos(...))
   data <- r$data
   sort <- match.arg(sort)
@@ -441,7 +498,13 @@ calc_percentage_batch <- function(data = NULL, ..., by = NULL,
   }
   by_q <- rlang::enquo(by)
 
-  purrr::map_dfr(cols, function(col) {
+  labels <- cols
+  if (clean_names || !is.null(prefix)) {
+    labels <- clean_label(cols, prefix = prefix)
+  }
+
+  purrr::map_dfr(seq_along(cols), function(i) {
+    col <- cols[[i]]
     res <- rlang::inject(
       calc_percentage(data, !!rlang::sym(col), by = !!by_q,
                       sort = sort, digits = digits, na_rm = na_rm,
@@ -449,6 +512,6 @@ calc_percentage_batch <- function(data = NULL, ..., by = NULL,
     )
     names(res)[names(res) == col] <- "answer"
     res$answer <- as.character(res$answer)
-    dplyr::mutate(res, variable = col, .before = 1)
+    dplyr::mutate(res, variable = labels[[i]], .before = 1)
   })
 }

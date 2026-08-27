@@ -43,6 +43,7 @@ recode_age(c("17", "22 years", "31", "47"))
 Other recode:
 \code{\link[=add_region]{add_region()}},
 \code{\link[=bin_numeric]{bin_numeric()}},
+\code{\link[=clean_label]{clean_label()}},
 \code{\link[=drop_items]{drop_items()}},
 \code{\link[=ensure_numeric]{ensure_numeric()}},
 \code{\link[=generation_scheme]{generation_scheme()}},

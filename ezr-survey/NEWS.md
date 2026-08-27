@@ -1,3 +1,73 @@
+# ezrsurvey 0.6.0
+
+## Rating scales: a fix that can move existing numbers
+
+* **`recode_likert()`** now tries the longest answer wording first. A scale
+  whose levels nest inside one another ("Good" inside "Very good", "Likeable"
+  inside "Very likeable") previously resolved any answer the exact pass missed
+  to the **shorter** level, so an answer carrying an emoji or a stray character
+  was quietly downgraded. If your data has such a scale and any untidy answers,
+  ratings, feature averages and `ipm_model()` performance scores will change,
+  and the new numbers are the correct ones. Supplied `synonyms` follow the same
+  longest-first rule.
+* **`bin_numeric()`** reports values that fell outside `breaks` instead of
+  turning them into `NA` in silence, and takes `quiet = TRUE` to suppress that.
+  A closed top band under an open-ended label (`35` to `40.5` labelled
+  "35 to 40+") silently drops everyone above it; `Inf` is what that label means.
+* A registered order that does not list an answer now names the answers that
+  became `NA` rather than letting them appear as an unlabelled bar.
+
+## Progress on the slow helpers
+
+* The helpers that can run for minutes -- `crosstab_banner()`,
+  `export_summary_xlsx()`, `report_deck()`, `read_folder()`, `diagnose()` --
+  now report the question, file or slide they are on, with a measured estimate
+  of the time remaining. A full every-variable banner is one cross-tab per
+  question per grouping variable, so it takes minutes on a wide survey and used
+  to give no sign of life at all.
+* New **`progress`** option (`ezrsurvey_options(progress = )`): `"auto"`
+  (default) reports in an interactive session and stays silent in scripts,
+  vignettes and `R CMD check`; `TRUE` / `FALSE` force it either way.
+
+## Resuming an interrupted table
+
+* **`crosstab_banner(checkpoint = )`** saves each question as it finishes, so
+  re-running the identical call after a crash or an interrupt continues instead
+  of starting over. A checkpoint written from different data or different
+  arguments is reported and discarded, never blended into the new run. Use
+  `TRUE` to have the file managed under `tools::R_user_dir()`, or name a path to
+  choose the location. Nothing is written unless you ask.
+* Weights are computed **once per dataset and scheme** and reused, instead of
+  re-running the raking loop inside every cell of a banner table.
+  `clear_weights_cache()` empties the cache; `clear_weights()` does it too.
+* **`sample_comments_diverse(max_candidates = )`** narrows a large corpus to a
+  random shortlist (default 500) before comparing every comment with every
+  other, which is what made it slow and memory-hungry on a big survey.
+
+## New
+
+* **`plot_rating_grid()`** builds a stacked rating chart for a whole block of
+  prefix-sharing columns in one call: tabulate, tidy the question names, number
+  the answers by their place on the scale, stack. It replaces an eight-line
+  block per question block, and it *reports* answers that are not on the scale
+  instead of leaving them as an unranked segment.
+* **`clean_label()`** is now exported. It is the tidying
+  `calc_percentage_multi()` and `ipm_model()` already applied to their own
+  output, so a hand-built table can be made to match them: labels that disagree
+  will not join, which is what silently empties a comparison chart.
+* **`calc_percentage_batch(clean_names = , prefix = )`** applies that same
+  tidying to its `variable` column.
+* **`bands_nps_score()`** exposes the Net Promoter Score band set
+  (needs work / good / great / excellent over -100..100) that was previously
+  locked inside `plot_nps_gauge()`. Note `bands_nps()` is the 0-10 *answer*
+  scale and is a different thing.
+* The band presets take **`from` / `to`** to trim themselves to the part of the
+  scale a chart actually shows, e.g. `bands_rating_3(from = 2)` on a 2-5 panel.
+* **`report_new(keep_slides = FALSE)`** starts from an empty deck, dropping any
+  boilerplate slides the template carries.
+* **`sample_comments(by = )`** samples `n` comments per group and keeps the
+  group as a column, replacing a hand-rolled loop over the groups.
+
 # ezrsurvey 0.5.0
 
 ## AI summaries move to ezrintelligence
@@ -17,6 +87,17 @@
 * The Quarto scaffolds and the worked example lose their `ai` parameter and
   the eval-gated AI chunks; they render with placeholder narrative and their
   `data` parameter as before.
+
+## Fixes
+
+* **`export_summary_xlsx()`** no longer fails with "Failed to save workbook"
+  when `R_ZIPCMD` names a zip tool that is not installed. openxlsx2 reaches for
+  an external zip whenever that variable is set, and R sets it to a bare `zip`
+  on Windows under `R CMD` whether or not a `zip.exe` exists; the workbook is
+  now written with openxlsx2's own zipping code whenever the named tool cannot
+  be found.
+* The `crosstab_banner()` example that crosses every variable against every
+  other moves to `\donttest`, where its runtime belongs.
 # ezrsurvey 0.4.0
 
 ## Cross-tabs and summary workbooks
