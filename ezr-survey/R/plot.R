@@ -259,6 +259,7 @@ plot_bars <- function(data, label = NULL, value = pct,
 #'   ungroup()
 #' p <- plot_stacked_rating(rating_long, feature, level)
 #' @export
+#' @export
 plot_stacked_rating <- function(data, feature, level, value = pct,
                                 palette = NULL, label_min = 1,
                                 show_average = TRUE) {
@@ -315,6 +316,75 @@ plot_stacked_rating <- function(data, feature, level, value = pct,
   p
 }
 
+#' A stacked rating chart for a whole block of questions
+#'
+#' The one-line form of [plot_stacked_rating()] for the common case: a block of
+#' columns sharing a prefix, each asking the same rating question about a
+#' different feature or brand. Tabulates the block, tidies the question names,
+#' numbers the answers by their position on the scale and stacks the result.
+#'
+#' @param data A data frame. If omitted, the session default ([use_dataset()]).
+#' @param prefix The block's shared column prefix, e.g. `"ratings_"`. It is
+#'   stripped from the feature labels.
+#' @param levels The scale's answer wordings, worst first. `NULL` (default)
+#'   looks the block up in the order registry ([register_order()]), falling back
+#'   to the [recode_likert()] default five-point scale.
+#' @param digits Decimal places kept in the underlying percentages. Default `2`.
+#' @param ... Passed to [plot_stacked_rating()] (`palette`, `label_min`,
+#'   `show_average`).
+#'
+#' @return A ggplot object.
+#'
+#' @details
+#' Answers are numbered by their position in `levels`, which is what orders the
+#' features by their weighted mean and colours the segments worst-to-best. A
+#' wording that is not on the scale cannot be numbered, so it is reported rather
+#' than being silently dropped into an unlabelled segment: check it against the
+#' raw export, since exports often differ from a questionnaire by a typo.
+#' Registering the block once with
+#' `register_order("likeability", levels, prefixes = "partner_likeability_")`
+#' removes the `levels` argument from every later call.
+#'
+#' @family plots
+#' @seealso [plot_stacked_rating()], [calc_percentage_batch()],
+#'   [register_order()].
+#' @examples
+#' plot_rating_grid(podracing_survey, "ratings_")
+#'
+#' plot_rating_grid(podracing_survey, "partner_likeability_",
+#'                  levels = c("Very unlikeable", "Unlikeable",
+#'                             "Likeable", "Very likeable"))
+#' @export
+plot_rating_grid <- function(data = NULL, prefix, levels = NULL, digits = 2,
+                             ...) {
+  r <- resolve_data_columns(rlang::enquo(data), list(rlang::enquo(prefix)),
+                            missing(prefix))
+  data <- r$data
+  prefix <- rlang::eval_tidy(r$cols[[1]])
+
+  cols <- names(data)[startsWith(names(data), prefix)]
+  if (length(cols) == 0L) {
+    stop("No columns start with '", prefix, "'.", call. = FALSE)
+  }
+  if (is.null(levels)) {
+    levels <- order_for(cols[[1]]) %||%
+      c("Very bad", "Bad", "Ok", "Good", "Very good")
+  }
+
+  tab <- calc_percentage_batch(data, dplyr::all_of(cols), digits = digits,
+                               prefix = prefix)
+  ranks <- recode_likert(tab$answer, levels = levels)
+  unknown <- unique(tab$answer[is.na(ranks)])
+  if (length(unknown)) {
+    message("plot_rating_grid: ", length(unknown),
+            " answer(s) are not on the '", prefix, "' scale and cannot be ",
+            "ranked: ", paste(unknown, collapse = ", "),
+            ". Check `levels` against the data.")
+  }
+  tab$answer <- paste(ranks, "-", tab$answer)
+  plot_stacked_rating(tab, variable, answer, ...)
+}
+
 #' Score gauge with decision bands and a value marker
 #'
 #' A horizontal gauge that places a single score (NPS or mean rating) onto a
@@ -349,12 +419,7 @@ plot_nps_gauge <- function(score, scale = c("nps", "rating"),
   scale <- match.arg(scale)
   label_size <- label_size %||% (11 / ggplot2::.pt)
   if (scale == "nps") {
-    bands <- tibble::tibble(
-      label = c("NEEDS WORK", "GOOD", "GREAT", "EXCELLENT"),
-      from = c(-100, 0, 30, 70),
-      to = c(0, 30, 70, 100),
-      colour = unname(pal_rating[c("1", "3", "4", "5")])
-    )
+    bands <- bands_nps_score()
     lim <- c(-100, 100)
     if (is.null(title)) title <- paste0("Net Promoter Score of: ", round(score))
   } else {
@@ -391,12 +456,7 @@ plot_nps_gauge <- function(score, scale = c("nps", "rating"),
 gauge_scale <- function(scale) {
   if (scale == "nps") {
     list(
-      bands = tibble::tibble(
-        label = c("NEEDS WORK", "GOOD", "GREAT", "EXCELLENT"),
-        from = c(-100, 0, 30, 70),
-        to = c(0, 30, 70, 100),
-        colour = unname(pal_rating[c("1", "3", "4", "5")])
-      ),
+      bands = bands_nps_score(),
       lo = -100, hi = 100,
       fmt = function(s) sprintf("%+d", as.integer(round(s)))
     )

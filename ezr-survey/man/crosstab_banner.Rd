@@ -17,7 +17,8 @@ crosstab_banner(
   weights = NULL,
   max_levels = 20,
   long = FALSE,
-  flextable = FALSE
+  flextable = FALSE,
+  checkpoint = NULL
 )
 }
 \arguments{
@@ -70,6 +71,11 @@ free-text are skipped; numeric scales are always kept as stub rows.}
 \item{flextable}{If \code{TRUE}, return a \link[flextable:flextable]{flextable} with the
 two-row banner header ready for a slide or Word report. Default \code{FALSE}.
 Requires the suggested \code{flextable} package.}
+
+\item{checkpoint}{Save each question as it finishes, so re-running the same
+call picks up where an interrupted run stopped. \code{TRUE} manages the file for
+you under \code{\link[tools:R_user_dir]{tools::R_user_dir()}}; a file path puts it where you choose.
+\code{NULL} (default) or \code{FALSE} writes nothing. See Details.}
 }
 \value{
 By default a wide \link[tibble:tibble]{tibble}: \code{variable}, \code{item},
@@ -106,11 +112,20 @@ recognised as a single multi-select stub question and tabulated with
 \code{\link[=calc_percentage_multi]{calc_percentage_multi()}}, whose base is the respondents who picked any option
 (so those rows can sum past 100). Multi-select blocks appear as stubs only, not
 banner groups, and are unweighted.
+
+A full every-variable banner is one \code{\link[=crosstab]{crosstab()}} per question per grouping
+variable, so a wide survey takes minutes rather than seconds. In an
+interactive session it reports which question it is on, with an estimate of
+the time left; \code{ezrsurvey_options(progress = FALSE)} turns that off, and
+scripts are silent by default. \code{checkpoint = TRUE} additionally saves each
+question as it completes, so re-running the identical call after an
+interruption resumes instead of starting again. The managed file is named
+after the run's own fingerprint, so a call finds its own interrupted run and
+a call with different data or arguments never sees it; pass a path instead if
+you would rather choose the location. Either way the file is yours to delete
+once the table is built.
 }
 \examples{
-# full variable-by-variable banner: just pass the data frame
-crosstab_banner(podracing_survey)
-
 # gender and region banner over two questions (column percentages)
 crosstab_banner(podracing_survey,
                 rows = c(satis_return, demo_edu),
@@ -124,6 +139,11 @@ crosstab_banner(podracing_survey,
 # each cell as its difference from the Overall column
 crosstab_banner(podracing_survey, rows = satis_return,
                 cols = region, cell = "diff")
+
+\donttest{
+# full variable-by-variable banner: just pass the data frame
+crosstab_banner(podracing_survey)
+}
 }
 \seealso{
 \code{\link[=crosstab]{crosstab()}} for a single pair, \code{\link[=calc_percentage_batch]{calc_percentage_batch()}} for stacked

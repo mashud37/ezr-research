@@ -242,6 +242,72 @@ banner_auto_select <- function(data, max_levels) {
        skipped = setdiff(names(data), used))
 }
 
+# ---- checkpointing -------------------------------------------------------
+
+# Internal: what a saved run has to match before any of it can be reused. The
+# data itself is in here, so a checkpoint taken from different answers is never
+# mistaken for this one.
+banner_fingerprint <- function(data, labels, col_vars, cell, stats, total,
+                               na_rm, drop, digits) {
+  rlang::hash(list(data, labels, col_vars, cell, stats, total, na_rm, drop,
+                   digits, "banner-v1"))
+}
+
+# Internal: turn what the user asked for into a file path, or NULL for no
+# checkpointing. `TRUE` names the file after the fingerprint, so an identical
+# call finds its own interrupted run without the user tracking a path.
+banner_checkpoint_path <- function(checkpoint, fingerprint) {
+  if (is.null(checkpoint) || isFALSE(checkpoint)) {
+    return(NULL)
+  }
+  if (isTRUE(checkpoint)) {
+    dir <- tools::R_user_dir("ezrsurvey", "cache")
+    return(file.path(dir, paste0("banner-", substr(fingerprint, 1, 16), ".rds")))
+  }
+  if (is.character(checkpoint) && length(checkpoint) == 1 && !is.na(checkpoint)) {
+    return(checkpoint)
+  }
+  stop("`checkpoint` must be TRUE, FALSE, or a single file path, not ",
+       class(checkpoint)[1], ".", call. = FALSE)
+}
+
+# Internal: pick up an interrupted run, or start a fresh one. A checkpoint from
+# a different dataset or a different set of arguments is discarded rather than
+# blended into this run's results.
+banner_checkpoint_load <- function(path, fingerprint) {
+  empty <- list(blocks = list(), row_keys = list(), finished = character(0))
+  if (is.null(path) || !file.exists(path)) {
+    return(empty)
+  }
+  saved <- tryCatch(readRDS(path), error = function(e) NULL)
+  if (is.null(saved) || !identical(saved$fingerprint, fingerprint)) {
+    progress_note("Checkpoint at ", path, " belongs to a different run; ",
+                  "starting over.")
+    return(empty)
+  }
+  list(blocks = saved$blocks, row_keys = saved$row_keys,
+       finished = saved$finished)
+}
+
+# Internal: record what is done so far. Written to a neighbouring temporary file
+# and renamed, so an interruption mid-write cannot leave a half-written
+# checkpoint behind.
+banner_checkpoint_save <- function(path, fingerprint, finished, blocks,
+                                   row_keys) {
+  if (is.null(path)) {
+    return(invisible(FALSE))
+  }
+  dir <- dirname(path)
+  if (!dir.exists(dir)) {
+    dir.create(dir, recursive = TRUE, showWarnings = FALSE)
+  }
+  part <- paste0(path, ".part")
+  saveRDS(list(fingerprint = fingerprint, finished = finished,
+               blocks = blocks, row_keys = row_keys), part)
+  file.rename(part, path)
+  invisible(TRUE)
+}
+
 #' Build a master banner (cross-tab) table
 #'
 #' Produces the market-research "banner" table: one master table with a stack of
@@ -289,6 +355,10 @@ banner_auto_select <- function(data, max_levels) {
 #' @param flextable If `TRUE`, return a [flextable][flextable::flextable] with the
 #'   two-row banner header ready for a slide or Word report. Default `FALSE`.
 #'   Requires the suggested `flextable` package.
+#' @param checkpoint Save each question as it finishes, so re-running the same
+#'   call picks up where an interrupted run stopped. `TRUE` manages the file for
+#'   you under [tools::R_user_dir()]; a file path puts it where you choose.
+#'   `NULL` (default) or `FALSE` writes nothing. See Details.
 #'
 #' @return By default a wide [tibble][tibble::tibble]: `variable`, `item`,
 #'   `Overall`, then one column per banner item. The banner grouping (which
@@ -316,13 +386,22 @@ banner_auto_select <- function(data, max_levels) {
 #' (so those rows can sum past 100). Multi-select blocks appear as stubs only, not
 #' banner groups, and are unweighted.
 #'
+#' A full every-variable banner is one [crosstab()] per question per grouping
+#' variable, so a wide survey takes minutes rather than seconds. In an
+#' interactive session it reports which question it is on, with an estimate of
+#' the time left; `ezrsurvey_options(progress = FALSE)` turns that off, and
+#' scripts are silent by default. `checkpoint = TRUE` additionally saves each
+#' question as it completes, so re-running the identical call after an
+#' interruption resumes instead of starting again. The managed file is named
+#' after the run's own fingerprint, so a call finds its own interrupted run and
+#' a call with different data or arguments never sees it; pass a path instead if
+#' you would rather choose the location. Either way the file is yours to delete
+#' once the table is built.
+#'
 #' @family summaries
 #' @seealso [crosstab()] for a single pair, [calc_percentage_batch()] for stacked
 #'   one-variable percentages, [export_summary_xlsx()], [register_order()].
 #' @examples
-#' # full variable-by-variable banner: just pass the data frame
-#' crosstab_banner(podracing_survey)
-#'
 #' # gender and region banner over two questions (column percentages)
 #' crosstab_banner(podracing_survey,
 #'                 rows = c(satis_return, demo_edu),
@@ -336,13 +415,19 @@ banner_auto_select <- function(data, max_levels) {
 #' # each cell as its difference from the Overall column
 #' crosstab_banner(podracing_survey, rows = satis_return,
 #'                 cols = region, cell = "diff")
+#'
+#' \donttest{
+#' # full variable-by-variable banner: just pass the data frame
+#' crosstab_banner(podracing_survey)
+#' }
 #' @export
 crosstab_banner <- function(data = NULL, rows, cols,
                             cell = c("auto", "pct", "count", "mean", "diff"),
                             stats = c("mean", "median", "sd", "p25", "p75"),
                             total = TRUE, digits = NULL, na_rm = TRUE,
                             drop = NULL, weights = NULL, max_levels = 20,
-                            long = FALSE, flextable = FALSE) {
+                            long = FALSE, flextable = FALSE,
+                            checkpoint = NULL) {
   data <- resolve_data(data)
   cell <- match.arg(cell)
   stats <- match.arg(stats, several.ok = TRUE)
@@ -397,9 +482,33 @@ crosstab_banner <- function(data = NULL, rows, cols,
   )
   specs <- specs[order(vapply(specs, function(s) s$pos, numeric(1)))]
 
-  blocks <- list()
-  row_keys <- list()
-  for (s in specs) {
+  labels <- vapply(specs, function(s) s$label, character(1))
+  fingerprint <- banner_fingerprint(data, labels, col_vars, cell, stats, total,
+                                    na_rm, drop, digits)
+  checkpoint <- banner_checkpoint_path(checkpoint, fingerprint)
+  state <- banner_checkpoint_load(checkpoint, fingerprint)
+  blocks <- state$blocks
+  row_keys <- state$row_keys
+  finished <- state$finished
+
+  progress_plan(
+    paste0("Banner table: ", length(specs), " question(s) across ",
+           length(col_vars), " grouping variable(s)"),
+    labels
+  )
+  if (!is.null(checkpoint)) {
+    progress_note("Checkpoint: ", checkpoint)
+  }
+  if (length(finished)) {
+    progress_note("Resuming: ", length(finished), " of ", length(specs),
+                  " question(s) already done.")
+  }
+
+  run <- progress_start(length(specs))
+  for (i in seq_along(specs)) {
+    s <- specs[[i]]
+    if (s$label %in% finished) next
+    progress_item(run, i, s$label)
     blk <- if (s$type == "multi") {
       banner_block_multi(data, s$label, col_vars, cell, na_rm, drop, weights,
                          pct_digits, group_levels)
@@ -411,12 +520,18 @@ crosstab_banner <- function(data = NULL, rows, cols,
                        weights, pct_digits, group_levels)
     }
     il <- attr(blk, "item_levels")
-    if (!length(il)) next
-    row_keys[[length(row_keys) + 1L]] <- tibble::tibble(
-      variable = blk$variable[[1]], item = il
-    )
-    blocks[[length(blocks) + 1L]] <- blk
+    finished <- c(finished, s$label)
+    if (length(il)) {
+      row_keys[[length(row_keys) + 1L]] <- tibble::tibble(
+        variable = blk$variable[[1]], item = il
+      )
+      blocks[[length(blocks) + 1L]] <- blk
+    }
+    # Saved per question, so an interrupted run resumes from the next one.
+    banner_checkpoint_save(checkpoint, fingerprint, finished, blocks, row_keys)
   }
+  progress_done(run)
+
   long_df <- dplyr::bind_rows(blocks)
   row_keys <- dplyr::bind_rows(row_keys)
 

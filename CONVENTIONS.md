@@ -49,6 +49,7 @@ files to copy:
 | Options + YAML profiles: `ezr<pkg>_options()`, `reset/use/edit/save/load_*_profile()` | `config.R` | **yes** (option prefix `ezr<pkg>.`, profile `~/.ezr<pkg>.yml`) |
 | Themes + palettes: `theme_ezr<pkg>*()`, `scale_*` | `theme.R`, `palettes.R` | **yes** (theme names) |
 | Save/export: `save_plot()`, `save_data()`, `save_output()`, `export_xlsx()` | `export.R` | no |
+| Progress: internal `progress_plan()`, `progress_start()`, `progress_item()`, `progress_note()`, `progress_done()` | `progress.R` | no |
 
 **AI is not an ezr core primitive.** Language-model summaries, API-key storage
 and the prompt registry live in **`ezrintelligence`** alone; no other package
@@ -133,3 +134,42 @@ R CMD check  ezr<name>_<version>.tar.gz --as-cran
 ```
 
 Commit or submit a package only when its own `--as-cran` check is clean.
+
+## 9. Progress and resumability
+
+A helper that can run for more than a few seconds says what it is doing. The
+rules, which mirror the workspace's CLI liveness policy translated for a library
+called from an R console:
+
+- **Announce before the work, not after.** The `[i/N]` line for an item is
+  printed *before* that item is processed, so a run that stops names the item it
+  stopped on.
+- **Print from the main thread, never animate.** R blocks during a long call, so
+  a spinner is a lie. Progress is tied to real completed items.
+- **A multi-step run prints its plan first.** No phase appears as a surprise.
+- **The ETA is measured, not guessed**: `elapsed / done * remaining`, and it
+  stays hidden until there is enough elapsed time to mean anything.
+- **Everything goes through `message()`** (stderr), so progress never
+  contaminates a returned value or a piped chain, and never through `cat()`.
+- **Silent by default outside an interactive session.** The `progress` option is
+  `"auto"`, which reports in a console and stays quiet in scripts, vignettes and
+  `R CMD check`. `TRUE` / `FALSE` force it. Whether a run reports is settled when
+  the run opens, so it cannot start reporting half way through.
+- **No new dependency.** `cli` and `progressr` are not used; `message()` plus
+  `sprintf()` covers the whole contract.
+
+Resumability applies to any loop that accumulates a list and binds it at the
+end. Such a function takes an optional `checkpoint = NULL` file path:
+
+- Writes **after each item**, never an end-of-run summary, so a crash costs one
+  item at most. Write to `<path>.part` and rename, so an interruption mid-write
+  cannot leave a half-written checkpoint.
+- Carries a **fingerprint** of the data and every argument that shapes the
+  result. A checkpoint that does not match is reported and discarded, never
+  blended into the new run. A corrupt file is treated the same way.
+- **Defaults to `NULL`.** CRAN forbids writing outside `tempdir()` /
+  `tools::R_user_dir()` unasked (§7), so the file only exists when the user
+  names one. Checkpoints are gitignored and are the user's to delete.
+
+`crosstab_banner()` in `ezr-survey/R/crosstab_banner.R` is the template for
+both halves.

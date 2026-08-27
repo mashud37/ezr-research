@@ -4,7 +4,7 @@
 \alias{bin_numeric}
 \title{Bin a numeric vector into labelled groups}
 \usage{
-bin_numeric(x, breaks, labels, right = FALSE)
+bin_numeric(x, breaks, labels, right = FALSE, quiet = FALSE)
 }
 \arguments{
 \item{x}{A numeric vector.}
@@ -16,6 +16,8 @@ breaks. Use \code{Inf} for an open-ended top band.}
 
 \item{right}{If \code{TRUE}, intervals are closed on the right; if \code{FALSE}
 (default) closed on the left. Left-closed matches "18 to 21" style bands.}
+
+\item{quiet}{If \code{TRUE}, do not report values that fell outside \code{breaks}.}
 }
 \value{
 A character vector of group labels (values outside the range or \code{NA}
@@ -37,6 +39,11 @@ is what you want for age groups like "18 to 24". Text input is salvaged with
 character vector (not a factor); apply an order later with \code{\link[=register_order]{register_order()}}
 or pass \verb{levels =} to \code{\link[=calc_percentage]{calc_percentage()}} if you need a specific display
 order.
+
+A value below the first break or above the last becomes \code{NA} and drops out of
+every chart built from the result, so the function says how many did and what
+their range was. A closed top band such as \code{35} to \code{40.5} under a label of
+"35 to 40+" is the usual cause; \code{Inf} is what that label means.
 }
 \examples{
 bin_numeric(c(15, 19, 27, 41),
@@ -49,6 +56,7 @@ bin_numeric(c(15, 19, 27, 41),
 
 Other recode:
 \code{\link[=add_region]{add_region()}},
+\code{\link[=clean_label]{clean_label()}},
 \code{\link[=drop_items]{drop_items()}},
 \code{\link[=ensure_numeric]{ensure_numeric()}},
 \code{\link[=generation_scheme]{generation_scheme()}},

@@ -53,3 +53,26 @@ test_that("the rating palette agrees with the 3-band thresholds", {
   expect_false(unname(pal_rating[["4"]]) %in% c(bad, ok))
   expect_false(unname(pal_rating[["5"]]) %in% c(bad, ok))
 })
+
+test_that("band presets can be clipped to the axis a chart shows", {
+  full <- bands_rating_3()
+  expect_equal(full$from[[1]], 1)
+
+  clipped <- bands_rating_3(from = 2)
+  expect_equal(clipped$from[[1]], 2)
+  expect_equal(nrow(clipped), nrow(full))
+  expect_equal(clipped$to, full$to)
+
+  # a band entirely outside the range drops out
+  expect_equal(nrow(bands_rating_3(from = 4)), 1)
+  expect_equal(nrow(bands_rating_3(to = 3)), 1)
+})
+
+test_that("bands_nps_score covers the -100..100 score axis", {
+  b <- bands_nps_score()
+  expect_equal(min(b$from), -100)
+  expect_equal(max(b$to), 100)
+  expect_true(all(c("label", "from", "to", "colour") %in% names(b)))
+  # bands_nps() is the 0-10 answer scale and is a different thing
+  expect_equal(max(bands_nps()$to), 10.5)
+})

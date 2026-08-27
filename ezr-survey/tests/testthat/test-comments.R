@@ -65,3 +65,21 @@ test_that("resolve_stopwords honours FALSE, vectors, and a default set", {
   expect_equal(resolve_stopwords(c("A", "B")), c("a", "b"))
   expect_gt(length(resolve_stopwords(NULL)), 10)   # stopwords pkg or fallback
 })
+
+test_that("sample_comments can sample per group and keeps the group column", {
+  d <- podracing_survey %>%
+    dplyr::mutate(group = nps_group(nps_value, labels = TRUE)) %>%
+    dplyr::filter(!is.na(group))
+  out <- sample_comments(d, nps_com, n = 2, by = group, seed = 1)
+  expect_true("group" %in% names(out))
+  expect_true(all(table(out$group) <= 2))
+  expect_true(all(out$group %in% c("Detractor", "Passive", "Promoter")))
+})
+
+test_that("sample_comments_diverse shortlists a large corpus before comparing", {
+  many <- podracing_survey[rep(seq_len(nrow(podracing_survey)), 2), ]
+  out <- sample_comments_diverse(many, nps_com, n = 5, max_candidates = 50,
+                                 seed = 1)
+  expect_equal(nrow(out), 5)
+  expect_true(all(c("source", "comment", "length", "info") %in% names(out)))
+})

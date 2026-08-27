@@ -87,9 +87,37 @@ weight_diagnostics <- function(w) {
   list(deff = deff, n_eff = length(w) / deff)
 }
 
-# Internal: compute per-row weights for `data` under a (canonical) spec by raking.
+# Session cache of computed weight vectors. Raking is deterministic, so the same
+# rows under the same scheme always give the same weights -- and a banner table
+# asks for them once per cell, which is thousands of times for one answer.
+.ezrsurvey_weight_cache <- new.env(parent = emptyenv())
+
+# Internal: a key standing for "these rows under this scheme". The weighting
+# columns' contents are part of it, so editing the data invalidates the entry on
+# its own and a stale weight vector cannot be handed back.
+weight_cache_key <- function(data, spec, max_iter, tol) {
+  rlang::hash(list(spec, nrow(data), data[names(spec)], max_iter, tol))
+}
+
+# Internal: compute per-row weights for `data` under a (canonical) spec, reusing
+# the cached vector when this exact question has already been answered.
 compute_weights <- function(data, spec, max_iter = 50L, tol = 1e-6) {
   if (length(spec) == 0L) return(rep(1, nrow(data)))
+  key <- weight_cache_key(data, spec, max_iter, tol)
+  if (exists(key, envir = .ezrsurvey_weight_cache, inherits = FALSE)) {
+    return(get(key, envir = .ezrsurvey_weight_cache, inherits = FALSE))
+  }
+  w <- rake_weights(data, spec, max_iter, tol)
+  # A handful of datasets per session is normal; a runaway cache is not.
+  if (length(ls(.ezrsurvey_weight_cache)) >= 32L) {
+    clear_weights_cache()
+  }
+  assign(key, w, envir = .ezrsurvey_weight_cache)
+  w
+}
+
+# Internal: the raking itself (iterative proportional fitting).
+rake_weights <- function(data, spec, max_iter, tol) {
   N <- nrow(data)
 
   # Pre-clean the weighting columns and validate coverage up front.
@@ -259,6 +287,35 @@ has_weights <- function() {
 #' @export
 clear_weights <- function() {
   if (has_weights()) rm("weight_spec", envir = .ezrsurvey_active)
+  clear_weights_cache()
+  invisible(TRUE)
+}
+
+#' Forget cached survey weights
+#'
+#' Empties the session's cache of computed weight vectors. Weighting the same
+#' rows under the same scheme always gives the same numbers, so ezrsurvey works
+#' them out once and reuses them; a table crossing every question against every
+#' group would otherwise re-run the raking for each cell.
+#'
+#' @return `TRUE`, invisibly.
+#'
+#' @details
+#' The cache keys on the weighting columns' own contents, so editing the data
+#' produces different weights without any action from you. Clearing it by hand
+#' is only needed to reclaim memory, or after changing a weighting variable
+#' in place inside an object the cache has already seen. [clear_weights()]
+#' clears it too.
+#'
+#' @family weighting
+#' @seealso [set_weights()], [weight_vector()].
+#' @examples
+#' clear_weights_cache()
+#' #> invisible(TRUE)
+#' @export
+clear_weights_cache <- function() {
+  rm(list = ls(.ezrsurvey_weight_cache, all.names = TRUE),
+     envir = .ezrsurvey_weight_cache)
   invisible(TRUE)
 }
 

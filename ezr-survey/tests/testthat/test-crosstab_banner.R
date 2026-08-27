@@ -134,3 +134,63 @@ test_that("mean on a categorical question errors clearly", {
     "numeric"
   )
 })
+
+test_that("a checkpointed banner resumes and matches an uninterrupted run", {
+  d <- podracing_survey[, c("satis_return", "demo_gender", "region")]
+  want <- crosstab_banner(d)
+
+  ck <- withr::local_tempfile(fileext = ".rds")
+  original <- ezrsurvey:::banner_block_cat
+  calls <- 0
+  # Stop part-way through, the way a real interruption would.
+  local_mocked_bindings(
+    banner_block_cat = function(...) {
+      calls <<- calls + 1
+      if (calls == 2) stop("interrupted")
+      original(...)
+    }
+  )
+  expect_error(crosstab_banner(d, checkpoint = ck), "interrupted")
+  expect_true(file.exists(ck))
+  expect_length(readRDS(ck)$finished, 1)
+
+  # Re-running the identical call picks up where it stopped.
+  got <- crosstab_banner(d, checkpoint = ck)
+  expect_equal(got, want)
+})
+
+test_that("a checkpoint from different data is discarded, not reused", {
+  d <- podracing_survey[, c("satis_return", "demo_gender")]
+  ck <- withr::local_tempfile(fileext = ".rds")
+  crosstab_banner(d, checkpoint = ck)
+
+  d2 <- d
+  d2$satis_return[1:100] <- "Very likely"
+  expect_equal(crosstab_banner(d2, checkpoint = ck), crosstab_banner(d2))
+})
+
+test_that("a corrupt checkpoint does not stop the run", {
+  d <- podracing_survey[, c("satis_return", "demo_gender")]
+  ck <- withr::local_tempfile(fileext = ".rds")
+  writeLines("not an rds file", ck)
+  expect_equal(crosstab_banner(d, checkpoint = ck), crosstab_banner(d))
+})
+
+test_that("checkpoint accepts TRUE and rejects nonsense", {
+  d <- podracing_survey[1:80, c("satis_return", "demo_gender", "region")]
+  fp <- banner_fingerprint(d, "a", "b", "pct", NULL, TRUE, TRUE, NULL, 0)
+
+  expect_null(banner_checkpoint_path(NULL, fp))
+  expect_null(banner_checkpoint_path(FALSE, fp))
+  expect_equal(banner_checkpoint_path("my.rds", fp), "my.rds")
+
+  managed <- banner_checkpoint_path(TRUE, fp)
+  expect_true(startsWith(basename(managed), "banner-"))
+  # the name carries the fingerprint, so a different run cannot collide with it
+  other <- banner_checkpoint_path(TRUE, banner_fingerprint(d, "z", "b", "pct",
+                                                           NULL, TRUE, TRUE,
+                                                           NULL, 0))
+  expect_false(identical(managed, other))
+
+  expect_error(banner_checkpoint_path(1, fp), "must be TRUE, FALSE")
+})

@@ -73,3 +73,31 @@ test_that("drop works for multi-select and reads the drop_answers option", {
   out <- calc_percentage(podracing_survey, demo_job)
   expect_false("Unemployed" %in% as.character(out$demo_job))
 })
+
+test_that("clean_label undoes exporter mangling and strips a prefix", {
+  expect_equal(clean_label("Broadcast.quality...audio"),
+               "Broadcast quality / audio")
+  expect_equal(clean_label("ratings_Camera.work", prefix = "ratings_"),
+               "Camera work")
+  # a name without the prefix keeps it: only dots are exporter mangling
+  expect_equal(clean_label("other_thing", prefix = "ratings_"), "other_thing")
+})
+
+test_that("calc_percentage_batch can tidy its variable names", {
+  raw <- calc_percentage_batch(podracing_survey, starts_with("ratings_"))
+  expect_true(all(startsWith(unique(raw$variable), "ratings_")))
+
+  tidy <- calc_percentage_batch(podracing_survey, starts_with("ratings_"),
+                                prefix = "ratings_")
+  expect_false(any(startsWith(unique(tidy$variable), "ratings_")))
+  # only the labels change, never the numbers
+  expect_equal(tidy$pct, raw$pct)
+})
+
+test_that("calc_percentage_batch names match ipm_model's, so the two can join", {
+  skip_if_not_installed("rwa")
+  model <- ipm_model(podracing_survey, nps_value, "ratings_")
+  tab <- calc_percentage_batch(podracing_survey, starts_with("ratings_"),
+                               prefix = "ratings_")
+  expect_true(all(model$feature %in% unique(tab$variable)))
+})

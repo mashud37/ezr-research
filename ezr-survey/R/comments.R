@@ -46,14 +46,15 @@ push_seed <- function(seed) {
 }
 
 # Internal: tidy, filter and truncate the comment columns into one long table.
-prep_comments <- function(data, cols, min_chars, max_chars, exclude) {
+prep_comments <- function(data, cols, min_chars, max_chars, exclude,
+                          by = NULL) {
   if (length(cols) == 0L) {
     stop("Select at least one comment column.", call. = FALSE)
   }
   long <- data %>%
-    dplyr::select(dplyr::all_of(cols)) %>%
-    dplyr::mutate(dplyr::across(dplyr::everything(), as.character)) %>%
-    tidyr::pivot_longer(dplyr::everything(),
+    dplyr::select(dplyr::all_of(c(by, cols))) %>%
+    dplyr::mutate(dplyr::across(dplyr::all_of(cols), as.character)) %>%
+    tidyr::pivot_longer(dplyr::all_of(cols),
                         names_to = "source",
                         values_to = "comment") %>%
     dplyr::mutate(comment = na_blank(.data$comment)) %>%
@@ -95,10 +96,14 @@ prep_comments <- function(data, cols, min_chars, max_chars, exclude) {
 #'   comments matching any are dropped (e.g. `c("friend", "recommend")`).
 #' @param by_column If `TRUE` (default), sample `n` from each column; if `FALSE`,
 #'   sample `n` from the pooled comments.
+#' @param by Optional grouping column (unquoted), e.g. an NPS group. Sampling
+#'   then takes `n` from each group, and the group is kept as a column of the
+#'   result so a slide can filter on it.
 #' @param seed Optional integer for reproducible sampling (the RNG state is
 #'   restored afterwards).
 #'
-#' @return A [tibble][tibble::tibble] with `source`, `comment` and `length`.
+#' @return A [tibble][tibble::tibble] with `source`, `comment` and `length`,
+#'   plus the `by` column when one is given.
 #'
 #' @details
 #' Verbatims need clean-up before they go on a slide: this drops blanks and very
@@ -113,21 +118,36 @@ prep_comments <- function(data, cols, min_chars, max_chars, exclude) {
 #'   [plot_quotes_tree()].
 #' @examples
 #' sample_comments(podracing_survey, nps_com, show_com, n = 3)
+#'
+#' # three quotes per NPS group, with the group kept as a column
+#' podracing_survey %>%
+#'   mutate(group = nps_group(nps_value, labels = TRUE)) %>%
+#'   filter(!is.na(group)) %>%
+#'   sample_comments(nps_com, n = 3, by = group)
 #' @export
 sample_comments <- function(data = NULL, ..., n = 8, min_chars = 30,
                             max_chars = 400, exclude = NULL, by_column = TRUE,
-                            seed = NULL) {
+                            by = NULL, seed = NULL) {
   rd <- resolve_data_dots(rlang::enquo(data), rlang::enquos(...))
   data <- rd$data
   restore_seed <- push_seed(seed)
   on.exit(restore_seed(), add = TRUE)
   cols <- names(dplyr::select(data, !!!rd$dots))
-  long <- prep_comments(data, cols, min_chars, max_chars, exclude)
+
+  by_q <- rlang::enquo(by)
+  by_col <- if (rlang::quo_is_null(by_q)) {
+    NULL
+  } else {
+    names(dplyr::select(data, !!by_q))
+  }
+
+  long <- prep_comments(data, cols, min_chars, max_chars, exclude, by_col)
   if (nrow(long) == 0L) {
     return(long)
   }
-  if (by_column) {
-    long <- dplyr::group_by(long, .data$source)
+  groups <- c(if (by_column) "source", by_col)
+  if (length(groups)) {
+    long <- dplyr::group_by(long, dplyr::across(dplyr::all_of(groups)))
   }
   long %>%
     dplyr::slice_sample(n = n) %>%
@@ -225,6 +245,10 @@ select_diverse <- function(tfidf, info, n, lambda) {
 #'   package when installed (English), otherwise a small built-in fallback;
 #'   a character vector supplies your own list; `FALSE` disables removal. Pass
 #'   e.g. `stopwords::stopwords("de")` for another language.
+#' @param max_candidates Largest number of comments compared with one another
+#'   (default `500`). A bigger corpus is narrowed to a random shortlist of this
+#'   size first, because the comparison grows with the square of the number
+#'   kept. Raise it to widen the choice, at the cost of time and memory.
 #' @param seed Optional integer for reproducible sampling (the RNG state is
 #'   restored afterwards).
 #'
@@ -241,6 +265,7 @@ sample_comments_diverse <- function(data = NULL, ..., n = 8, min_chars = 30,
                                     method = c("mmr", "entropy"),
                                     score = c("entropy", "tfidf"),
                                     stopwords = NULL,
+                                    max_candidates = 500,
                                     seed = NULL) {
   rd <- resolve_data_dots(rlang::enquo(data), rlang::enquos(...))
   data <- rd$data
@@ -259,6 +284,15 @@ sample_comments_diverse <- function(data = NULL, ..., n = 8, min_chars = 30,
     return(long)
   }
 
+  # Comparing every comment with every other grows with the square of how many
+  # there are, so a large corpus is narrowed to a random shortlist first.
+  if (nrow(long) > max_candidates) {
+    progress_note("Scoring a random ", max_candidates, " of ", nrow(long),
+                  " comments. Raise `max_candidates` to widen the shortlist.")
+    long <- dplyr::slice_sample(long, n = max_candidates)
+  }
+
+  progress_note("Comparing ", nrow(long), " comments to pick ", n, ".")
   mats <- build_tfidf(long$comment, resolve_stopwords(stopwords))
   if (is.null(mats)) {
     # Nothing scorable (e.g. all stop-words) -- fall back to a plain sample.

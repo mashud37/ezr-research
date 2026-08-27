@@ -38,6 +38,12 @@ like \code{"4 - Good"} still resolve; (3) any \code{synonyms} you supply. This m
 function robust to the small wording differences between survey tools (e.g.
 "Dissatisfied" vs "Bad"). Turning ratings into integers is the first step of
 \code{\link[=ipm_model]{ipm_model()}} and lets you average a scale with \code{\link[=calc_summary]{calc_summary()}}.
+
+The substring passes try the longest wording first, so a scale whose levels
+nest inside one another ("Likeable" inside "Very likeable", "Good" inside
+"Very good") resolves to the level the answer actually names. Without that,
+any answer the exact pass misses, such as one carrying an emoji or a stray
+character, would quietly land on the shorter level.
 }
 \examples{
 recode_likert(c("Very bad", "Ok", "Good", "Very good"))
@@ -46,6 +52,10 @@ recode_likert(c("Very bad", "Ok", "Good", "Very good"))
 # substring fallback copes with numbered labels
 recode_likert("4 - Good")
 #> [1] 4
+
+# nested wordings resolve to the level the answer names, not the shorter one
+recode_likert(c("\U0001F642 Very good", "\U0001F610 Good"))
+#> [1] 5 4
 
 # map another tool's wording onto the same scale
 recode_likert(c("Dissatisfied", "Satisfied"),
@@ -59,6 +69,7 @@ recode_likert(c("Dissatisfied", "Satisfied"),
 Other recode:
 \code{\link[=add_region]{add_region()}},
 \code{\link[=bin_numeric]{bin_numeric()}},
+\code{\link[=clean_label]{clean_label()}},
 \code{\link[=drop_items]{drop_items()}},
 \code{\link[=ensure_numeric]{ensure_numeric()}},
 \code{\link[=generation_scheme]{generation_scheme()}},

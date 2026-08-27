@@ -46,6 +46,7 @@ drop_items(c("Yes", "No", "Other", "Don't know"),
 Other recode:
 \code{\link[=add_region]{add_region()}},
 \code{\link[=bin_numeric]{bin_numeric()}},
+\code{\link[=clean_label]{clean_label()}},
 \code{\link[=ensure_numeric]{ensure_numeric()}},
 \code{\link[=generation_scheme]{generation_scheme()}},
 \code{\link[=na_blank]{na_blank()}},

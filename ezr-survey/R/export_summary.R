@@ -178,10 +178,15 @@ export_summary_xlsx <- function(data = NULL, ..., path = NULL, by = NULL,
   pngs <- character(0)
   on.exit(unlink(pngs), add = TRUE)
 
+  progress_plan(paste0("Summary workbook: ", total, " question(s)"),
+                vapply(specs, function(s) s$label, character(1)))
+  run <- progress_start(total)
+  on.exit(progress_done(run), add = TRUE)
+
   for (i in seq_along(specs)) {
     s <- specs[[i]]
     sh <- sheet_names[[i]]
-    message(sprintf("[%d/%d] %s", i, total, s$label))
+    progress_item(run, i, s$label)
     if (s$type == "multi") {
       tab <- multi_table(data, s$prefix, by_q, sort, digits)
       p <- if (chart) multi_chart(data, s$prefix, digits) else NULL
@@ -211,6 +216,29 @@ export_summary_xlsx <- function(data = NULL, ..., path = NULL, by = NULL,
     }
   }
 
-  openxlsx2::wb_save(wb, file = path, overwrite = TRUE)
+  save_workbook(wb, path)
   invisible(path)
+}
+
+# Internal: is a zip tool named but absent? openxlsx2 zips the workbook with an
+# external tool whenever R_ZIPCMD is set or "zip" is on the PATH, and errors if
+# the tool it names is not installed. On Windows R sets R_ZIPCMD=zip under
+# `R CMD` whether or not a zip.exe exists, so this is the common case: a name
+# with nothing behind it.
+named_zip_tool_missing <- function() {
+  tool <- Sys.getenv("R_ZIPCMD", unset = "")
+  if (!nzchar(tool)) {
+    tool <- unname(Sys.which("zip"))
+  }
+  nzchar(tool) && !nzchar(Sys.which(tool))
+}
+
+# Internal: write the workbook, sending openxlsx2 to its own zipping code when
+# the external tool it would otherwise reach for is not really there.
+save_workbook <- function(wb, path) {
+  if (named_zip_tool_missing()) {
+    old <- options(openxlsx2.no_utils_zip = TRUE)
+    on.exit(options(old), add = TRUE)
+  }
+  openxlsx2::wb_save(wb, file = path, overwrite = TRUE)
 }

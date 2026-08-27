@@ -96,3 +96,24 @@ test_that("themes and palette scales return the right objects", {
   expect_s3_class(scale_fill_rating(), "Scale")
   expect_s3_class(scale_fill_nps(), "Scale")
 })
+
+test_that("plot_rating_grid builds a whole question block in one call", {
+  p <- plot_rating_grid(podracing_survey, "ratings_")
+  expect_s3_class(p, "ggplot")
+  # the block prefix is stripped from the feature labels
+  expect_false(any(grepl("^ratings_", as.character(p$data[[1]]))))
+})
+
+test_that("plot_rating_grid reports answers that are not on the scale", {
+  d <- podracing_survey
+  d$fit_a <- "Fits the community"
+  expect_message(
+    plot_rating_grid(d, "fit_",
+                     levels = c("Does not fit", "Fits the commnity")),
+    "not on the"
+  )
+})
+
+test_that("plot_rating_grid errors when no column matches the prefix", {
+  expect_error(plot_rating_grid(podracing_survey, "nothing_"), "start with")
+})

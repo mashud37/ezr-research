@@ -12,7 +12,9 @@ calc_percentage_batch(
   digits = 0,
   na_rm = TRUE,
   drop = NULL,
-  weights = NULL
+  weights = NULL,
+  clean_names = FALSE,
+  prefix = NULL
 )
 }
 \arguments{
@@ -24,6 +26,12 @@ or \verb{demo_gender, demo_edu}).}
 \item{by, sort, digits, na_rm, drop, weights}{Passed to \code{\link[=calc_percentage]{calc_percentage()}} (so a
 \code{wpct} column appears when weighting is active, and \code{drop} removes unwanted
 answers from every question).}
+
+\item{clean_names}{If \code{TRUE}, tidy each \code{variable} with \code{\link[=clean_label]{clean_label()}}
+instead of reporting the raw column name.}
+
+\item{prefix}{Optional question prefix to strip from \code{variable}, e.g.
+\code{"ratings_"}. Implies \code{clean_names}.}
 }
 \value{
 A \link[tibble:tibble]{tibble} with \code{variable}, \code{answer}, \code{n}, \code{pct}
@@ -43,6 +51,11 @@ between questions, so they are coerced to character when stacked). This is the
 tidy long shape you want for faceted plots or a single export of a whole
 question block. To send each question to its own Excel tab instead, see
 \code{\link[=export_xlsx]{export_xlsx()}}.
+
+\code{variable} is the raw column name by default. Set \code{clean_names = TRUE} (or
+name a \code{prefix}) to get the same tidied wording \code{\link[=calc_percentage_multi]{calc_percentage_multi()}} and
+\code{\link[=ipm_model]{ipm_model()}} produce, which is what lets a batch table join to a model table
+on the question name.
 }
 \examples{
 calc_percentage_batch(podracing_survey, demo_gender, demo_job)
@@ -54,9 +67,13 @@ calc_percentage_batch(podracing_survey, demo_gender, demo_job)
 #> # ... and so on for each answer of each variable
 
 calc_percentage_batch(podracing_survey, starts_with("demo_"))
+
+# tidy question names, with the block's prefix removed
+calc_percentage_batch(podracing_survey, starts_with("ratings_"),
+                      prefix = "ratings_")
 }
 \seealso{
-\code{\link[=calc_percentage]{calc_percentage()}}, \code{\link[=export_xlsx]{export_xlsx()}}.
+\code{\link[=calc_percentage]{calc_percentage()}}, \code{\link[=clean_label]{clean_label()}}, \code{\link[=export_xlsx]{export_xlsx()}}.
 
 Other summaries:
 \code{\link[=calc_percentage]{calc_percentage()}},

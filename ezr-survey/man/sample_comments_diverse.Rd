@@ -15,6 +15,7 @@ sample_comments_diverse(
   method = c("mmr", "entropy"),
   score = c("entropy", "tfidf"),
   stopwords = NULL,
+  max_candidates = 500,
   seed = NULL
 )
 }
@@ -49,6 +50,11 @@ bits) or \code{"tfidf"} (summed TF-IDF weight).}
 package when installed (English), otherwise a small built-in fallback;
 a character vector supplies your own list; \code{FALSE} disables removal. Pass
 e.g. \code{stopwords::stopwords("de")} for another language.}
+
+\item{max_candidates}{Largest number of comments compared with one another
+(default \code{500}). A bigger corpus is narrowed to a random shortlist of this
+size first, because the comparison grows with the square of the number
+kept. Raise it to widen the choice, at the cost of time and memory.}
 
 \item{seed}{Optional integer for reproducible sampling (the RNG state is
 restored afterwards).}

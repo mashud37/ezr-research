@@ -67,12 +67,15 @@ report_deck <- function(items, path = NULL, format = c("pptx", "docx"),
   }
 
   nms <- names(items) %||% rep("", length(items))
+  run <- progress_start(length(items),
+                        paste0("Building ", length(items), " slide(s)"))
   for (i in seq_along(items)) {
     item <- items[[i]]
     nm <- nms[i]
     if (!inherits(item, "ggplot") && !is.data.frame(item)) {
       stop("Item '", nm, "' must be a ggplot or a data frame.", call. = FALSE)
     }
+    progress_item(run, i, if (nzchar(nm)) nm else "(untitled)")
 
     doc <- report_add_slide(doc, title = if (nzchar(nm)) nm)
 
@@ -82,5 +85,6 @@ report_deck <- function(items, path = NULL, format = c("pptx", "docx"),
       report_add_table(doc, item)
     }
   }
+  progress_done(run)
   report_save(doc, path)
 }

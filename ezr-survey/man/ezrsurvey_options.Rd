@@ -66,6 +66,10 @@ PowerPoint / Word template used as the default reference document by
 \code{\link[=report_new]{report_new()}}, \code{\link[=report_deck]{report_deck()}} and \code{\link[=scaffold_report]{scaffold_report()}}. These are
 machine-specific absolute paths -- if you persist them, prefer the
 project-level \code{.ezrsurvey.yml} profile over the user-level one.}
+\item{\code{progress}}{Whether the slow helpers report which item they are on.
+\code{"auto"} (default) reports in an interactive session and stays silent in
+scripts, vignettes and \verb{R CMD check}; \code{TRUE} or \code{FALSE} force it either
+way. See \code{\link[=crosstab_banner]{crosstab_banner()}}.}
 }
 
 Options are ordinary R options under the \code{ezrsurvey.} prefix, so anything you

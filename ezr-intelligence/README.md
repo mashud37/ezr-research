@@ -14,7 +14,7 @@ table the model sees, and raw respondent rows never leave your machine.
 
 ```r
 # install.packages("pak")
-pak::pak("aschellewald/ezrintelligence")
+pak::pak("mashud37/ezrintelligence")
 ```
 
 The model calls go through [`ellmer`](https://ellmer.tidyverse.org), and key

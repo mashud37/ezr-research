@@ -106,3 +106,33 @@ test_that("the named-list spec form is equivalent to the vector form", {
                                           "Non-binary" = 0.01)))
   expect_equal(a, b)
 })
+
+test_that("weights are computed once and reused for the same data and scheme", {
+  clear_weights_cache()
+  spec <- ezrsurvey:::parse_weight_spec(gender_scheme())
+  a <- ezrsurvey:::compute_weights(podracing_survey, spec)
+  expect_length(ls(ezrsurvey:::.ezrsurvey_weight_cache), 1)
+  b <- ezrsurvey:::compute_weights(podracing_survey, spec)
+  expect_equal(a, b)
+  expect_length(ls(ezrsurvey:::.ezrsurvey_weight_cache), 1)
+})
+
+test_that("changing the weighting column invalidates the cached weights", {
+  clear_weights_cache()
+  spec <- ezrsurvey:::parse_weight_spec(gender_scheme())
+  a <- ezrsurvey:::compute_weights(podracing_survey, spec)
+
+  edited <- podracing_survey
+  edited$demo_gender[1:200] <- "Female"
+  b <- ezrsurvey:::compute_weights(edited, spec)
+  expect_false(isTRUE(all.equal(a, b)))
+  expect_equal(b, ezrsurvey:::rake_weights(edited, spec, 50L, 1e-6))
+})
+
+test_that("clear_weights_cache empties the cache", {
+  ezrsurvey:::compute_weights(podracing_survey,
+                              ezrsurvey:::parse_weight_spec(gender_scheme()))
+  expect_gt(length(ls(ezrsurvey:::.ezrsurvey_weight_cache)), 0)
+  clear_weights_cache()
+  expect_length(ls(ezrsurvey:::.ezrsurvey_weight_cache), 0)
+})

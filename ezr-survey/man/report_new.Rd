@@ -8,7 +8,8 @@ report_new(
   format = c("pptx", "docx"),
   template = NULL,
   style = c("elevated", "plain"),
-  slide_numbers = TRUE
+  slide_numbers = TRUE,
+  keep_slides = TRUE
 )
 }
 \arguments{
@@ -31,6 +32,11 @@ supplied.}
 \code{\link[=report_add_slide]{report_add_slide()}} shows the template's slide-number placeholder in
 its usual corner. Requires the suggested \code{xml2} package (silently skipped
 without it, or when the template has no slide-number placeholder).}
+
+\item{keep_slides}{PowerPoint only. If \code{TRUE} (default), any slides already
+in the template stay and your first slide is added after them. Set \code{FALSE}
+to start from an empty deck, which is what you want when the template
+carries example or boilerplate slides you do not intend to ship.}
 }
 \value{
 An officer document object (\code{rpptx} or \code{rdocx}).

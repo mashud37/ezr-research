@@ -4,13 +4,21 @@
 \alias{bands_rating_3}
 \alias{bands_rating_5}
 \alias{bands_nps}
+\alias{bands_nps_score}
 \title{Built-in decision-band presets}
 \usage{
-bands_rating_3()
+bands_rating_3(from = NULL, to = NULL)
 
-bands_rating_5()
+bands_rating_5(from = NULL, to = NULL)
 
-bands_nps()
+bands_nps(from = NULL, to = NULL)
+
+bands_nps_score(from = NULL, to = NULL)
+}
+\arguments{
+\item{from, to}{Optional axis limits. A band reaching past them is trimmed and
+a band entirely outside them is dropped, so a preset can be reused on a
+chart that shows only part of the scale.}
 }
 \value{
 A \link[tibble:tibble]{tibble} with \code{from}, \code{to}, \code{label} and \code{colour}.
@@ -22,12 +30,23 @@ Ready-made band specifications for \code{\link[=annotate_bands]{annotate_bands()
 \itemize{
 \item \code{bands_rating_3()} -- BAD / OK / GOOD over a 1-5 rating axis.
 \item \code{bands_rating_5()} -- per-point labels (1 Very bad .. 5 Very good) over 1-5.
-\item \code{bands_nps()} -- Detractor / Passive / Promoter over a 0-10 axis.
+\item \code{bands_nps()} -- Detractor / Passive / Promoter over a 0-10 answer axis.
+\item \code{bands_nps_score()} -- Needs work / Good / Great / Excellent over a
+-100..100 Net Promoter Score axis (the scale a headline NPS sits on, not
+the 0-10 answers it is computed from).
 }
+
+Pass \code{from} / \code{to} when the chart's panel is narrower than the full scale.
+Plotting a 2-5 range with the untrimmed \code{bands_rating_3()} would open the BAD
+band at 1, off the left edge, and stretch the panel to reach it.
 }
 \examples{
 bands_rating_3()
-bands_nps()
+
+# only the part of the scale a 2-5 panel actually shows
+bands_rating_3(from = 2)
+
+bands_nps_score()
 }
 \seealso{
 Other decisions:
