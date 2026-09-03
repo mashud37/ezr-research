@@ -18,7 +18,8 @@ crosstab_banner(
   max_levels = 20,
   long = FALSE,
   flextable = FALSE,
-  checkpoint = NULL
+  checkpoint = NULL,
+  confirm = NULL
 )
 }
 \arguments{
@@ -76,6 +77,12 @@ Requires the suggested \code{flextable} package.}
 call picks up where an interrupted run stopped. \code{TRUE} manages the file for
 you under \code{\link[tools:R_user_dir]{tools::R_user_dir()}}; a file path puts it where you choose.
 \code{NULL} (default) or \code{FALSE} writes nothing. See Details.}
+
+\item{confirm}{When \code{rows} / \code{cols} are left to the automatic selection, show
+which variables were chosen and which were skipped, and wait for a yes
+before the run starts. \code{NULL} (default) follows the \code{confirm} option, which
+asks in an interactive session and never asks in a script; \code{TRUE} or \code{FALSE}
+force it either way. Answering no returns \code{NULL} and computes nothing.}
 }
 \value{
 By default a wide \link[tibble:tibble]{tibble}: \code{variable}, \code{item},
@@ -106,7 +113,9 @@ matrix (a variable is never crossed with itself). Supplying only the data
 frame does this automatically: every variable with at most \code{max_levels}
 distinct answers becomes both a stub and a banner group, numeric scales are
 added as stub statistics blocks, and identifier / free-text columns are
-skipped (and named in a message). Check-all-that-apply blocks (columns sharing
+skipped (and named in a message). That selection decides the whole table, so
+an interactive session prints it and waits for a yes before starting the run
+(see \code{confirm}). Check-all-that-apply blocks (columns sharing
 a prefix that each hold one option or blank, such as \verb{motivations_*}) are
 recognised as a single multi-select stub question and tabulated with
 \code{\link[=calc_percentage_multi]{calc_percentage_multi()}}, whose base is the respondents who picked any option

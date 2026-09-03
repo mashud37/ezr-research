@@ -100,9 +100,10 @@ export_questions <- function(data, sel_cols, auto) {
 #'   `starts_with("ratings_")` or `demo_gender, satis_return`). One worksheet per
 #'   question. If omitted, every question is written: each eligible column plus
 #'   any multi-select block, skipping identifier and free-text columns.
-#' @param path Output `.xlsx` path. If `NULL` (default), the workbook is written
-#'   to `ezrsurvey-outputs/summary.xlsx` in the working directory. Missing
-#'   directories are created.
+#' @param path Output `.xlsx` path. `NULL` (default) writes `summary.xlsx`.
+#'   A bare file name lands in `ezrsurvey-outputs/` (created on demand); a path
+#'   naming a directory (`"./x.xlsx"`, `"charts/x.xlsx"`, anything absolute) is used
+#'   exactly as given. See the `output_dir` option.
 #' @param by Optional grouping column(s) for the tables (passed to
 #'   [calc_percentage()] / [calc_summary()] / [calc_percentage_multi()]). The
 #'   chart is always the ungrouped distribution.
@@ -115,6 +116,11 @@ export_questions <- function(data, sel_cols, auto) {
 #'   [calc_percentage()]). `NULL` (default) uses the session scheme if set.
 #'   Multi-select blocks are always unweighted.
 #' @param width,height Chart size in inches. Default `6 x 3.4`.
+#' @param confirm When no variables are named, show which questions were chosen
+#'   and which were skipped, and wait for a yes before writing. `NULL` (default)
+#'   follows the `confirm` option, which asks in an interactive session and never
+#'   asks in a script; `TRUE` or `FALSE` force it either way. Answering no writes
+#'   nothing and returns `NULL`.
 #'
 #' @return Invisibly the `path` written.
 #'
@@ -148,7 +154,7 @@ export_questions <- function(data, sel_cols, auto) {
 export_summary_xlsx <- function(data = NULL, ..., path = NULL, by = NULL,
                                 chart = TRUE, sort = c("none", "desc", "asc"),
                                 digits = 0, weights = NULL,
-                                width = 6, height = 3.4) {
+                                width = 6, height = 3.4, confirm = NULL) {
   if (!requireNamespace("openxlsx2", quietly = TRUE)) {
     stop("Exporting a summary workbook needs the 'openxlsx2' package. ",
          "Install it with install.packages('openxlsx2').", call. = FALSE)
@@ -163,14 +169,28 @@ export_summary_xlsx <- function(data = NULL, ..., path = NULL, by = NULL,
   if (!length(specs)) {
     stop("Select at least one variable to summarise.", call. = FALSE)
   }
-  if (auto && length(q$skipped)) {
+  labels <- vapply(specs, function(s) s$label, character(1))
+  if (auto && !confirm_on(confirm) && length(q$skipped)) {
     message("export_summary_xlsx: skipped ", length(q$skipped),
             " identifier / free-text column(s): ",
             paste(q$skipped, collapse = ", "), ".")
   }
+  if (auto) {
+    proceed <- confirm_selection(
+      paste0("Questions chosen automatically: ", length(specs),
+             " worksheet(s)."),
+      c(confirm_lines("Questions", labels),
+        confirm_lines("Skipped", q$skipped),
+        "Name the variables yourself to change this."),
+      confirm
+    )
+    if (!proceed) {
+      message("Cancelled. Nothing was written.")
+      return(invisible(NULL))
+    }
+  }
   by_q <- rlang::enquo(by)
-  path <- ensure_output_dir(path %||% default_output_path("summary", "xlsx"))
-  labels <- vapply(specs, function(s) s$label, character(1))
+  path <- resolve_output_path(path %||% default_output_path("summary", "xlsx"))
   sheet_names <- sanitize_sheet_names(labels)
   total <- length(specs)
 

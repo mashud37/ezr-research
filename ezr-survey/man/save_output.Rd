@@ -9,9 +9,11 @@ save_output(x, path = NULL, ...)
 \arguments{
 \item{x}{A ggplot, a data frame, or a (named) list of data frames.}
 
-\item{path}{Output path; the extension picks the format. If \code{NULL}
-(default), the file lands in the working directory's \verb{ezrsurvey-outputs/}
-folder (\code{ezrsurvey-outputs/plot.png} or \code{ezrsurvey-outputs/data.csv}).}
+\item{path}{Output path; the extension picks the format. \code{NULL} (default)
+writes \code{plot.png} or \code{data.csv}.
+A bare file name lands in \verb{ezrsurvey-outputs/} (created on demand); a path
+naming a directory (\code{"./x.png"}, \code{"charts/x.png"}, anything absolute) is used
+exactly as given. See the \code{output_dir} option.}
 
 \item{...}{Passed to \code{\link[=save_plot]{save_plot()}} or \code{\link[=save_data]{save_data()}}.}
 }

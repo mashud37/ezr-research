@@ -194,3 +194,38 @@ test_that("checkpoint accepts TRUE and rejects nonsense", {
 
   expect_error(banner_checkpoint_path(1, fp), "must be TRUE, FALSE")
 })
+
+test_that("confirmation is off in scripts and validates its argument", {
+  expect_false(confirm_on("auto"))
+  expect_true(confirm_on(TRUE))
+  expect_false(confirm_on(FALSE))
+  expect_error(confirm_on("yes"), "must be TRUE, FALSE")
+
+  # with no prompt to show, the run simply goes ahead
+  expect_true(confirm_selection("title", "line", setting = FALSE))
+
+  expect_equal(confirm_lines("Skipped", character(0)), "Skipped: none")
+  expect_match(confirm_lines("Questions", c("a", "b"))[[1]],
+               "Questions (2): a, b", fixed = TRUE)
+
+  # even forced on, readline() cannot block a script: it reads an empty answer,
+  # which is a yes
+  d <- podracing_survey[1:80, c("satis_return", "demo_gender", "region")]
+  expect_s3_class(suppressMessages(crosstab_banner(d, confirm = TRUE)),
+                  "data.frame")
+})
+
+test_that("declining the selection computes nothing", {
+  d <- podracing_survey[1:80, c("satis_return", "demo_gender", "region")]
+  out <- testthat::with_mocked_bindings(
+    suppressMessages(crosstab_banner(d, confirm = TRUE)),
+    readline = function(...) "n", .package = "base")
+  expect_null(out)
+
+  # a named selection is the user's own choice, so it is never questioned
+  named <- testthat::with_mocked_bindings(
+    crosstab_banner(d, rows = satis_return, cols = demo_gender,
+                    confirm = TRUE),
+    readline = function(...) "n", .package = "base")
+  expect_s3_class(named, "data.frame")
+})

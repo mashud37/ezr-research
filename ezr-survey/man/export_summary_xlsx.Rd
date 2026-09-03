@@ -14,7 +14,8 @@ export_summary_xlsx(
   digits = 0,
   weights = NULL,
   width = 6,
-  height = 3.4
+  height = 3.4,
+  confirm = NULL
 )
 }
 \arguments{
@@ -26,9 +27,10 @@ used.}
 question. If omitted, every question is written: each eligible column plus
 any multi-select block, skipping identifier and free-text columns.}
 
-\item{path}{Output \code{.xlsx} path. If \code{NULL} (default), the workbook is written
-to \code{ezrsurvey-outputs/summary.xlsx} in the working directory. Missing
-directories are created.}
+\item{path}{Output \code{.xlsx} path. \code{NULL} (default) writes \code{summary.xlsx}.
+A bare file name lands in \verb{ezrsurvey-outputs/} (created on demand); a path
+naming a directory (\code{"./x.xlsx"}, \code{"charts/x.xlsx"}, anything absolute) is used
+exactly as given. See the \code{output_dir} option.}
 
 \item{by}{Optional grouping column(s) for the tables (passed to
 \code{\link[=calc_percentage]{calc_percentage()}} / \code{\link[=calc_summary]{calc_summary()}} / \code{\link[=calc_percentage_multi]{calc_percentage_multi()}}). The
@@ -47,6 +49,12 @@ chart is always the ungrouped distribution.}
 Multi-select blocks are always unweighted.}
 
 \item{width, height}{Chart size in inches. Default \verb{6 x 3.4}.}
+
+\item{confirm}{When no variables are named, show which questions were chosen
+and which were skipped, and wait for a yes before writing. \code{NULL} (default)
+follows the \code{confirm} option, which asks in an interactive session and never
+asks in a script; \code{TRUE} or \code{FALSE} force it either way. Answering no writes
+nothing and returns \code{NULL}.}
 }
 \value{
 Invisibly the \code{path} written.

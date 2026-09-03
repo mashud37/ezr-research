@@ -28,7 +28,9 @@ ezrsurvey_defaults <- function() {
     brand_fonts_enabled = TRUE,   # apply brand fonts to ggplot text
     brand_template_pptx = NULL,   # default reference .pptx for reports
     brand_template_docx = NULL,   # default reference .docx for reports
-    progress = "auto"          # "auto" = report progress when interactive()
+    progress = "auto",         # "auto" = report progress when interactive()
+    confirm = "auto",          # "auto" = confirm an automatic selection when interactive()
+    output_dir = "ezrsurvey-outputs"   # folder a bare output file name lands in
   )
 }
 
@@ -101,6 +103,17 @@ ezrsurvey_default <- function(name) {
 #'     `"auto"` (default) reports in an interactive session and stays silent in
 #'     scripts, vignettes and `R CMD check`; `TRUE` or `FALSE` force it either
 #'     way. See [crosstab_banner()].}
+#'   \item{`confirm`}{Whether a call that picks its own variables shows the
+#'     selection and waits for a yes before a long run. `"auto"` (default) asks
+#'     in an interactive session and never asks in a script; `TRUE` or `FALSE`
+#'     force it either way. See [crosstab_banner()].}
+#'   \item{`output_dir`}{Folder that a bare output file name lands in, created
+#'     on demand (default `"ezrsurvey-outputs"`, relative to the working
+#'     directory). `save_plot("chart.png")` writes
+#'     `ezrsurvey-outputs/chart.png`, so a script's results collect in one place.
+#'     A path that names a directory (`"./chart.png"`, `"charts/chart.png"`,
+#'     anything absolute) is written exactly where it says. Set to `"."` to put
+#'     bare names back in the working directory.}
 #' }
 #'
 #' @param ... Either nothing (to read all values) or named `option = value`
@@ -276,6 +289,8 @@ use_ezrsurvey_profile <- function(path = NULL, overwrite = FALSE) {
     "# generation_scheme: pew  # cohort scheme for recode_generation()",
     "# current_year: 2026      # reference year for age -> cohort",
     "# progress: auto          # auto | true | false: per-item progress lines",
+    "# confirm: auto           # auto | true | false: confirm an automatic variable selection",
+    "# output_dir: ezrsurvey-outputs   # folder a bare output file name lands in",
     "# na_answers:",
     "#   - Prefer not to answer",
     "#   - Don't know",

@@ -656,10 +656,11 @@ report_title_slide <- function(doc, title, subtitle = NULL, layout = NULL,
 #' Save a report to disk
 #'
 #' @param doc A document from [report_new()].
-#' @param path Output file path (`.pptx` or `.docx`). If `NULL` (default), the
-#'   report is written to `ezrsurvey-outputs/report.pptx` /
-#'   `ezrsurvey-outputs/report.docx` in the working directory. Missing
-#'   directories are created.
+#' @param path Output file path (`.pptx` or `.docx`). `NULL` (default) writes
+#'   `report.pptx` / `report.docx`.
+#'   A bare file name lands in `ezrsurvey-outputs/` (created on demand); a path
+#'   naming a directory (`"./x.pptx"`, `"charts/x.pptx"`, anything absolute) is used
+#'   exactly as given. See the `output_dir` option.
 #'
 #' @return Invisibly `path`.
 #' @family reporting
@@ -671,7 +672,7 @@ report_title_slide <- function(doc, title, subtitle = NULL, layout = NULL,
 report_save <- function(doc, path = NULL) {
   check_doc(doc)
   ext <- if (is_pptx(doc)) "pptx" else "docx"
-  path <- ensure_output_dir(path %||% default_output_path("report", ext))
+  path <- resolve_output_path(path %||% default_output_path("report", ext))
   print(doc, target = path)
   invisible(path)
 }

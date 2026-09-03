@@ -6,9 +6,11 @@
 #'
 #' @param items A named list; names become slide titles. Each element is either
 #'   a ggplot (added as a plot) or a data frame (added as a table).
-#' @param path Output file path. If `NULL` (default), the deck is written to
-#'   `ezrsurvey-outputs/report.pptx` / `ezrsurvey-outputs/report.docx` in the
-#'   working directory.
+#' @param path Output file path. `NULL` (default) writes `report.pptx` /
+#'   `report.docx`.
+#'   A bare file name lands in `ezrsurvey-outputs/` (created on demand); a path
+#'   naming a directory (`"./x.pptx"`, `"charts/x.pptx"`, anything absolute) is used
+#'   exactly as given. See the `output_dir` option.
 #' @param format `"pptx"` (default) or `"docx"`.
 #' @param title Optional title-slide / document-title text.
 #' @param template Optional reference document; `NULL` (default) uses the brand

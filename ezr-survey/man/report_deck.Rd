@@ -17,9 +17,11 @@ report_deck(
 \item{items}{A named list; names become slide titles. Each element is either
 a ggplot (added as a plot) or a data frame (added as a table).}
 
-\item{path}{Output file path. If \code{NULL} (default), the deck is written to
-\code{ezrsurvey-outputs/report.pptx} / \code{ezrsurvey-outputs/report.docx} in the
-working directory.}
+\item{path}{Output file path. \code{NULL} (default) writes \code{report.pptx} /
+\code{report.docx}.
+A bare file name lands in \verb{ezrsurvey-outputs/} (created on demand); a path
+naming a directory (\code{"./x.pptx"}, \code{"charts/x.pptx"}, anything absolute) is used
+exactly as given. See the \code{output_dir} option.}
 
 \item{format}{\code{"pptx"} (default) or \code{"docx"}.}
 

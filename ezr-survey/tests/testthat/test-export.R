@@ -1,8 +1,8 @@
 test_that("the default output folder is ezrsurvey-outputs, written to flat", {
-  expect_equal(default_output_path("plot", "png"),
-               file.path("ezrsurvey-outputs", "plot.png"))
   dir <- withr::local_tempdir()
   withr::local_dir(dir)
+  expect_equal(resolve_output_path(default_output_path("plot", "png")),
+               file.path("ezrsurvey-outputs", "plot.png"))
   save_data(calc_percentage(podracing_survey, demo_gender))
   expect_true(file.exists(file.path("ezrsurvey-outputs", "data.csv")))
 })
@@ -69,4 +69,36 @@ test_that("save_output dispatches on object type", {
   expect_true(file.exists(png))
 
   expect_error(save_output(42, csv))
+})
+
+test_that("a bare file name lands in the outputs folder", {
+  dir <- withr::local_tempdir()
+  withr::local_dir(dir)
+
+  expect_equal(resolve_output_path("chart.png"),
+               file.path("ezrsurvey-outputs", "chart.png"))
+  expect_true(dir.exists("ezrsurvey-outputs"))
+
+  # naming a directory is how the caller overrides the default
+  expect_equal(resolve_output_path("./chart.png"), "./chart.png")
+  expect_equal(resolve_output_path("charts/chart.png"), "charts/chart.png")
+  expect_true(dir.exists("charts"))
+
+  absolute <- file.path(dir, "chart.png")
+  expect_equal(resolve_output_path(absolute), absolute)
+
+  withr::local_options(ezrsurvey.output_dir = ".")
+  expect_equal(resolve_output_path("chart.png"), "chart.png")
+})
+
+test_that("save_plot writes into the outputs folder by default", {
+  dir <- withr::local_tempdir()
+  withr::local_dir(dir)
+  p <- ggplot2::ggplot(mtcars, ggplot2::aes(mpg, wt)) + ggplot2::geom_point()
+
+  save_plot(p, "chart.png", width = 3, height = 2)
+  expect_true(file.exists(file.path("ezrsurvey-outputs", "chart.png")))
+
+  save_data(head(mtcars), "cars.csv")
+  expect_true(file.exists(file.path("ezrsurvey-outputs", "cars.csv")))
 })

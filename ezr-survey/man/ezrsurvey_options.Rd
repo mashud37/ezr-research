@@ -70,6 +70,17 @@ project-level \code{.ezrsurvey.yml} profile over the user-level one.}
 \code{"auto"} (default) reports in an interactive session and stays silent in
 scripts, vignettes and \verb{R CMD check}; \code{TRUE} or \code{FALSE} force it either
 way. See \code{\link[=crosstab_banner]{crosstab_banner()}}.}
+\item{\code{confirm}}{Whether a call that picks its own variables shows the
+selection and waits for a yes before a long run. \code{"auto"} (default) asks
+in an interactive session and never asks in a script; \code{TRUE} or \code{FALSE}
+force it either way. See \code{\link[=crosstab_banner]{crosstab_banner()}}.}
+\item{\code{output_dir}}{Folder that a bare output file name lands in, created
+on demand (default \code{"ezrsurvey-outputs"}, relative to the working
+directory). \code{save_plot("chart.png")} writes
+\code{ezrsurvey-outputs/chart.png}, so a script's results collect in one place.
+A path that names a directory (\code{"./chart.png"}, \code{"charts/chart.png"},
+anything absolute) is written exactly where it says. Set to \code{"."} to put
+bare names back in the working directory.}
 }
 
 Options are ordinary R options under the \code{ezrsurvey.} prefix, so anything you
