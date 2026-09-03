@@ -10,9 +10,10 @@ save_data(data, path = NULL, na = "", ...)
 \item{data}{A data frame / tibble, or (for \code{.xlsx}) a named list of them.}
 
 \item{path}{Output path; the extension sets the format (\code{.csv}, \code{.tsv},
-\code{.xlsx}). If \code{NULL} (default), the table is written to
-\code{ezrsurvey-outputs/data.csv} in the working directory. Missing directories
-are created.}
+\code{.xlsx}). \code{NULL} (default) writes \code{data.csv}.
+A bare file name lands in \verb{ezrsurvey-outputs/} (created on demand); a path
+naming a directory (\code{"./x.csv"}, \code{"charts/x.csv"}, anything absolute) is used
+exactly as given. See the \code{output_dir} option.}
 
 \item{na}{String to write for missing values. Default \code{""}.}
 

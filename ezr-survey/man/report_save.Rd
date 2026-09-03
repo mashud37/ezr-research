@@ -9,10 +9,11 @@ report_save(doc, path = NULL)
 \arguments{
 \item{doc}{A document from \code{\link[=report_new]{report_new()}}.}
 
-\item{path}{Output file path (\code{.pptx} or \code{.docx}). If \code{NULL} (default), the
-report is written to \code{ezrsurvey-outputs/report.pptx} /
-\code{ezrsurvey-outputs/report.docx} in the working directory. Missing
-directories are created.}
+\item{path}{Output file path (\code{.pptx} or \code{.docx}). \code{NULL} (default) writes
+\code{report.pptx} / \code{report.docx}.
+A bare file name lands in \verb{ezrsurvey-outputs/} (created on demand); a path
+naming a directory (\code{"./x.pptx"}, \code{"charts/x.pptx"}, anything absolute) is used
+exactly as given. See the \code{output_dir} option.}
 }
 \value{
 Invisibly \code{path}.

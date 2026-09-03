@@ -1,15 +1,23 @@
 # Internal: lower-case file extension without the dot.
 file_ext <- function(path) tolower(tools::file_ext(path))
 
-# Internal: default output location -- a project-local "ezrsurvey-outputs"
-# folder in the working directory, never the session temp directory. Files land
-# directly in it; no per-type subfolders.
+# Internal: the name used when the caller gives no path at all.
 default_output_path <- function(name, ext) {
-  file.path("ezrsurvey-outputs", paste0(name, ".", ext))
+  paste0(name, ".", ext)
 }
 
-# Internal: create the parent directory of `path` if needed, and return `path`.
-ensure_output_dir <- function(path) {
+# Internal: where a file actually gets written. A bare file name goes into the
+# project-local outputs folder, so a session's results collect in one place
+# instead of scattering through the working directory; the folder is created if
+# it is missing, and is never the session temp directory. A path that names a
+# directory ("./out.pptx", "charts/x.png", anything absolute) is taken exactly as
+# written, which is how the caller overrides that.
+resolve_output_path <- function(path) {
+  folder <- ezrsurvey_default("output_dir")
+  bare <- identical(dirname(path), ".") && !startsWith(path, "./")
+  if (bare && folder != ".") {
+    path <- file.path(folder, path)
+  }
   dir <- dirname(path)
   if (nzchar(dir) && dir != "." && !dir.exists(dir)) {
     dir.create(dir, recursive = TRUE)
@@ -26,9 +34,10 @@ ensure_output_dir <- function(path) {
 #'
 #' @param plot A ggplot object.
 #' @param path Output path; the extension sets the format (`.png`, `.svg`,
-#'   `.pdf`, `.jpg`/`.jpeg`, `.tiff`). If `NULL` (default), the plot is written
-#'   to `ezrsurvey-outputs/plot.png` in the working directory. Missing
-#'   directories are created.
+#'   `.pdf`, `.jpg`/`.jpeg`, `.tiff`). `NULL` (default) writes `plot.png`.
+#'   A bare file name lands in `ezrsurvey-outputs/` (created on demand); a path
+#'   naming a directory (`"./x.png"`, `"charts/x.png"`, anything absolute) is used
+#'   exactly as given. See the `output_dir` option.
 #' @param width,height Size in inches. Default `8 x 4.5`.
 #' @param dpi Raster resolution for PNG/JPG/TIFF. Default `300`.
 #' @param bg Background fill. Default `"transparent"` (matches the ezrsurvey
@@ -58,7 +67,7 @@ save_plot <- function(plot, path = NULL, width = 8, height = 4.5, dpi = 300,
   if (!inherits(plot, "ggplot")) {
     stop("`plot` must be a ggplot object.", call. = FALSE)
   }
-  path <- ensure_output_dir(path %||% default_output_path("plot", "png"))
+  path <- resolve_output_path(path %||% default_output_path("plot", "png"))
   ext <- file_ext(path)
   if (ext == "svg" && !requireNamespace("svglite", quietly = TRUE)) {
     stop("Saving SVG needs the 'svglite' package. ",
@@ -78,9 +87,10 @@ save_plot <- function(plot, path = NULL, width = 8, height = 4.5, dpi = 300,
 #'
 #' @param data A data frame / tibble, or (for `.xlsx`) a named list of them.
 #' @param path Output path; the extension sets the format (`.csv`, `.tsv`,
-#'   `.xlsx`). If `NULL` (default), the table is written to
-#'   `ezrsurvey-outputs/data.csv` in the working directory. Missing directories
-#'   are created.
+#'   `.xlsx`). `NULL` (default) writes `data.csv`.
+#'   A bare file name lands in `ezrsurvey-outputs/` (created on demand); a path
+#'   naming a directory (`"./x.csv"`, `"charts/x.csv"`, anything absolute) is used
+#'   exactly as given. See the `output_dir` option.
 #' @param na String to write for missing values. Default `""`.
 #' @param ... Passed to the underlying writer ([readr::write_csv()] /
 #'   [readr::write_tsv()] / [writexl::write_xlsx()]).
@@ -103,7 +113,7 @@ save_plot <- function(plot, path = NULL, width = 8, height = 4.5, dpi = 300,
 #' file.exists(tmp)
 #' @export
 save_data <- function(data, path = NULL, na = "", ...) {
-  path <- ensure_output_dir(path %||% default_output_path("data", "csv"))
+  path <- resolve_output_path(path %||% default_output_path("data", "csv"))
   ext <- file_ext(path)
   switch(
     ext,
@@ -129,9 +139,11 @@ save_data <- function(data, path = NULL, na = "", ...) {
 #' pipe when you do not want to think about which saver to call.
 #'
 #' @param x A ggplot, a data frame, or a (named) list of data frames.
-#' @param path Output path; the extension picks the format. If `NULL`
-#'   (default), the file lands in the working directory's `ezrsurvey-outputs/`
-#'   folder (`ezrsurvey-outputs/plot.png` or `ezrsurvey-outputs/data.csv`).
+#' @param path Output path; the extension picks the format. `NULL` (default)
+#'   writes `plot.png` or `data.csv`.
+#'   A bare file name lands in `ezrsurvey-outputs/` (created on demand); a path
+#'   naming a directory (`"./x.png"`, `"charts/x.png"`, anything absolute) is used
+#'   exactly as given. See the `output_dir` option.
 #' @param ... Passed to [save_plot()] or [save_data()].
 #'
 #' @return `x`, invisibly.
@@ -191,9 +203,10 @@ derive_sheet_name <- function(df, i) {
 #'
 #' @param ... Data frames to write, one per tab. Name them to set tab names
 #'   (e.g. `gender = calc_percentage(d, demo_gender)`).
-#' @param path Output `.xlsx` path. If `NULL` (default), the workbook is
-#'   written to `ezrsurvey-outputs/tables.xlsx` in the working directory.
-#'   Missing directories are created.
+#' @param path Output `.xlsx` path. `NULL` (default) writes `tables.xlsx`.
+#'   A bare file name lands in `ezrsurvey-outputs/` (created on demand); a path
+#'   naming a directory (`"./x.xlsx"`, `"charts/x.xlsx"`, anything absolute) is used
+#'   exactly as given. See the `output_dir` option.
 #' @param sheet_names Optional character vector of tab names (overrides argument
 #'   names).
 #'
@@ -223,7 +236,7 @@ export_xlsx <- function(..., path = NULL, sheet_names = NULL) {
     stop("Exporting XLSX needs the 'writexl' package. ",
          "Install it with install.packages('writexl').", call. = FALSE)
   }
-  path <- ensure_output_dir(path %||% default_output_path("tables", "xlsx"))
+  path <- resolve_output_path(path %||% default_output_path("tables", "xlsx"))
   items <- list(...)
   if (length(items) == 0L) {
     stop("Provide at least one data frame to export.", call. = FALSE)

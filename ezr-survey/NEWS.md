@@ -29,6 +29,33 @@
   (default) reports in an interactive session and stays silent in scripts,
   vignettes and `R CMD check`; `TRUE` / `FALSE` force it either way.
 
+## Every output lands in one folder
+
+* A **bare output file name now goes into `ezrsurvey-outputs/`**, created on
+  demand: `save_plot(p, "nps.png")` writes `ezrsurvey-outputs/nps.png`, and the
+  same holds for `save_data()`, `save_output()`, `export_xlsx()`,
+  `export_summary_xlsx()`, `report_save()` and `report_deck()`. Previously only
+  the `path = NULL` default used that folder, so any script that named its files
+  scattered them through the working directory.
+* A path that **names a directory** is written exactly as given, which is how you
+  override it: `"./nps.png"` for the working directory, `"charts/nps.png"` for a
+  folder of your own, or any absolute path (so `tempfile()` is unaffected).
+* New **`output_dir`** option (default `"ezrsurvey-outputs"`) renames that folder
+  for a project, or set it to `"."` to put bare names back in the working
+  directory.
+
+## Confirming an automatic variable selection
+
+* `crosstab_banner()` and `export_summary_xlsx()` choose their own variables
+  when none are named, and that choice decides everything they produce. Both now
+  print the questions kept, the grouping variables and the columns skipped, and
+  wait for a yes before a run that takes minutes. Naming `rows` / `cols` (or the
+  variables to summarise) is your own choice and is never questioned.
+* New **`confirm`** option and argument: `"auto"` (default) asks in an
+  interactive session and never asks in a script, so an unattended run cannot
+  stall on a prompt; `TRUE` / `FALSE` force it either way. Answering no computes
+  nothing and returns `NULL`.
+
 ## Resuming an interrupted table
 
 * **`crosstab_banner(checkpoint = )`** saves each question as it finishes, so

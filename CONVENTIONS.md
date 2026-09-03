@@ -50,6 +50,7 @@ files to copy:
 | Themes + palettes: `theme_ezr<pkg>*()`, `scale_*` | `theme.R`, `palettes.R` | **yes** (theme names) |
 | Save/export: `save_plot()`, `save_data()`, `save_output()`, `export_xlsx()` | `export.R` | no |
 | Progress: internal `progress_plan()`, `progress_start()`, `progress_item()`, `progress_note()`, `progress_done()` | `progress.R` | no |
+| Confirmation: internal `confirm_on()`, `confirm_lines()`, `confirm_selection()` | `confirm.R` | no |
 
 **AI is not an ezr core primitive.** Language-model summaries, API-key storage
 and the prompt registry live in **`ezrintelligence`** alone; no other package
@@ -77,6 +78,23 @@ full result plus diagnostics, and provides:
   the result appended (`.cluster`, `.fitted`, component scores), where useful.
 
 `ezrsurvey_precision` in `ezr-survey/R/diagnostics.R` is the template.
+
+### 4.1 Where a written file goes
+
+Any function that writes a file routes its `path` through one resolver
+(`resolve_output_path()` in `ezr-survey/R/export.R`), never through a bare
+`ggsave()` / `write_csv()` call:
+
+- **A bare file name lands in the package's output folder**, created on demand,
+  so a session's results collect in one place instead of scattering through the
+  working directory. The folder is an option (`output_dir`, default
+  `"ezrsurvey-outputs"`), not a constant.
+- **A path that names a directory is used exactly as written.** `"./x.png"`,
+  `"charts/x.png"` and any absolute path are the user's override, which is what
+  keeps `tempfile()` in examples and tests unaffected (and so keeps §7 satisfied:
+  nothing is written outside `tempdir()` during `R CMD check`).
+- **The rule is in every `@param path`**, in the same words, because a reader
+  meets it one function at a time.
 
 ## 5. Documentation standard
 
@@ -171,5 +189,18 @@ end. Such a function takes an optional `checkpoint = NULL` file path:
   `tools::R_user_dir()` unasked (§7), so the file only exists when the user
   names one. Checkpoints are gitignored and are the user's to delete.
 
-`crosstab_banner()` in `ezr-survey/R/crosstab_banner.R` is the template for
-both halves.
+A third rule covers the choice a long call makes for you. When a function picks
+its own variables because the user named none, and the run then costs minutes or
+writes a file, it **shows the selection and waits for a yes** before starting:
+
+- **Only when the consequential default was used.** A named selection is the
+  user's own choice and is never questioned.
+- **Show both sides**: what was kept, what was skipped, and the one argument that
+  changes the answer. A count is not enough; the reader needs the names.
+- **The `confirm` option is `"auto"`,** interactive sessions only, so an
+  unattended script can never stall on a prompt. Enter means yes. Declining
+  computes nothing, writes nothing and returns `NULL`.
+
+`crosstab_banner()` in `ezr-survey/R/crosstab_banner.R` is the template for all
+three, with the shared helpers in `ezr-survey/R/progress.R` and
+`ezr-survey/R/confirm.R`.

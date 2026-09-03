@@ -18,9 +18,10 @@ save_plot(
 \item{plot}{A ggplot object.}
 
 \item{path}{Output path; the extension sets the format (\code{.png}, \code{.svg},
-\code{.pdf}, \code{.jpg}/\code{.jpeg}, \code{.tiff}). If \code{NULL} (default), the plot is written
-to \code{ezrsurvey-outputs/plot.png} in the working directory. Missing
-directories are created.}
+\code{.pdf}, \code{.jpg}/\code{.jpeg}, \code{.tiff}). \code{NULL} (default) writes \code{plot.png}.
+A bare file name lands in \verb{ezrsurvey-outputs/} (created on demand); a path
+naming a directory (\code{"./x.png"}, \code{"charts/x.png"}, anything absolute) is used
+exactly as given. See the \code{output_dir} option.}
 
 \item{width, height}{Size in inches. Default \verb{8 x 4.5}.}
 

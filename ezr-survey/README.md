@@ -1,6 +1,6 @@
 # ezrsurvey <img src="man/figures/logo.png" align="right" height="120" alt="" />
 
-> ezrsurvey — tidyverse helpers for everyday consumer-survey work, designed so
+> ezrsurvey: tidyverse helpers for everyday consumer-survey work, designed so
 > common tasks require minimal R experience.
 
 `ezrsurvey` packages the patterns a research manager reaches for again and again:
@@ -80,7 +80,8 @@ ipm_model(podracing_survey, nps_value, "ratings_") %>%
 # 5. Survey precision diagnostics (the appendix "data info" block, as one call)
 diagnose(podracing_survey, demo_gender, dplyr::starts_with("ratings_"))
 
-# 6. Quick saves — pipe-friendly, format inferred from the extension
+# 6. Quick saves, pipe-friendly, format inferred from the extension
+# (a bare name lands in ezrsurvey-outputs/; give a path to choose the folder)
 calc_percentage(podracing_survey, demo_gender) %>% save_data("gender.xlsx")
 plot_bars(calc_percentage(podracing_survey, demo_gender)) %>% save_plot("gender.svg")
 
@@ -126,15 +127,48 @@ export_summary_xlsx(podracing_survey, demo_gender, satis_return, nps_value)
   next tidy multiple, so data labels never collide with the panel top. It powers
   `scale_y_pct()` and the plot wrappers.
 - **Decision bands.** `annotate_bands()` adds consistent "where's good, where's
-  bad" guidance to any chart from a small band spec — the presets
+  bad" guidance to any chart from a small band spec; the presets
   `bands_rating_3()` / `bands_nps()` cover the common cases. Pass `from` / `to`
   to trim a preset to the part of the scale your chart shows.
+
+## Where output goes
+
+Every save writes into an `ezrsurvey-outputs/` folder in the working directory,
+created on demand, so a script's results collect in one place:
+
+```r
+save_plot(p, "nps.png")           # ezrsurvey-outputs/nps.png
+report_deck(items, path = "q2.pptx")  # ezrsurvey-outputs/q2.pptx
+```
+
+A path that names a directory is used exactly as written, which is how you
+override that: `"./nps.png"` for the working directory, `"charts/nps.png"` for a
+folder of your own, or any absolute path. `ezrsurvey_options(output_dir = )`
+renames the folder for a project, or set it to `"."` to put bare names back in
+the working directory.
 
 ## Long runs
 
 A full every-variable `crosstab_banner()` is one cross-tab per question per
-grouping variable, so on a wide survey it takes minutes. The helpers that can
-run that long say where they are:
+grouping variable, so on a wide survey it takes minutes. Called with no `rows` /
+`cols`, it also picks the variables itself, and that choice decides the whole
+table, so it shows the choice and waits before spending the time:
+
+```
+Banner variables chosen automatically: 34 question(s) across 12 grouping variable(s).
+  Questions (34): satis_return, demo_gender, ...
+  Grouping variables (12): demo_gender, region, ...
+  Skipped (11): respondent_id, start_date, nps_com, ...
+  Name `rows` / `cols` yourself, or raise `max_levels` (now 20), to change this.
+Continue? [Y/n]
+```
+
+`export_summary_xlsx()` asks the same way when no variables are named. Naming
+them yourself is your own choice and is never questioned. The prompt appears in
+an interactive session only, so an unattended script can never stall on it;
+`ezrsurvey_options(confirm = FALSE)` removes it, `TRUE` forces it.
+
+Once a run starts, the helpers that can run for minutes say where they are:
 
 ```
 Banner table: 34 question(s) across 12 grouping variable(s)

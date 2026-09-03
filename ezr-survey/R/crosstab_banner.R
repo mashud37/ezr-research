@@ -359,6 +359,11 @@ banner_checkpoint_save <- function(path, fingerprint, finished, blocks,
 #'   call picks up where an interrupted run stopped. `TRUE` manages the file for
 #'   you under [tools::R_user_dir()]; a file path puts it where you choose.
 #'   `NULL` (default) or `FALSE` writes nothing. See Details.
+#' @param confirm When `rows` / `cols` are left to the automatic selection, show
+#'   which variables were chosen and which were skipped, and wait for a yes
+#'   before the run starts. `NULL` (default) follows the `confirm` option, which
+#'   asks in an interactive session and never asks in a script; `TRUE` or `FALSE`
+#'   force it either way. Answering no returns `NULL` and computes nothing.
 #'
 #' @return By default a wide [tibble][tibble::tibble]: `variable`, `item`,
 #'   `Overall`, then one column per banner item. The banner grouping (which
@@ -379,7 +384,9 @@ banner_checkpoint_save <- function(path, fingerprint, finished, blocks,
 #' frame does this automatically: every variable with at most `max_levels`
 #' distinct answers becomes both a stub and a banner group, numeric scales are
 #' added as stub statistics blocks, and identifier / free-text columns are
-#' skipped (and named in a message). Check-all-that-apply blocks (columns sharing
+#' skipped (and named in a message). That selection decides the whole table, so
+#' an interactive session prints it and waits for a yes before starting the run
+#' (see `confirm`). Check-all-that-apply blocks (columns sharing
 #' a prefix that each hold one option or blank, such as `motivations_*`) are
 #' recognised as a single multi-select stub question and tabulated with
 #' [calc_percentage_multi()], whose base is the respondents who picked any option
@@ -427,7 +434,7 @@ crosstab_banner <- function(data = NULL, rows, cols,
                             total = TRUE, digits = NULL, na_rm = TRUE,
                             drop = NULL, weights = NULL, max_levels = 20,
                             long = FALSE, flextable = FALSE,
-                            checkpoint = NULL) {
+                            checkpoint = NULL, confirm = NULL) {
   data <- resolve_data(data)
   cell <- match.arg(cell)
   stats <- match.arg(stats, several.ok = TRUE)
@@ -444,7 +451,7 @@ crosstab_banner <- function(data = NULL, rows, cols,
     row_singles <- setdiff(raw, unlist(multi, use.names = FALSE))
   }
   col_vars <- if (missing(cols)) sel$cols else names(dplyr::select(data, {{ cols }}))
-  if (auto && length(sel$skipped)) {
+  if (auto && !confirm_on(confirm) && length(sel$skipped)) {
     message("crosstab_banner: skipped ", length(sel$skipped),
             " identifier / free-text / high-cardinality column(s): ",
             paste(sel$skipped, collapse = ", "),
@@ -483,6 +490,25 @@ crosstab_banner <- function(data = NULL, rows, cols,
   specs <- specs[order(vapply(specs, function(s) s$pos, numeric(1)))]
 
   labels <- vapply(specs, function(s) s$label, character(1))
+
+  if (auto) {
+    proceed <- confirm_selection(
+      paste0("Banner variables chosen automatically: ", length(specs),
+             " question(s) across ", length(col_vars),
+             " grouping variable(s)."),
+      c(confirm_lines("Questions", labels),
+        confirm_lines("Grouping variables", col_vars),
+        confirm_lines("Skipped", sel$skipped),
+        paste0("Name `rows` / `cols` yourself, or raise `max_levels` (now ",
+               max_levels, "), to change this.")),
+      confirm
+    )
+    if (!proceed) {
+      message("Cancelled. Nothing was computed.")
+      return(invisible(NULL))
+    }
+  }
+
   fingerprint <- banner_fingerprint(data, labels, col_vars, cell, stats, total,
                                     na_rm, drop, digits)
   checkpoint <- banner_checkpoint_path(checkpoint, fingerprint)

@@ -10,9 +10,10 @@ export_xlsx(..., path = NULL, sheet_names = NULL)
 \item{...}{Data frames to write, one per tab. Name them to set tab names
 (e.g. \code{gender = calc_percentage(d, demo_gender)}).}
 
-\item{path}{Output \code{.xlsx} path. If \code{NULL} (default), the workbook is
-written to \code{ezrsurvey-outputs/tables.xlsx} in the working directory.
-Missing directories are created.}
+\item{path}{Output \code{.xlsx} path. \code{NULL} (default) writes \code{tables.xlsx}.
+A bare file name lands in \verb{ezrsurvey-outputs/} (created on demand); a path
+naming a directory (\code{"./x.xlsx"}, \code{"charts/x.xlsx"}, anything absolute) is used
+exactly as given. See the \code{output_dir} option.}
 
 \item{sheet_names}{Optional character vector of tab names (overrides argument
 names).}
