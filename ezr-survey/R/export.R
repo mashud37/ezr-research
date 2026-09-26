@@ -6,6 +6,10 @@ default_output_path <- function(name, ext) {
   paste0(name, ".", ext)
 }
 
+# Tracks whether this session has already been told where bare file names go.
+# Saving forty charts in a loop should say it once, not forty times.
+.ezrsurvey_output <- new.env(parent = emptyenv())
+
 # Internal: where a file actually gets written. A bare file name goes into the
 # project-local outputs folder, so a session's results collect in one place
 # instead of scattering through the working directory; the folder is created if
@@ -17,12 +21,27 @@ resolve_output_path <- function(path) {
   bare <- identical(dirname(path), ".") && !startsWith(path, "./")
   if (bare && folder != ".") {
     path <- file.path(folder, path)
+    announce_output_dir(folder)
   }
   dir <- dirname(path)
   if (nzchar(dir) && dir != "." && !dir.exists(dir)) {
     dir.create(dir, recursive = TRUE)
   }
   path
+}
+
+# Internal: say once per session that a bare name was redirected, so nobody goes
+# looking in the working directory for a file that is one folder down. Silent
+# once said, and silent when the user has turned messages off.
+announce_output_dir <- function(folder) {
+  if (isTRUE(.ezrsurvey_output$announced)) {
+    return(invisible(NULL))
+  }
+  .ezrsurvey_output$announced <- TRUE
+  message("Saving to ", folder, "/. Pass a path that names a folder ",
+          "(\"./name.png\", \"charts/name.png\") to choose somewhere else, ",
+          "or set ezrsurvey_options(output_dir = \".\").")
+  invisible(NULL)
 }
 
 #' Quick-save a plot to PNG, SVG or PDF

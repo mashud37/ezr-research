@@ -7,10 +7,16 @@
 ## usethis namespace: end
 NULL
 
-# ezrsurvey wraps the tidyverse, so attaching it attaches the tidyverse too
-# (Depends). Importing one symbol keeps R CMD check from reporting a Depends
-# package that is never imported from.
-#' @importFrom tidyverse tidyverse_packages
+# The packages ezrsurvey wraps are attached for the user (Depends), and the code
+# reaches them as ggplot2::, tibble:: and so on. Naming one symbol from each
+# also imports them, which is what makes the namespace work when it is loaded
+# without being attached.
+#' @importFrom ggplot2 aes
+#' @importFrom tibble tibble
+#' @importFrom tidyr pivot_longer
+#' @importFrom readr write_csv
+#' @importFrom stringr str_wrap
+#' @importFrom purrr map
 NULL
 
 # Quiet R CMD check notes about unquoted column names used in NSE pipelines and

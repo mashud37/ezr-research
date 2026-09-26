@@ -58,10 +58,13 @@ does the whole thing in one call; for a document-driven workflow,
 suggested \code{officer} package.
 }
 \examples{
-\dontrun{
+\dontshow{if (requireNamespace("officer", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 doc <- report_new("pptx")
-doc <- report_new("pptx", template = "brand/org-template.pptx")
-}
+class(doc)
+
+# a corporate template replaces the built-in one:
+# report_new("pptx", template = "brand/org-template.pptx")
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=report_add_slide]{report_add_slide()}}, \code{\link[=report_add_plot]{report_add_plot()}}, \code{\link[=report_add_table]{report_add_table()}},

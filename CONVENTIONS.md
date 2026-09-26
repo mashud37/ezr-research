@@ -1,10 +1,10 @@
-# ezr family — conventions & policy
+# ezr family: conventions & policy
 
 This document is the contract every package in this monorepo follows, so the
 `ezr*` family feels like one toolkit. `ezrsurvey` is the reference implementation;
 the other packages (`ezrmodel`, `ezrlearning`, ...) copy these conventions.
 
-## 1. Philosophy — the "ezr mentality"
+## 1. Philosophy: the "ezr mentality"
 
 - **Single-line helpers.** Each common task is one verb-named function that does
   the whole job and returns a finished result, not a kit of parts.
@@ -15,10 +15,10 @@ the other packages (`ezrmodel`, `ezrlearning`, ...) copy these conventions.
   what relates to it. Unsupervised helpers find structure and report it with
   diagnostics.
 - **Complete results.** A helper returns the answer *and* its diagnostics in one
-  object you can `print()`, `plot()`, and tidy — never make the user assemble
+  object you can `print()`, `plot()`, and tidy, never make the user assemble
   the evaluation by hand.
 - **Tidyverse pipe, always.** These are tidyverse wrapper packages: use `%>%`
-  everywhere (source, tests, `@examples`, vignettes, READMEs) — never the base
+  everywhere (source, tests, `@examples`, vignettes, READMEs), never the base
   R `|>`. `%>%` is re-exported from the tidyverse family the package already
   depends on.
 
@@ -61,8 +61,8 @@ takes any summary table the analysis packages produce, so the split costs the
 user one extra `library()` call and nothing else.
 
 **Masking caveat (document it):** when a user attaches two `ezr*` packages, R
-masks the identically-named primitive from the earlier one — harmless, since the
-implementations match. The default-dataset state lives in each package's own
+masks the identically-named primitive from the earlier one. That is harmless,
+since the implementations match. The default-dataset state lives in each package's own
 namespace, so `use_dataset()` is per-package. A shared `ezbase` package can be
 extracted **later**, once every package is stable on CRAN; until then,
 duplication is the deliberate price of independent releases.
@@ -72,9 +72,9 @@ duplication is the deliberate price of independent releases.
 A wrapper returns `structure(list(...), class = "ezr<pkg>_<type>")` carrying the
 full result plus diagnostics, and provides:
 
-- `print()` — a concise, human summary (the headline numbers / verdict).
-- `plot()` — the natural chart (cluster plot, scree, coefficient/importance bars).
-- `tidy()` / `augment()` — a tidy table of the result, and the input data with
+- `print()`: a concise, human summary (the headline numbers / verdict).
+- `plot()`: the natural chart (cluster plot, scree, coefficient/importance bars).
+- `tidy()` / `augment()`: a tidy table of the result, and the input data with
   the result appended (`.cluster`, `.fitted`, component scores), where useful.
 
 `ezrsurvey_precision` in `ezr-survey/R/diagnostics.R` is the template.
@@ -88,7 +88,11 @@ Any function that writes a file routes its `path` through one resolver
 - **A bare file name lands in the package's output folder**, created on demand,
   so a session's results collect in one place instead of scattering through the
   working directory. The folder is an option (`output_dir`, default
-  `"ezrsurvey-outputs"`), not a constant.
+  `"ezrsurvey-outputs"`), not a constant. A scaffold counts: `scaffold_report()`
+  puts its `.qmd` there so the source and its render sit together.
+- **The first redirect of a session says so**, once, through `message()`.
+  Silently moving a file the caller named is the kind of surprise that ends in a
+  bug report; forty charts in a loop still say it once.
 - **A path that names a directory is used exactly as written.** `"./x.png"`,
   `"charts/x.png"` and any absolute path are the user's override, which is what
   keeps `tempfile()` in examples and tests unaffected (and so keeps §7 satisfied:
@@ -114,7 +118,23 @@ or `@family`. Provide a getting-started vignette and a family-grouped
 
 ## 7. CRAN conformance
 
-- Source is **ASCII** — use `\u` escapes, never literal non-ASCII bytes.
+- Source is **ASCII**, use `\u` escapes, never literal non-ASCII bytes.
+- **`Depends` names the packages actually used, never the `tidyverse`
+  meta-package.** These are tidyverse wrappers and attaching the stack is the
+  point, so the packages the code calls (`dplyr`, `ggplot2`, `tidyr`, `tibble`,
+  `readr`, `stringr`, `purrr`) go in `Depends`, where `library(ezr<name>)`
+  attaches them. Depending on the meta-package instead ties the release to every
+  package in that tree, which is both a reviewer's objection and a standing
+  archival risk. Packages used only internally (`rlang`) stay in `Imports`.
+- **`\dontrun{}` needs a reason a reviewer would accept**, which in practice
+  means only a function that writes into the user's own config directory.
+  Anything gated on a `Suggests` package uses `@examplesIf`, anything slow uses
+  `\donttest`, and anything that writes uses `tempfile()`. `test-docs.R` holds
+  the allow-list, so adding one is a decision rather than an oversight.
+- **A cache under `tools::R_user_dir()` is actively managed**, which CRAN policy
+  requires in as many words. A finished run deletes its own checkpoint, and the
+  package exports a verb that empties the folder (`clear_checkpoints()`). A path
+  the caller chose is theirs, and is never deleted.
 - `Suggests` packages are used **conditionally** (`requireNamespace()` in code,
   `skip_if_not_installed()` in tests, `@examplesIf` in examples) and the package
   works without them, failing gracefully with an install hint.
@@ -122,10 +142,10 @@ or `@family`. Provide a getting-started vignette and a family-grouped
   global state (RNG seed, `options()`) that you change.
 - Examples run in a few seconds each; wrap slow/IO/key-dependent ones in
   `\donttest` or `@examplesIf`.
-- **No inter-package dependencies** between `ezr*` packages — each is
+- **No inter-package dependencies** between `ezr*` packages; each is
   independently releasable, avoiding CRAN submission-ordering deadlocks (an
   `Imports` must already be on CRAN). This is why the ezr core is duplicated.
-  - **Exception — `ezrlearning`.** Because it is a *teaching companion* for the
+  - **Exception, `ezrlearning`.** Because it is a *teaching companion* for the
     family, `ezrlearning` deliberately `Imports` `ezrsurvey` and `ezrmodel` (its
     exercises run and grade real ezr code). It is therefore installed from this
     repository rather than released independently on CRAN; its `--as-cran` check

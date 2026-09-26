@@ -152,7 +152,8 @@ Every table and plot has a one-line, pipe-friendly save. A bare file name lands
 in an `ezrsurvey-outputs/` folder, created on demand, so a script's results
 collect in one place instead of scattering through the working directory; pass a
 path with a directory in it (`"./gender.xlsx"`, `"tables/gender.xlsx"`, anything
-absolute) to put a file exactly where you want it.
+absolute) to put a file exactly where you want it. The first save of a session
+says which folder it used, so nothing goes missing.
 
 ```{r, eval = FALSE}
 calc_percentage(podracing_survey, demo_gender) %>% save_data("gender.xlsx")
@@ -171,7 +172,7 @@ export_xlsx(
 * Set persistent defaults with `ezrsurvey_options()` and a profile
   (`use_ezrsurvey_profile()`).
 * Build a deck with `report_deck()` or scaffold a Quarto report with
-  `scaffold_report()`.
+  `scaffold_report()`, which drops the `.qmd` beside where its render will land.
 * Draft the narrative around the tables with the companion `ezrintelligence`
   package.
 

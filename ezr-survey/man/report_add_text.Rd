@@ -21,9 +21,10 @@ The updated document.
 Add a paragraph of text to a report
 }
 \examples{
-\dontrun{
-report_new("docx") \%>\% report_add_text("Key findings follow.")
-}
+\dontshow{if (requireNamespace("officer", quietly = TRUE)) withAutoprint(\{ # examplesIf}
+doc <- report_new("docx") \%>\% report_add_text("Key findings follow.")
+class(doc)
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 Other reporting:

@@ -285,11 +285,12 @@ report_layouts <- function(template = NULL, style = c("elevated", "plain")) {
 #' @family reporting
 #' @seealso [report_add_slide()], [report_add_plot()], [report_add_table()],
 #'   [report_save()], [report_deck()], [report_layouts()], [use_brand()].
-#' @examples
-#' \dontrun{
+#' @examplesIf requireNamespace("officer", quietly = TRUE)
 #' doc <- report_new("pptx")
-#' doc <- report_new("pptx", template = "brand/org-template.pptx")
-#' }
+#' class(doc)
+#'
+#' # a corporate template replaces the built-in one:
+#' # report_new("pptx", template = "brand/org-template.pptx")
 #' @export
 report_new <- function(format = c("pptx", "docx"), template = NULL,
                        style = c("elevated", "plain"), slide_numbers = TRUE,
@@ -338,10 +339,9 @@ report_new <- function(format = c("pptx", "docx"), template = NULL,
 #'
 #' @family reporting
 #' @seealso [report_new()], [report_layouts()].
-#' @examples
-#' \dontrun{
+#' @examplesIf requireNamespace("officer", quietly = TRUE)
 #' doc <- report_new("pptx") %>% report_add_slide("Audience")
-#' }
+#' class(doc)
 #' @export
 report_add_slide <- function(doc, title = NULL, layout = NULL,
                              master = NULL, heading_level = 1) {
@@ -414,10 +414,13 @@ report_add_slide <- function(doc, title = NULL, layout = NULL,
 #'
 #' @family reporting
 #' @seealso [report_add_table()].
-#' @examples
-#' \dontrun{
+#' @examplesIf requireNamespace("officer", quietly = TRUE)
+#' \donttest{
 #' p <- calc_percentage(podracing_survey, demo_gender) %>% plot_bars()
-#' report_new("pptx") %>% report_add_slide("Gender") %>% report_add_plot(p)
+#' doc <- report_new("pptx") %>%
+#'   report_add_slide("Gender") %>%
+#'   report_add_plot(p)
+#' class(doc)
 #' }
 #' @export
 report_add_plot <- function(doc, plot, width = NULL, height = NULL, dpi = 150) {
@@ -463,11 +466,10 @@ report_add_plot <- function(doc, plot, width = NULL, height = NULL, dpi = 150) {
 #'
 #' @family reporting
 #' @seealso [report_add_plot()].
-#' @examples
-#' \dontrun{
+#' @examplesIf requireNamespace("officer", quietly = TRUE) && requireNamespace("flextable", quietly = TRUE)
 #' tbl <- calc_percentage(podracing_survey, demo_gender)
-#' report_new("docx") %>% report_add_table(tbl)
-#' }
+#' doc <- report_new("docx") %>% report_add_table(tbl)
+#' class(doc)
 #' @export
 report_add_table <- function(doc, data, font_size = 12, autofit = TRUE) {
   check_doc(doc)
@@ -506,10 +508,9 @@ report_add_table <- function(doc, data, font_size = 12, autofit = TRUE) {
 #'
 #' @return The updated document.
 #' @family reporting
-#' @examples
-#' \dontrun{
-#' report_new("docx") %>% report_add_text("Key findings follow.")
-#' }
+#' @examplesIf requireNamespace("officer", quietly = TRUE)
+#' doc <- report_new("docx") %>% report_add_text("Key findings follow.")
+#' class(doc)
 #' @export
 report_add_text <- function(doc, text, ...) {
   check_doc(doc)
@@ -546,11 +547,12 @@ report_add_text <- function(doc, text, ...) {
 #'
 #' @family reporting
 #' @seealso [report_section()], [report_title_slide()], [report_add_slide()].
-#' @examples
-#' \dontrun{
-#' report_new("pptx") %>%
+#' @examplesIf requireNamespace("officer", quietly = TRUE)
+#' \donttest{
+#' doc <- report_new("pptx") %>%
 #'   report_slide("Who follows pod racing?",
 #'                plot_bars(calc_percentage(podracing_survey, demo_gender)))
+#' class(doc)
 #' }
 #' @export
 report_slide <- function(doc, title = NULL, content = NULL, layout = NULL,
@@ -585,10 +587,9 @@ report_slide <- function(doc, title = NULL, content = NULL, layout = NULL,
 #' @return The updated document.
 #' @family reporting
 #' @seealso [report_slide()], [report_title_slide()].
-#' @examples
-#' \dontrun{
-#' report_new("pptx") %>% report_section("DEMOGRAPHICS")
-#' }
+#' @examplesIf requireNamespace("officer", quietly = TRUE)
+#' doc <- report_new("pptx") %>% report_section("DEMOGRAPHICS")
+#' class(doc)
 #' @export
 report_section <- function(doc, title, layout = "Section Header",
                            master = NULL) {
@@ -620,12 +621,11 @@ report_section <- function(doc, title, layout = "Section Header",
 #' @return The updated document.
 #' @family reporting
 #' @seealso [report_slide()], [report_section()].
-#' @examples
-#' \dontrun{
-#' report_new("pptx") %>%
+#' @examplesIf requireNamespace("officer", quietly = TRUE)
+#' doc <- report_new("pptx") %>%
 #'   report_title_slide("Pod-Racing Fan Survey",
 #'                      subtitle = "1,000 fans | Fieldwork 2026")
-#' }
+#' class(doc)
 #' @export
 report_title_slide <- function(doc, title, subtitle = NULL, layout = NULL,
                                master = NULL) {
@@ -664,10 +664,13 @@ report_title_slide <- function(doc, title, subtitle = NULL, layout = NULL,
 #'
 #' @return Invisibly `path`.
 #' @family reporting
-#' @examples
-#' \dontrun{
-#' report_new("pptx") %>% report_add_slide("Hi") %>% report_save("out.pptx")
-#' }
+#' @examplesIf requireNamespace("officer", quietly = TRUE)
+#' tmp <- tempfile(fileext = ".pptx")
+#' report_new("pptx") %>% report_add_slide("Hi") %>% report_save(tmp)
+#' file.exists(tmp)
+#'
+#' # a bare name instead lands in ezrsurvey-outputs/:
+#' # report_new("pptx") %>% report_add_slide("Hi") %>% report_save("deck.pptx")
 #' @export
 report_save <- function(doc, path = NULL) {
   check_doc(doc)

@@ -19,7 +19,8 @@ Edwardian shopping survey) -- so every example runs out of the box.
 pak::pak("mashud37/ezrsurvey")
 ```
 
-The analysis core depends only on the tidyverse packages. A few extras unlock
+The analysis core depends only on dplyr, ggplot2, tidyr, tibble, readr, stringr
+and purrr, which it attaches for you. A few extras unlock
 optional features: `rwa` (importance analysis), `treemapify` (quote treemaps) and
 `ggrepel` (non-overlapping IPM labels).
 
@@ -30,7 +31,7 @@ any summary table `ezrsurvey` produces.
 ## The 60-second tour
 
 ```r
-library(ezrsurvey)   # brings the tidyverse with it
+library(ezrsurvey)   # attaches dplyr, ggplot2 and the rest with it
 
 # 1. Percentages, no count/mutate/pivot_wider
 calc_percentage(podracing_survey, demo_gender, sort = "desc")
@@ -137,9 +138,13 @@ Every save writes into an `ezrsurvey-outputs/` folder in the working directory,
 created on demand, so a script's results collect in one place:
 
 ```r
-save_plot(p, "nps.png")           # ezrsurvey-outputs/nps.png
+save_plot(p, "nps.png")               # ezrsurvey-outputs/nps.png
 report_deck(items, path = "q2.pptx")  # ezrsurvey-outputs/q2.pptx
+scaffold_report("html")               # ezrsurvey-outputs/survey-report-html.qmd
 ```
+
+The first save of a session says where the file went, so nobody hunts for it in
+the working directory.
 
 A path that names a directory is used exactly as written, which is how you
 override that: `"./nps.png"` for the working directory, `"charts/nps.png"` for a

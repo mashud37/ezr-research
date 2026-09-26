@@ -1,5 +1,32 @@
 # ezrsurvey 0.6.0
 
+## Attaching the package attaches seven packages, not the whole tidyverse
+
+* `library(ezrsurvey)` still puts dplyr, ggplot2, tidyr, tibble, readr, stringr
+  and purrr on your search path, so nothing changes in a script. The package now
+  names those seven in `Depends` rather than depending on the `tidyverse`
+  meta-package, which had tied it to every package in that tree.
+
+## Checkpoints clean up after themselves
+
+* `crosstab_banner(checkpoint = TRUE)` now **deletes its checkpoint once the
+  table is built**. A finished run has nothing left to resume from, so the file
+  it kept under `tools::R_user_dir()` is removed instead of accumulating.
+* **`clear_checkpoints()`** empties that folder, for runs that were interrupted
+  and never repeated.
+* A checkpoint path you chose yourself (`checkpoint = "my-run.rds"`) is your
+  file: it is left exactly where it is, and `clear_checkpoints()` never touches
+  it.
+
+## The outputs folder now says where it put things
+
+* The first save of a session that redirects a bare file name prints the folder
+  it used, once, so nothing goes missing in a working directory that does not
+  contain it.
+* **`scaffold_report()`** now follows the same rule as every other writer: a
+  bare name lands in `ezrsurvey-outputs/`, so the `.qmd` sits where its rendered
+  output will. Pass a path naming a directory to put it somewhere else.
+
 ## Rating scales: a fix that can move existing numbers
 
 * **`recode_likert()`** now tries the longest answer wording first. A scale

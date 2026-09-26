@@ -33,10 +33,12 @@ you can see every visual and slide element in a finished state before
 adapting it.
 }
 \examples{
-\dontrun{
-example_report()
-quarto::quarto_render("ezrsurvey-example/podracing-report.qmd")
-}
+dir <- file.path(tempdir(), "ezrsurvey-example")
+example_report(dir)
+list.files(dir)
+
+# then render it:
+# quarto::quarto_render("ezrsurvey-example/podracing-report.qmd")
 }
 \seealso{
 \code{\link[=scaffold_report]{scaffold_report()}} for blank skeletons, \code{\link[=report_deck]{report_deck()}}.

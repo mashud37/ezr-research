@@ -308,6 +308,47 @@ banner_checkpoint_save <- function(path, fingerprint, finished, blocks,
   invisible(TRUE)
 }
 
+# Internal: a finished run has no interruption left to resume from, so its
+# checkpoint is deleted rather than left behind. Only a file the package named
+# for itself is removed; a path the caller chose is theirs to keep.
+banner_checkpoint_clear <- function(ours, path) {
+  if (ours && !is.null(path) && file.exists(path)) {
+    unlink(path)
+  }
+  invisible(NULL)
+}
+
+#' Delete saved cross-tab checkpoints
+#'
+#' Removes the checkpoint files that `crosstab_banner(checkpoint = TRUE)` keeps
+#' under [tools::R_user_dir()]. A finished run clears its own checkpoint, so
+#' anything left is from a run that was interrupted and never repeated; this
+#' empties the folder in one call.
+#'
+#' @return Invisibly the number of files removed.
+#'
+#' @details
+#' Only checkpoints the package named for itself are stored there. A checkpoint
+#' you pointed somewhere yourself (`checkpoint = "my-run.rds"`) is your file and
+#' is never touched, by this function or by a completed run.
+#'
+#' @family summaries
+#' @seealso [crosstab_banner()], [clear_weights_cache()].
+#' @examplesIf requireNamespace("withr", quietly = TRUE)
+#' # in your own session this is the whole call:
+#' # clear_checkpoints()
+#'
+#' # here it runs against a throwaway cache, so the example leaves yours alone
+#' withr::with_envvar(c(R_USER_CACHE_DIR = tempdir()), clear_checkpoints())
+#' @export
+clear_checkpoints <- function() {
+  dir <- tools::R_user_dir("ezrsurvey", "cache")
+  files <- list.files(dir, pattern = "^banner-.*[.]rds$", full.names = TRUE)
+  unlink(files)
+  message("Removed ", length(files), " checkpoint file(s).")
+  invisible(length(files))
+}
+
 #' Build a master banner (cross-tab) table
 #'
 #' Produces the market-research "banner" table: one master table with a stack of
@@ -356,9 +397,11 @@ banner_checkpoint_save <- function(path, fingerprint, finished, blocks,
 #'   two-row banner header ready for a slide or Word report. Default `FALSE`.
 #'   Requires the suggested `flextable` package.
 #' @param checkpoint Save each question as it finishes, so re-running the same
-#'   call picks up where an interrupted run stopped. `TRUE` manages the file for
-#'   you under [tools::R_user_dir()]; a file path puts it where you choose.
-#'   `NULL` (default) or `FALSE` writes nothing. See Details.
+#'   call picks up where an interrupted run stopped. `TRUE` keeps the file under
+#'   [tools::R_user_dir()] and deletes it once the run completes; a file path
+#'   puts it where you choose and leaves it there for you to manage.
+#'   `NULL` (default) or `FALSE` writes nothing. See Details and
+#'   [clear_checkpoints()].
 #' @param confirm When `rows` / `cols` are left to the automatic selection, show
 #'   which variables were chosen and which were skipped, and wait for a yes
 #'   before the run starts. `NULL` (default) follows the `confirm` option, which
@@ -401,9 +444,11 @@ banner_checkpoint_save <- function(path, fingerprint, finished, blocks,
 #' question as it completes, so re-running the identical call after an
 #' interruption resumes instead of starting again. The managed file is named
 #' after the run's own fingerprint, so a call finds its own interrupted run and
-#' a call with different data or arguments never sees it; pass a path instead if
-#' you would rather choose the location. Either way the file is yours to delete
-#' once the table is built.
+#' a call with different data or arguments never sees it, and it is deleted as
+#' soon as the table is built. Pass a path instead if you would rather choose
+#' the location; that file is yours, so the package neither deletes it nor
+#' counts it as one of its own. [clear_checkpoints()] empties the managed
+#' folder if a run was interrupted and never repeated.
 #'
 #' @family summaries
 #' @seealso [crosstab()] for a single pair, [calc_percentage_batch()] for stacked
@@ -511,6 +556,7 @@ crosstab_banner <- function(data = NULL, rows, cols,
 
   fingerprint <- banner_fingerprint(data, labels, col_vars, cell, stats, total,
                                     na_rm, drop, digits)
+  ours <- isTRUE(checkpoint)
   checkpoint <- banner_checkpoint_path(checkpoint, fingerprint)
   state <- banner_checkpoint_load(checkpoint, fingerprint)
   blocks <- state$blocks
@@ -557,6 +603,7 @@ crosstab_banner <- function(data = NULL, rows, cols,
     banner_checkpoint_save(checkpoint, fingerprint, finished, blocks, row_keys)
   }
   progress_done(run)
+  banner_checkpoint_clear(ours, checkpoint)
 
   long_df <- dplyr::bind_rows(blocks)
   row_keys <- dplyr::bind_rows(row_keys)

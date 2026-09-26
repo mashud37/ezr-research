@@ -17,8 +17,12 @@ scaffold_report(
 \item{format}{Output format: one of \code{\link[=list_report_templates]{list_report_templates()}} (\code{"pptx"},
 \code{"html"}, \code{"pdf"}, \code{"docx"}). Defaults to \code{"pptx"}.}
 
-\item{path}{Destination \code{.qmd} path. If \code{NULL}, defaults to
-\code{"survey-report-<format>.qmd"} in the working directory.}
+\item{path}{Destination \code{.qmd} path. \code{NULL} (default) writes
+\verb{survey-report-<format>.qmd}. A bare file name lands in
+\verb{ezrsurvey-outputs/} (created on demand), so the scaffold sits where its
+rendered output will; a path naming a directory (\code{"./x.qmd"},
+\code{"reports/x.qmd"}, anything absolute) is used exactly as given. See the
+\code{output_dir} option.}
 
 \item{title}{Title inserted into the template's YAML header.}
 
@@ -56,12 +60,13 @@ directly; one with renamed layouts will render broken or blank slides here
 and works with any template.
 }
 \examples{
-\dontrun{
-scaffold_report("html", path = "report.qmd", title = "Q2 Customer Survey")
-scaffold_report("pptx", title = "Q2 Customer Survey",
-                reference_doc = "brand/org-template.pptx")
-# then: quarto::quarto_render("report.qmd")
-}
+tmp <- tempfile(fileext = ".qmd")
+scaffold_report("html", path = tmp, title = "Q2 Customer Survey")
+file.exists(tmp)
+
+# a bare name instead lands in ezrsurvey-outputs/, beside its render:
+# scaffold_report("html", title = "Q2 Customer Survey")
+# quarto::quarto_render("ezrsurvey-outputs/survey-report-html.qmd")
 }
 \seealso{
 \code{\link[=report_deck]{report_deck()}} for building decks directly without Quarto;

@@ -10,5 +10,5 @@
 ^\.git$
 ^PHASE-3-PLAN\.md$
 ^_pkgdown\.yml$
-^\.github$
 ^docs$
+^cran-comments\.md$

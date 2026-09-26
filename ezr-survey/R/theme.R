@@ -136,9 +136,8 @@ theme_ezrsurvey_xy <- function(base_size = 11, base_family = NULL,
 #' @return A [ggplot2::theme()] object.
 #' @family themes
 #' @examples
-#' \dontrun{
-#' ggplot(df, aes(x, y)) + geom_point() + theme_ezrsurvey() + theme_transparent()
-#' }
+#' p <- calc_percentage(podracing_survey, demo_gender) %>% plot_bars()
+#' p + theme_transparent()
 #' @export
 theme_transparent <- function() {
   ggplot2::theme(

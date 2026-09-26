@@ -102,3 +102,28 @@ test_that("save_plot writes into the outputs folder by default", {
   save_data(head(mtcars), "cars.csv")
   expect_true(file.exists(file.path("ezrsurvey-outputs", "cars.csv")))
 })
+
+test_that("the outputs folder is announced once per session", {
+  dir <- withr::local_tempdir()
+  withr::local_dir(dir)
+  withr::local_options(ezrsurvey.output_dir = "ezrsurvey-outputs")
+  # the announcement is session state, so start from a known point
+  .ezrsurvey_output$announced <- NULL
+  withr::defer(.ezrsurvey_output$announced <- NULL)
+
+  expect_message(resolve_output_path("a.png"), "ezrsurvey-outputs")
+  expect_silent(resolve_output_path("b.png"))
+
+  # a path the caller chose was never redirected, so it says nothing either way
+  .ezrsurvey_output$announced <- NULL
+  expect_silent(resolve_output_path("charts/c.png"))
+})
+
+test_that("scaffold_report writes into the outputs folder by default", {
+  dir <- withr::local_tempdir()
+  withr::local_dir(dir)
+
+  suppressMessages(scaffold_report("html"))
+  expect_true(file.exists(file.path("ezrsurvey-outputs",
+                                    "survey-report-html.qmd")))
+})

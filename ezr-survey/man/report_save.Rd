@@ -22,9 +22,14 @@ Invisibly \code{path}.
 Save a report to disk
 }
 \examples{
-\dontrun{
-report_new("pptx") \%>\% report_add_slide("Hi") \%>\% report_save("out.pptx")
-}
+\dontshow{if (requireNamespace("officer", quietly = TRUE)) withAutoprint(\{ # examplesIf}
+tmp <- tempfile(fileext = ".pptx")
+report_new("pptx") \%>\% report_add_slide("Hi") \%>\% report_save(tmp)
+file.exists(tmp)
+
+# a bare name instead lands in ezrsurvey-outputs/:
+# report_new("pptx") \%>\% report_add_slide("Hi") \%>\% report_save("deck.pptx")
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 Other reporting:

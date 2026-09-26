@@ -15,9 +15,8 @@ backgrounds transparent. Add it to any theme for slide-friendly exports; the
 \code{transparent} argument of \code{\link[=theme_ezrsurvey]{theme_ezrsurvey()}} applies it for you.
 }
 \examples{
-\dontrun{
-ggplot(df, aes(x, y)) + geom_point() + theme_ezrsurvey() + theme_transparent()
-}
+p <- calc_percentage(podracing_survey, demo_gender) \%>\% plot_bars()
+p + theme_transparent()
 }
 \seealso{
 Other themes:

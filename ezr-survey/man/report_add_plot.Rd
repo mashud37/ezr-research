@@ -31,10 +31,15 @@ so nothing is stretched or letterboxed; when the template does not define
 placeholder geometry the slide size (minus margins) is used instead.
 }
 \examples{
-\dontrun{
+\dontshow{if (requireNamespace("officer", quietly = TRUE)) withAutoprint(\{ # examplesIf}
+\donttest{
 p <- calc_percentage(podracing_survey, demo_gender) \%>\% plot_bars()
-report_new("pptx") \%>\% report_add_slide("Gender") \%>\% report_add_plot(p)
+doc <- report_new("pptx") \%>\%
+  report_add_slide("Gender") \%>\%
+  report_add_plot(p)
+class(doc)
 }
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=report_add_table]{report_add_table()}}.

@@ -52,15 +52,22 @@ control over the layout, use \code{\link[=report_new]{report_new()}} and the \ve
 instead.
 }
 \examples{
-\dontrun{
+\dontshow{if (requireNamespace("officer", quietly = TRUE) && requireNamespace("flextable", quietly = TRUE)) withAutoprint(\{ # examplesIf}
+\donttest{
+tmp <- tempfile(fileext = ".pptx")
 report_deck(
   list(
     "Gender" = plot_bars(calc_percentage(podracing_survey, demo_gender)),
     "NPS"    = calc_nps(podracing_survey, nps_value)
   ),
-  path = "overview.pptx"
+  path = tmp
 )
+file.exists(tmp)
 }
+
+# a bare name instead lands in ezrsurvey-outputs/:
+# report_deck(items, path = "overview.pptx")
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=report_new]{report_new()}}, \code{\link[=use_brand]{use_brand()}}.

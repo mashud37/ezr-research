@@ -60,3 +60,34 @@ test_that("every exported function documents @return, @examples and @family", {
                    info = paste("missing @family:",
                                 paste(missing_family, collapse = ", ")))
 })
+
+# CONVENTIONS.md section 5 asks for runnable examples, and CRAN asks the same
+# question of every \dontrun{}. The only honest answer is a function that writes
+# to the user's own config; everything else runs under @examplesIf, \donttest or
+# tempfile(). Keeping the allow-list here makes adding a new one a decision
+# rather than an oversight.
+writes_user_config <- c(
+  "use_ezrsurvey_profile",
+  "save_ezrsurvey_profile",
+  "edit_ezrsurvey_profile",
+  "load_ezrsurvey_profile"
+)
+
+test_that("only the profile writers use dontrun", {
+  db <- rd_sections()
+  offenders <- character(0)
+
+  for (nm in names(db)) {
+    rd <- db[[nm]]
+    text <- paste(as.character(rd), collapse = " ")
+    if (!grepl("dontrun", text, fixed = TRUE)) next
+    aliases <- unlist(lapply(rd_tag_values(rd, "\\alias"),
+                             function(a) trimws(paste(unlist(a), collapse = ""))))
+    if (any(aliases %in% writes_user_config)) next
+    offenders <- c(offenders, nm)
+  }
+
+  expect_identical(offenders, character(0),
+                   info = paste("unjustified dontrun:",
+                                paste(offenders, collapse = ", ")))
+})

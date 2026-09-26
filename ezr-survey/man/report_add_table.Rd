@@ -31,10 +31,11 @@ meaningfully instead of sitting tiny in a corner. In Word it is added as a
 plain auto-fitted \pkg{flextable}.
 }
 \examples{
-\dontrun{
+\dontshow{if (requireNamespace("officer", quietly = TRUE) && requireNamespace("flextable", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 tbl <- calc_percentage(podracing_survey, demo_gender)
-report_new("docx") \%>\% report_add_table(tbl)
-}
+doc <- report_new("docx") \%>\% report_add_table(tbl)
+class(doc)
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=report_add_plot]{report_add_plot()}}.

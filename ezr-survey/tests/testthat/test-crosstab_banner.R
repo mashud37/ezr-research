@@ -229,3 +229,33 @@ test_that("declining the selection computes nothing", {
     readline = function(...) "n", .package = "base")
   expect_s3_class(named, "data.frame")
 })
+
+test_that("a finished run leaves no managed checkpoint behind", {
+  withr::local_envvar(R_USER_CACHE_DIR = withr::local_tempdir())
+  cache <- tools::R_user_dir("ezrsurvey", "cache")
+  d <- podracing_survey[1:80, c("satis_return", "demo_gender")]
+
+  crosstab_banner(d, checkpoint = TRUE)
+  expect_length(list.files(cache, pattern = "^banner-"), 0)
+})
+
+test_that("a checkpoint the caller named is theirs to keep", {
+  d <- podracing_survey[1:80, c("satis_return", "demo_gender")]
+  ck <- withr::local_tempfile(fileext = ".rds")
+
+  crosstab_banner(d, checkpoint = ck)
+  expect_true(file.exists(ck))
+})
+
+test_that("clear_checkpoints empties the managed folder", {
+  withr::local_envvar(R_USER_CACHE_DIR = withr::local_tempdir())
+  cache <- tools::R_user_dir("ezrsurvey", "cache")
+  dir.create(cache, recursive = TRUE, showWarnings = FALSE)
+  file.create(file.path(cache, c("banner-aaa.rds", "banner-bbb.rds")))
+  # something the package did not write is not the package's to delete
+  file.create(file.path(cache, "notes.txt"))
+
+  expect_message(expect_equal(clear_checkpoints(), 2), "Removed 2")
+  expect_length(list.files(cache, pattern = "^banner-"), 0)
+  expect_true(file.exists(file.path(cache, "notes.txt")))
+})

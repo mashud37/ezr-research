@@ -38,9 +38,10 @@ Adds a reference line (and optional label) at a single value -- the "you are
 here" marker used on the NPS and quality gauges.
 }
 \examples{
-\dontrun{
-p \%>\% mark_value(42, axis = "x", label = "NPS 42")
-}
+# a target line across the percentage axis of a bar chart
+calc_percentage(podracing_survey, demo_gender) \%>\%
+  plot_bars() \%>\%
+  mark_value(20, axis = "y", label = "Target 20\%")
 }
 \seealso{
 Other decisions:

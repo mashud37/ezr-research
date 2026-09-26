@@ -74,9 +74,11 @@ two-row banner header ready for a slide or Word report. Default \code{FALSE}.
 Requires the suggested \code{flextable} package.}
 
 \item{checkpoint}{Save each question as it finishes, so re-running the same
-call picks up where an interrupted run stopped. \code{TRUE} manages the file for
-you under \code{\link[tools:R_user_dir]{tools::R_user_dir()}}; a file path puts it where you choose.
-\code{NULL} (default) or \code{FALSE} writes nothing. See Details.}
+call picks up where an interrupted run stopped. \code{TRUE} keeps the file under
+\code{\link[tools:R_user_dir]{tools::R_user_dir()}} and deletes it once the run completes; a file path
+puts it where you choose and leaves it there for you to manage.
+\code{NULL} (default) or \code{FALSE} writes nothing. See Details and
+\code{\link[=clear_checkpoints]{clear_checkpoints()}}.}
 
 \item{confirm}{When \code{rows} / \code{cols} are left to the automatic selection, show
 which variables were chosen and which were skipped, and wait for a yes
@@ -130,9 +132,11 @@ scripts are silent by default. \code{checkpoint = TRUE} additionally saves each
 question as it completes, so re-running the identical call after an
 interruption resumes instead of starting again. The managed file is named
 after the run's own fingerprint, so a call finds its own interrupted run and
-a call with different data or arguments never sees it; pass a path instead if
-you would rather choose the location. Either way the file is yours to delete
-once the table is built.
+a call with different data or arguments never sees it, and it is deleted as
+soon as the table is built. Pass a path instead if you would rather choose
+the location; that file is yours, so the package neither deletes it nor
+counts it as one of its own. \code{\link[=clear_checkpoints]{clear_checkpoints()}} empties the managed
+folder if a run was interrupted and never repeated.
 }
 \examples{
 # gender and region banner over two questions (column percentages)
@@ -163,6 +167,7 @@ Other summaries:
 \code{\link[=calc_percentage_batch]{calc_percentage_batch()}},
 \code{\link[=calc_percentage_multi]{calc_percentage_multi()}},
 \code{\link[=calc_summary]{calc_summary()}},
+\code{\link[=clear_checkpoints]{clear_checkpoints()}},
 \code{\link[=crosstab]{crosstab()}}
 }
 \concept{summaries}

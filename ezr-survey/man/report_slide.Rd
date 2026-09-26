@@ -42,11 +42,14 @@ single line:
 \code{report_slide("How likely to recommend?", plot_nps(nps_value))}.
 }
 \examples{
-\dontrun{
-report_new("pptx") \%>\%
+\dontshow{if (requireNamespace("officer", quietly = TRUE)) withAutoprint(\{ # examplesIf}
+\donttest{
+doc <- report_new("pptx") \%>\%
   report_slide("Who follows pod racing?",
                plot_bars(calc_percentage(podracing_survey, demo_gender)))
+class(doc)
 }
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=report_section]{report_section()}}, \code{\link[=report_title_slide]{report_title_slide()}}, \code{\link[=report_add_slide]{report_add_slide()}}.

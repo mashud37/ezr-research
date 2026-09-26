@@ -25,8 +25,12 @@ list_report_templates <- function() {
 #'
 #' @param format Output format: one of [list_report_templates()] (`"pptx"`,
 #'   `"html"`, `"pdf"`, `"docx"`). Defaults to `"pptx"`.
-#' @param path Destination `.qmd` path. If `NULL`, defaults to
-#'   `"survey-report-<format>.qmd"` in the working directory.
+#' @param path Destination `.qmd` path. `NULL` (default) writes
+#'   `survey-report-<format>.qmd`. A bare file name lands in
+#'   `ezrsurvey-outputs/` (created on demand), so the scaffold sits where its
+#'   rendered output will; a path naming a directory (`"./x.qmd"`,
+#'   `"reports/x.qmd"`, anything absolute) is used exactly as given. See the
+#'   `output_dir` option.
 #' @param title Title inserted into the template's YAML header.
 #' @param author Author name for the YAML header. `NULL` leaves a placeholder.
 #' @param reference_doc Path to a PowerPoint / Word template used as the
@@ -53,12 +57,13 @@ list_report_templates <- function() {
 #' @seealso [report_deck()] for building decks directly without Quarto;
 #'   [use_brand()] to register a default reference document.
 #' @examples
-#' \dontrun{
-#' scaffold_report("html", path = "report.qmd", title = "Q2 Customer Survey")
-#' scaffold_report("pptx", title = "Q2 Customer Survey",
-#'                 reference_doc = "brand/org-template.pptx")
-#' # then: quarto::quarto_render("report.qmd")
-#' }
+#' tmp <- tempfile(fileext = ".qmd")
+#' scaffold_report("html", path = tmp, title = "Q2 Customer Survey")
+#' file.exists(tmp)
+#'
+#' # a bare name instead lands in ezrsurvey-outputs/, beside its render:
+#' # scaffold_report("html", title = "Q2 Customer Survey")
+#' # quarto::quarto_render("ezrsurvey-outputs/survey-report-html.qmd")
 #' @export
 scaffold_report <- function(format = c("pptx", "html", "pdf", "docx"),
                             path = NULL, title = "Survey Report",
@@ -70,9 +75,8 @@ scaffold_report <- function(format = c("pptx", "html", "pdf", "docx"),
   if (!nzchar(src)) {
     stop("No bundled template for format '", format, "'.", call. = FALSE)
   }
-  if (is.null(path)) {
-    path <- paste0("survey-report-", format, ".qmd")
-  }
+  path <- resolve_output_path(path %||% paste0("survey-report-", format,
+                                               ".qmd"))
   if (file.exists(path) && !overwrite) {
     stop("'", path, "' already exists. Use overwrite = TRUE to replace it.",
          call. = FALSE)
@@ -133,10 +137,12 @@ scaffold_report <- function(format = c("pptx", "html", "pdf", "docx"),
 #' @family reporting
 #' @seealso [scaffold_report()] for blank skeletons, [report_deck()].
 #' @examples
-#' \dontrun{
-#' example_report()
-#' quarto::quarto_render("ezrsurvey-example/podracing-report.qmd")
-#' }
+#' dir <- file.path(tempdir(), "ezrsurvey-example")
+#' example_report(dir)
+#' list.files(dir)
+#'
+#' # then render it:
+#' # quarto::quarto_render("ezrsurvey-example/podracing-report.qmd")
 #' @export
 example_report <- function(dir = "ezrsurvey-example", overwrite = FALSE) {
   src <- system.file("examples", package = "ezrsurvey")

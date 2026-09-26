@@ -39,9 +39,10 @@ layout has no title placeholder, the title is skipped with a warning rather
 than failing the build.
 }
 \examples{
-\dontrun{
+\dontshow{if (requireNamespace("officer", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 doc <- report_new("pptx") \%>\% report_add_slide("Audience")
-}
+class(doc)
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=report_new]{report_new()}}, \code{\link[=report_layouts]{report_layouts()}}.

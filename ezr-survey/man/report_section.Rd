@@ -25,9 +25,10 @@ short, single-word label -- \code{"DEMOGRAPHICS"}, \code{"RATINGS"}, \code{"APPE
 chapter a deck.
 }
 \examples{
-\dontrun{
-report_new("pptx") \%>\% report_section("DEMOGRAPHICS")
-}
+\dontshow{if (requireNamespace("officer", quietly = TRUE)) withAutoprint(\{ # examplesIf}
+doc <- report_new("pptx") \%>\% report_section("DEMOGRAPHICS")
+class(doc)
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=report_slide]{report_slide()}}, \code{\link[=report_title_slide]{report_title_slide()}}.

@@ -26,11 +26,12 @@ A one-line title slide, placed on the template's title layout (the one with a
 centre-title placeholder).
 }
 \examples{
-\dontrun{
-report_new("pptx") \%>\%
+\dontshow{if (requireNamespace("officer", quietly = TRUE)) withAutoprint(\{ # examplesIf}
+doc <- report_new("pptx") \%>\%
   report_title_slide("Pod-Racing Fan Survey",
                      subtitle = "1,000 fans | Fieldwork 2026")
-}
+class(doc)
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=report_slide]{report_slide()}}, \code{\link[=report_section]{report_section()}}.

@@ -66,11 +66,12 @@ infer_panel_range <- function(plot, axis) {
 #' @family decisions
 #' @seealso [mark_value()] to add a single "you are here" marker.
 #'
-#' @examples
-#' \dontrun{
-#' plot_ipm_base %>%
-#'   annotate_bands(bands_rating_3(), axis = "x", at = 30)
-#' }
+#' @examplesIf requireNamespace("rwa", quietly = TRUE)
+#' # the performance axis of an IPM chart is the 1-5 rating scale the
+#' # bands describe, so "where is good" lands where a reader expects it
+#' ipm_model(podracing_survey, nps_value, "ratings_") %>%
+#'   plot_ipm() %>%
+#'   annotate_bands(bands_rating_3(), axis = "x")
 #' @export
 annotate_bands <- function(plot, bands, axis = c("x", "y"), at = NULL,
                            label_offset = NULL, labels = TRUE,
@@ -149,9 +150,10 @@ annotate_bands <- function(plot, bands, axis = c("x", "y"), at = NULL,
 #' @family decisions
 #'
 #' @examples
-#' \dontrun{
-#' p %>% mark_value(42, axis = "x", label = "NPS 42")
-#' }
+#' # a target line across the percentage axis of a bar chart
+#' calc_percentage(podracing_survey, demo_gender) %>%
+#'   plot_bars() %>%
+#'   mark_value(20, axis = "y", label = "Target 20%")
 #' @export
 mark_value <- function(plot, value, axis = c("x", "y"),
                        colour = "black", linewidth = 1, label = NULL, ...) {

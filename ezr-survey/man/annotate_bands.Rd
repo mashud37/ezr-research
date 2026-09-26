@@ -62,10 +62,13 @@ opposite axis for the marker line (usually the top of the panel; inferred from
 the plot when omitted).
 }
 \examples{
-\dontrun{
-plot_ipm_base \%>\%
-  annotate_bands(bands_rating_3(), axis = "x", at = 30)
-}
+\dontshow{if (requireNamespace("rwa", quietly = TRUE)) withAutoprint(\{ # examplesIf}
+# the performance axis of an IPM chart is the 1-5 rating scale the
+# bands describe, so "where is good" lands where a reader expects it
+ipm_model(podracing_survey, nps_value, "ratings_") \%>\%
+  plot_ipm() \%>\%
+  annotate_bands(bands_rating_3(), axis = "x")
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=mark_value]{mark_value()}} to add a single "you are here" marker.

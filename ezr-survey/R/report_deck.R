@@ -32,16 +32,21 @@
 #'
 #' @family reporting
 #' @seealso [report_new()], [use_brand()].
-#' @examples
-#' \dontrun{
+#' @examplesIf requireNamespace("officer", quietly = TRUE) && requireNamespace("flextable", quietly = TRUE)
+#' \donttest{
+#' tmp <- tempfile(fileext = ".pptx")
 #' report_deck(
 #'   list(
 #'     "Gender" = plot_bars(calc_percentage(podracing_survey, demo_gender)),
 #'     "NPS"    = calc_nps(podracing_survey, nps_value)
 #'   ),
-#'   path = "overview.pptx"
+#'   path = tmp
 #' )
+#' file.exists(tmp)
 #' }
+#'
+#' # a bare name instead lands in ezrsurvey-outputs/:
+#' # report_deck(items, path = "overview.pptx")
 #' @export
 report_deck <- function(items, path = NULL, format = c("pptx", "docx"),
                         title = NULL, template = NULL,
