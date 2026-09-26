@@ -19,7 +19,15 @@ exactly as given. See the \code{output_dir} option.}
 Invisibly \code{path}.
 }
 \description{
-Save a report to disk
+Writes a deck or document built with \code{\link[=report_new]{report_new()}} and the \verb{report_*} verbs,
+and returns the path it used, so a build pipeline can carry on from it.
+}
+\details{
+The format follows the document, not the file name: a deck writes \code{.pptx} and
+a Word document writes \code{.docx}, which is why \code{path} may be left out entirely.
+Where the file lands follows the same rule as every other ezrsurvey save, so a
+bare name collects in the outputs folder with the rest of a session's results
+and a path naming a directory goes exactly there.
 }
 \examples{
 \dontshow{if (requireNamespace("officer", quietly = TRUE)) withAutoprint(\{ # examplesIf}

@@ -102,9 +102,13 @@ Any function that writes a file routes its `path` through one resolver
 
 ## 5. Documentation standard
 
-Every exported function has: `@description`, a `@details` section explaining the
-how/why, fully documented `@param`, `@return`, **runnable `@examples` with `#>`
-results**, and an `@family` tag. Suggests-gated examples use
+Every exported function has: `@description`, fully documented `@param`,
+`@return`, **runnable `@examples` with `#>` results**, and an `@family` tag.
+Add `@details` where the how/why is not already plain from the description: a
+function that dispatches on its input, picks defaults, or resolves a conflict
+earns one, and a one-line verb like `clear_brand()` or `list_orders()` does not.
+A `@details` that restates the description is filler, and filler is a defect
+here like anywhere else. Suggests-gated examples use
 `@examplesIf requireNamespace("pkg", quietly = TRUE)`. Ship a `test-docs.R`
 meta-test that fails if any exported function loses its `@return`, `@examples`,
 or `@family`. Provide a getting-started vignette and a family-grouped

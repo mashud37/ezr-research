@@ -655,6 +655,16 @@ report_title_slide <- function(doc, title, subtitle = NULL, layout = NULL,
 
 #' Save a report to disk
 #'
+#' Writes a deck or document built with [report_new()] and the `report_*` verbs,
+#' and returns the path it used, so a build pipeline can carry on from it.
+#'
+#' @details
+#' The format follows the document, not the file name: a deck writes `.pptx` and
+#' a Word document writes `.docx`, which is why `path` may be left out entirely.
+#' Where the file lands follows the same rule as every other ezrsurvey save, so a
+#' bare name collects in the outputs folder with the rest of a session's results
+#' and a path naming a directory goes exactly there.
+#'
 #' @param doc A document from [report_new()].
 #' @param path Output file path (`.pptx` or `.docx`). `NULL` (default) writes
 #'   `report.pptx` / `report.docx`.

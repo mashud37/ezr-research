@@ -25,7 +25,9 @@ optional features: `rwa` (importance analysis), `treemapify` (quote treemaps) an
 `ggrepel` (non-overlapping IPM labels).
 
 To draft the narrative that goes around these tables with a language model,
-add the companion [`ezrintelligence`](../ezr-intelligence/) package; it takes
+add the companion
+[`ezrintelligence`](https://github.com/mashud37/ezr-research/tree/main/ezr-intelligence)
+package; it takes
 any summary table `ezrsurvey` produces.
 
 ## The 60-second tour
