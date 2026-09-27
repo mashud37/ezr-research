@@ -36,11 +36,6 @@ tables for two events, or any other keyed metric.
 a <- data.frame(feature = c("price", "quality"), performance = c(3.1, 4.2))
 b <- data.frame(feature = c("price", "quality"), performance = c(2.8, 4.4))
 compare_values(current = b, previous = a)
-#> # A tibble: 2 x 4
-#>   feature previous current difference
-#>   <chr>      <dbl>   <dbl>      <dbl>
-#> 1 price        3.1     2.8      -0.3
-#> 2 quality      4.2     4.4       0.2
 }
 \seealso{
 \code{\link[=plot_diff]{plot_diff()}}, \code{\link[=ipm_model]{ipm_model()}}, \code{\link[=calc_percentage]{calc_percentage()}}.

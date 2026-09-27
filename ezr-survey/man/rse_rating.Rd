@@ -19,18 +19,18 @@ reliability rating, using a five-band scheme.
 \details{
 The bands are: under 5\% "high precision", under 10\% "precise", under 15\%
 "satisfactory", under 25\% "use with caution", and 25\% or more "likely
-reliability issues". Rating estimates by their relative standard error is the
-approach used by national statistical agencies (notably the Australian Bureau
-of Statistics) to signal when a survey number is solid enough to report; the
-specific cut-offs here are tuned for consumer-survey work. This drives the
-\code{precision} column of \code{\link[=diagnose]{diagnose()}} and the overall verdict of
-\code{\link[=precision_summary]{precision_summary()}}.
+reliability issues". Rating estimates by their relative standard error is how
+national statistical agencies signal whether a survey number is solid enough
+to publish: the Australian Bureau of Statistics treats an RSE of 25\% or more
+as "not reliable for most purposes", flags 25--50\% with an asterisk as
+estimates to use with caution, and suppresses anything above 50\%. The 25\%
+boundary here is that same one. The tighter bands below it are specific to
+consumer-survey work, where the question is usually which of several
+adequately precise numbers to lead a report with. This drives the \code{precision}
+column of \code{\link[=diagnose]{diagnose()}} and the overall verdict of \code{\link[=precision_summary]{precision_summary()}}.
 }
 \examples{
 rse_rating(c(3, 8, 12, 20, 40))
-#> [1] "high precision"            "precise"
-#> [3] "satisfactory"             "use with caution"
-#> [5] "likely reliability issues"
 }
 \seealso{
 \code{\link[=rse]{rse()}}, \code{\link[=diagnose]{diagnose()}}, \code{\link[=precision_summary]{precision_summary()}}.

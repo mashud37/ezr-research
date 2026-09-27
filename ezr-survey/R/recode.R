@@ -28,11 +28,9 @@
 #' @seealso [ensure_numeric()], [ezrsurvey_options()].
 #' @examples
 #' na_blank(c("Yes", "", "Prefer not to answer", "No"))
-#' #> [1] "Yes" NA    NA    "No"
 #'
 #' # add your own non-answers
 #' na_blank(c("a", "n/a", "N/A"), also = c("n/a", "N/A"))
-#' #> [1] "a" NA  NA
 #' @export
 na_blank <- function(x, also = ezrsurvey_default("na_answers"), trim = TRUE) {
   x <- as.character(x)
@@ -75,7 +73,6 @@ na_blank <- function(x, also = ezrsurvey_default("na_answers"), trim = TRUE) {
 #' @examples
 #' drop_items(c("Yes", "No", "Other", "Don't know"),
 #'            items = c("Other", "Don't know"))
-#' #> [1] "Yes" "No"  NA    NA
 #' @export
 drop_items <- function(x, items, trim = TRUE) {
   x <- as.character(x)
@@ -127,7 +124,6 @@ drop_items <- function(x, items, trim = TRUE) {
 #' bin_numeric(c(15, 19, 27, 41),
 #'             breaks = c(0, 18, 25, 35, Inf),
 #'             labels = c("<18", "18-24", "25-34", "35+"))
-#' #> [1] "<18"   "18-24" "25-34" "35+"
 #' @export
 bin_numeric <- function(x, breaks, labels, right = FALSE, quiet = FALSE) {
   if (length(labels) != length(breaks) - 1L) {
@@ -176,7 +172,6 @@ bin_numeric <- function(x, breaks, labels, right = FALSE, quiet = FALSE) {
 #' @seealso [bin_numeric()], [recode_generation()], [ezrsurvey_options()].
 #' @examples
 #' recode_age(c("17", "22 years", "31", "47"))
-#' #> [1] "17 or younger" "22 to 25"      "30 to 34"      "35+"
 #' @export
 recode_age <- function(x,
                        breaks = ezrsurvey_default("age_breaks"),
@@ -221,21 +216,17 @@ recode_age <- function(x,
 #' @seealso [nps_group()], [ipm_model()], [calc_summary()].
 #' @examples
 #' recode_likert(c("Very bad", "Ok", "Good", "Very good"))
-#' #> [1] 1 3 4 5
 #'
 #' # substring fallback copes with numbered labels
 #' recode_likert("4 - Good")
-#' #> [1] 4
 #'
 #' # nested wordings resolve to the level the answer names, not the shorter one
 #' recode_likert(c("\U0001F642 Very good", "\U0001F610 Good"))
-#' #> [1] 5 4
 #'
 #' # map another tool's wording onto the same scale
 #' recode_likert(c("Dissatisfied", "Satisfied"),
 #'               synonyms = list(Bad = "Dissatisfied", Good = "Satisfied"),
 #'               levels = c("Very bad", "Bad", "Ok", "Good", "Very good"))
-#' #> [1] 2 4
 #' @export
 recode_likert <- function(x,
                           levels = c("Very bad", "Bad", "Ok", "Good", "Very good"),
@@ -311,10 +302,8 @@ recode_likert <- function(x,
 #' @seealso [calc_nps()], [plot_nps()].
 #' @examples
 #' nps_group(c(0, 6, 7, 8, 9, 10))
-#' #> [1] -1 -1  0  0  1  1
 #'
 #' nps_group(c(3, 8, 10), labels = TRUE)
-#' #> [1] "Detractor" "Passive"   "Promoter"
 #' @export
 nps_group <- function(x, labels = FALSE) {
   v <- ensure_numeric(x, quiet = TRUE)
@@ -334,4 +323,109 @@ nps_group <- function(x, labels = FALSE) {
   } else {
     g
   }
+}
+
+# Internal: the delimiters an export is likely to pack answers with, in
+# precedence order. A semicolon wins over a comma because an export that uses
+# semicolons is usually doing so precisely because the answers contain commas.
+multi_delimiters <- c(";", "|", ",")
+
+# Internal: which delimiter a column of packed answers uses, or NULL when no
+# cell holds more than one answer.
+detect_delimiter <- function(x) {
+  x <- x[!is.na(x) & x != ""]
+  for (d in multi_delimiters) {
+    if (any(stringr::str_detect(x, stringr::fixed(d)))) {
+      return(d)
+    }
+  }
+  NULL
+}
+
+# Internal: one row per respondent-answer pair from a packed column. Shared by
+# split_multi() and calc_percentage_multi().
+unpack_answers <- function(values, delim) {
+  parts <- if (is.null(delim)) {
+    as.list(values)
+  } else {
+    stringr::str_split(values, stringr::fixed(delim))
+  }
+  lapply(parts, function(p) {
+    p <- stringr::str_squish(p)
+    p[!is.na(p) & p != ""]
+  })
+}
+
+#' Split a packed multi-select column into one column per answer
+#'
+#' Turns the single cell a spreadsheet export gives a "tick all that apply"
+#' question (`"Speed; Drivers; Betting"`) into the one-column-per-option layout
+#' the rest of the package expects, so [calc_percentage_multi()], [crosstab()]
+#' and the plots all work on it.
+#'
+#' @param data A data frame. If omitted, the session default ([use_dataset()]) is
+#'   used.
+#' @param column The packed column (unquoted).
+#' @param split The delimiter between answers inside a cell. `"auto"` (default)
+#'   detects `";"`, `"|"` or `","`, in that order. Pass a string to force one.
+#' @param prefix Prefix for the new column names. Defaults to the column's own
+#'   name followed by an underscore, e.g. `motivations_`.
+#'
+#' @return The data frame with one new column per distinct answer, each holding
+#'   the answer text for respondents who chose it and `""` for those who did
+#'   not, ordered most-chosen first. The packed column is kept.
+#'
+#' @details
+#' Google Forms, Google Sheets and most survey platforms export a multi-select
+#' question as one cell per respondent holding every answer they ticked, joined
+#' by a delimiter. That shape cannot be counted directly, because a respondent
+#' who ticked three options is one row, not three. This function unpacks it into
+#' the indicator layout the package's own datasets use.
+#'
+#' The new columns are named `prefix` plus the answer text verbatim, which keeps
+#' the labels readable all the way through to a chart: `calc_percentage_multi()`
+#' strips the prefix back off and uses what remains as the option label. Answer
+#' text is rarely a syntactic R name, so refer to the new columns with backticks
+#' if you need them individually. Surrounding whitespace is trimmed and empty
+#' answers are dropped, so `"Speed;  ; Drivers"` yields two options. When no cell
+#' contains the delimiter, each cell is treated as a single answer, which is the
+#' right answer for a multi-select question everyone happened to answer once.
+#'
+#' If you only want the percentages, skip this step: [calc_percentage_multi()]
+#' detects a packed column and splits it for you.
+#'
+#' @family recode
+#' @seealso [calc_percentage_multi()], [na_blank()].
+#' @examples
+#' packed <- data.frame(
+#'   respondent = 1:4,
+#'   motivations = c("Speed; Drivers", "Speed", "", "Betting; Speed")
+#' )
+#' split_multi(packed, motivations)
+#'
+#' split_multi(packed, motivations) %>%
+#'   calc_percentage_multi("motivations_", id = respondent, sort = "desc")
+#' @export
+split_multi <- function(data = NULL, column, split = "auto", prefix = NULL) {
+  r <- resolve_data_columns(rlang::enquo(data), list(rlang::enquo(column)),
+                            missing(column))
+  data <- r$data
+  col_name <- col_label(r$cols[[1]])
+  if (is.null(prefix)) prefix <- paste0(col_name, "_")
+
+  values <- na_blank(data[[col_name]])
+  delim <- if (identical(split, "auto")) detect_delimiter(values) else split
+  chosen <- unpack_answers(values, delim)
+
+  ranked <- sort(table(unlist(chosen)), decreasing = TRUE)
+  answers <- names(ranked)
+  if (length(answers) == 0L) {
+    stop("Column '", col_name, "' holds no answers to split.", call. = FALSE)
+  }
+
+  for (answer in answers) {
+    picked <- vapply(chosen, function(p) answer %in% p, logical(1))
+    data[[paste0(prefix, answer)]] <- ifelse(picked, answer, "")
+  }
+  tibble::as_tibble(data)
 }

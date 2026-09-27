@@ -45,6 +45,49 @@ test_that("calc_percentage_multi errors on a missing prefix", {
   expect_error(calc_percentage_multi(podracing_survey, "nope_"))
 })
 
+test_that("calc_percentage_multi unpacks a single delimited column", {
+  df <- tibble::tibble(
+    respondent_id = c("r1", "r2", "r3", "r4"),
+    why = c("Speed; Drivers", "Speed", "", "Betting; Speed")
+  )
+  out <- calc_percentage_multi(df, "why", id = respondent_id, sort = "desc")
+  # denominator = 3 respondents who chose anything; r3 chose nothing
+  expect_equal(as.character(out$option), c("Speed", "Betting", "Drivers"))
+  expect_equal(out$n, c(3L, 1L, 1L))
+  expect_equal(out$pct, c(100, 33, 33))
+})
+
+test_that("calc_percentage_multi detects each delimiter and trims answers", {
+  semis <- tibble::tibble(id = 1:2, why = c("A; B", "B"))
+  pipes <- tibble::tibble(id = 1:2, why = c("A|B", "B"))
+  commas <- tibble::tibble(id = 1:2, why = c("A,  , B", "B"))
+  for (df in list(semis, pipes, commas)) {
+    out <- calc_percentage_multi(df, "why", id = id, sort = "desc")
+    expect_equal(as.character(out$option), c("B", "A"))
+    expect_equal(out$n, c(2L, 1L))
+  }
+})
+
+test_that("a semicolon wins over commas inside the answers", {
+  df <- tibble::tibble(id = 1:2,
+                       why = c("Speed, noise and dust; Friends", "Friends"))
+  out <- calc_percentage_multi(df, "why", id = id, sort = "desc")
+  expect_equal(as.character(out$option), c("Friends", "Speed, noise and dust"))
+})
+
+test_that("split = FALSE and a column block keep the old behaviour", {
+  df <- tibble::tibble(id = 1:2, why = c("A; B", "B"))
+  # without splitting the column is treated as one option, so the answers are
+  # never separated out and everyone who replied lands in a single row
+  unsplit <- calc_percentage_multi(df, "why", id = id, split = FALSE)
+  expect_equal(nrow(unsplit), 1)
+  expect_equal(unsplit$pct, 100)
+
+  block <- calc_percentage_multi(podracing_survey, "motivations_",
+                                 id = respondent_id, sort = "desc")
+  expect_equal(as.character(block$option)[1], "speed")
+})
+
 test_that("calc_summary returns mean/median/sd", {
   out <- calc_summary(podracing_survey, demo_age)
   expect_setequal(names(out), c("n", "mean", "median", "sd"))

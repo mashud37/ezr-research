@@ -75,3 +75,48 @@ test_that("drop_items turns matched values into NA (case-insensitive)", {
   expect_identical(drop_items(c("a", "b"), character(0)), c("a", "b"))
   expect_identical(drop_items(c("a", "b"), NULL), c("a", "b"))
 })
+
+test_that("split_multi widens a packed column, most-chosen first", {
+  packed <- tibble::tibble(
+    respondent = 1:4,
+    motivations = c("Speed; Drivers", "Speed", "", "Betting; Speed")
+  )
+  out <- split_multi(packed, motivations)
+  expect_equal(names(out), c("respondent", "motivations", "motivations_Speed",
+                             "motivations_Betting", "motivations_Drivers"))
+  expect_equal(out$motivations_Speed, c("Speed", "Speed", "", "Speed"))
+  expect_equal(out$motivations_Drivers, c("Drivers", "", "", ""))
+})
+
+test_that("split_multi honours an explicit delimiter and prefix", {
+  packed <- tibble::tibble(x = c("a/b", "b"))
+  out <- split_multi(packed, x, split = "/", prefix = "pick_")
+  expect_equal(names(out), c("x", "pick_b", "pick_a"))
+})
+
+test_that("split_multi output reproduces the packed percentages", {
+  packed <- tibble::tibble(
+    respondent = 1:4,
+    motivations = c("Speed; Drivers", "Speed", "", "Betting; Speed")
+  )
+  direct <- calc_percentage_multi(packed, "motivations", id = respondent,
+                                 sort = "desc")
+  widened <- packed %>%
+    split_multi(motivations) %>%
+    calc_percentage_multi("motivations_", id = respondent, sort = "desc")
+  expect_equal(as.character(widened$option), as.character(direct$option))
+  expect_equal(widened$pct, direct$pct)
+})
+
+test_that("split_multi treats an undelimited column as one answer each", {
+  out <- split_multi(tibble::tibble(x = c("a", "b", "a")), x)
+  expect_equal(out$x_a, c("a", "", "a"))
+  expect_error(split_multi(tibble::tibble(x = c("", "")), x))
+})
+
+test_that("detect_delimiter prefers a semicolon over a comma", {
+  expect_equal(detect_delimiter(c("a, b; c", "d")), ";")
+  expect_equal(detect_delimiter(c("a, b", "c")), ",")
+  expect_equal(detect_delimiter(c("a|b", "c")), "|")
+  expect_null(detect_delimiter(c("a", "b", "")))
+})

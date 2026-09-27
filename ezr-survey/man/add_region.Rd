@@ -42,12 +42,6 @@ unmatched-country warning behave exactly as in \code{\link[=recode_region]{recod
 \examples{
 df <- tibble::tibble(demo_country = c("Germany", "Japan", "Brazil"))
 add_region(df, demo_country, subregion = TRUE)
-#> # A tibble: 3 x 3
-#>   demo_country region        subregion
-#>   <chr>        <chr>         <chr>
-#> 1 Germany      Europe        Western Europe
-#> 2 Japan        Asia          East Asia
-#> 3 Brazil       South America South America
 }
 \seealso{
 \code{\link[=recode_region]{recode_region()}}, \link{country_region}.
@@ -63,6 +57,7 @@ Other recode:
 \code{\link[=recode_age]{recode_age()}},
 \code{\link[=recode_generation]{recode_generation()}},
 \code{\link[=recode_likert]{recode_likert()}},
-\code{\link[=recode_region]{recode_region()}}
+\code{\link[=recode_region]{recode_region()}},
+\code{\link[=split_multi]{split_multi()}}
 }
 \concept{recode}

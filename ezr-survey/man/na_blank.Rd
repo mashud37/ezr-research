@@ -37,11 +37,9 @@ for free; call it directly when you want to blank a column in a pipeline.
 }
 \examples{
 na_blank(c("Yes", "", "Prefer not to answer", "No"))
-#> [1] "Yes" NA    NA    "No"
 
 # add your own non-answers
 na_blank(c("a", "n/a", "N/A"), also = c("n/a", "N/A"))
-#> [1] "a" NA  NA
 }
 \seealso{
 \code{\link[=ensure_numeric]{ensure_numeric()}}, \code{\link[=ezrsurvey_options]{ezrsurvey_options()}}.
@@ -57,6 +55,7 @@ Other recode:
 \code{\link[=recode_age]{recode_age()}},
 \code{\link[=recode_generation]{recode_generation()}},
 \code{\link[=recode_likert]{recode_likert()}},
-\code{\link[=recode_region]{recode_region()}}
+\code{\link[=recode_region]{recode_region()}},
+\code{\link[=split_multi]{split_multi()}}
 }
 \concept{recode}

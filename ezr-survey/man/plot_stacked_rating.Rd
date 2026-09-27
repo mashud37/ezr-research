@@ -63,7 +63,7 @@ rating_long <- podracing_survey \%>\%
   group_by(feature) \%>\%
   mutate(pct = n / sum(n) * 100) \%>\%
   ungroup()
-p <- plot_stacked_rating(rating_long, feature, level)
+plot_stacked_rating(rating_long, feature, level)
 }
 \seealso{
 \code{\link[=calc_percentage]{calc_percentage()}}, \code{\link[=scale_fill_rating]{scale_fill_rating()}}.

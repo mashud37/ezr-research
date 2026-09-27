@@ -58,6 +58,27 @@ calc_percentage_multi(podracing_survey, "motivations_",
                       id = respondent_id, sort = "desc")
 ```
 
+Spreadsheet exports, Google Forms among them, instead pack every answer a
+respondent ticked into a single cell. The same function recognises that shape and
+separates the answers, so you do not have to reshape anything first:
+
+```{r}
+packed <- data.frame(
+  respondent = 1:4,
+  motivations = c("Speed; Drivers", "Speed", "", "Betting; Speed")
+)
+
+calc_percentage_multi(packed, "motivations", id = respondent, sort = "desc")
+```
+
+Note the denominator: three respondents ticked something, so "Speed" is 3 of 3.
+When you need those answers as columns rather than as a table, for a crosstab or
+a filter, `split_multi()` widens them:
+
+```{r}
+split_multi(packed, motivations)
+```
+
 ## Reusable level orders
 
 Rather than retyping `levels = c(...)`, register an order once and link it to a
@@ -87,8 +108,10 @@ plot_nps(podracing_survey, nps_value)
 
 ## Importance / performance
 
-`ipm_model()` combines driver importance (relative weights against the NPS
-score) with feature performance; `plot_ipm()` draws the matrix.
+`ipm_model()` combines driver importance (by default, relative weights against
+the NPS score) with feature performance; `plot_ipm()` draws the matrix. Pass
+`method = "forest"` for a random-forest cross-check, which sees non-linear
+effects that relative weights cannot.
 
 ```{r}
 model <- ipm_model(podracing_survey, nps_value, "ratings_")
@@ -129,9 +152,14 @@ A standard error on its own is hard to judge -- is `±0.05` good? It depends on
 the scale. The **relative standard error** (RSE) divides the standard error by
 the estimate, so precision becomes comparable across a 1--5 rating and a
 percentage alike. Rating estimates by their RSE is the approach national
-statistical agencies use to decide whether a number is solid enough to publish;
-the Australian Bureau of Statistics, for example, flags estimates by their RSE
-before release. ezrsurvey uses a five-band scheme tuned for consumer surveys:
+statistical agencies use to decide whether a number is solid enough to publish.
+The [Australian Bureau of
+Statistics](https://www.abs.gov.au/statistics/microdata-tablebuilder/tablebuilder/confidentiality-and-relative-standard-error),
+for example, treats an RSE of 25% or more as not reliable for most purposes,
+marks estimates between 25% and 50% with an asterisk as ones to use with
+caution, and suppresses anything above 50%. ezrsurvey keeps that 25% boundary
+and adds tighter bands below it, because in consumer-survey work the question is
+usually which of several adequately precise numbers to lead with:
 
 | RSE | Rating |
 |---|---|

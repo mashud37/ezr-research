@@ -27,12 +27,6 @@ tibble with \code{from} and \code{label} columns and pass it to \code{\link[=rec
 }
 \examples{
 generation_scheme("pew")
-#> # A tibble: 6 x 3
-#>   label        from   to
-#>   <chr>       <dbl> <dbl>
-#> 1 Silent       1928  1945
-#> 2 Baby Boomer  1946  1964
-#> # ... Gen X, Millennial, Gen Z, Gen Alpha
 }
 \seealso{
 \code{\link[=recode_generation]{recode_generation()}}.
@@ -48,6 +42,7 @@ Other recode:
 \code{\link[=recode_age]{recode_age()}},
 \code{\link[=recode_generation]{recode_generation()}},
 \code{\link[=recode_likert]{recode_likert()}},
-\code{\link[=recode_region]{recode_region()}}
+\code{\link[=recode_region]{recode_region()}},
+\code{\link[=split_multi]{split_multi()}}
 }
 \concept{recode}

@@ -1,3 +1,51 @@
+# ezrsurvey 0.7.0
+
+## Multi-select questions packed into one cell
+
+Google Forms and most spreadsheet exports put every answer a respondent ticked
+into a single cell, joined by a delimiter. That shape could not be counted
+before, because a respondent who ticked three options is one row, not three.
+
+* **`calc_percentage_multi()`** now detects a packed column and unpacks it. When
+  the prefix matches exactly one column and a `";"`, `"|"` or `","` is found
+  inside it, the answers are separated and the answer text becomes the option
+  label. `split = ","` forces a delimiter and `split = FALSE` turns the detection
+  off. A block of one-column-per-option behaves exactly as before.
+* **`split_multi()`** is the new recode helper for the same shape, widening a
+  packed column into one column per answer so that `crosstab()`, the plots and
+  everything else can use it too.
+
+## `calc_nps()` shows how the score was reached
+
+* The result gains `pct_detractors`, `pct_passives` and `pct_promoters`, with the
+  counts behind them in `detractors`, `passives` and `promoters`. A single NPS
+  hides its own composition: +20 from 40% promoters and 20% detractors is a
+  different picture from +20 with 25% and 5%. Counts are unweighted; the
+  shares follow `nps` and so are weighted when a scheme is active.
+
+## `calc_importance()` offers a second and third opinion
+
+* New **`method`** argument. `"rwa"` (relative weights analysis) remains the
+  default and is unchanged. `"forest"` adds random-forest permutation importance,
+  which sees non-linear effects and interactions that relative weights cannot, so
+  a feature ranking high there and low under `"rwa"` is a signal worth chasing.
+  `"correlation"` needs no suggested package at all.
+* All three are rescaled to sum to 100 and returned strongest driver first, so
+  they are directly comparable and any of them can be fed to `plot_ipm()`.
+  `ipm_model(method = )` passes the choice through.
+
+## Smaller changes
+
+* **`se_prop(pctp = TRUE)`** returns the standard error in percentage points, the
+  form report footnotes use, instead of leaving you to multiply by 100.
+* Help pages no longer print every example's output twice. The examples carried a
+  hand-written copy of their own results, which the website then rendered
+  alongside the real thing.
+* Every plot function's examples now draw their chart on the reference page,
+  rather than most of them assigning the plot to a variable and showing nothing.
+* The relative-standard-error bands in `rse_rating()` now say exactly what the
+  Australian Bureau of Statistics does and where ezrsurvey departs from it.
+
 # ezrsurvey 0.6.0
 
 ## Attaching the package attaches seven packages, not the whole tidyverse

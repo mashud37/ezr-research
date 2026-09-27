@@ -22,7 +22,6 @@ are \emph{not} listed -- they resolve to their ISO code (here \code{"CNY"}).
 }
 \examples{
 list_currencies()
-#> [1] "USD" "EUR" "GBP" "JPY" "CNY" "CHF" ... (39 codes)
 }
 \seealso{
 \link{currency_rates}, \code{\link[=convert_currency]{convert_currency()}}.

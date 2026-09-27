@@ -39,14 +39,11 @@ checked the coverage. \code{region} is the coarse level (e.g. "Europe");
 }
 \examples{
 recode_region(c("Germany", "Japan", "Brazil"))
-#> [1] "Europe"        "Asia"          "South America"
 
 recode_subregion(c("Germany", "Japan"))
-#> [1] "Western Europe" "East Asia"
 
 # unmatched -> NA (warning suppressed here)
 recode_region(c("Germany", "Atlantis"), quiet = TRUE)
-#> [1] "Europe" NA
 }
 \seealso{
 \code{\link[=add_region]{add_region()}}, \link{country_region}.
@@ -62,6 +59,7 @@ Other recode:
 \code{\link[=nps_group]{nps_group()}},
 \code{\link[=recode_age]{recode_age()}},
 \code{\link[=recode_generation]{recode_generation()}},
-\code{\link[=recode_likert]{recode_likert()}}
+\code{\link[=recode_likert]{recode_likert()}},
+\code{\link[=split_multi]{split_multi()}}
 }
 \concept{recode}

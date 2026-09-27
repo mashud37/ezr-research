@@ -79,7 +79,10 @@ test_that("calc_nps and calc_summary replace with weighted values", {
   w_nps <- calc_nps(podracing_survey, nps_value)
   w_nps_mean <- calc_summary(podracing_survey, nps_value)$mean
   w_sum <- calc_summary(podracing_survey, demo_age)
-  expect_equal(names(w_nps), c("n", "nps"))          # no extra column
+  # weighting adds no column of its own, so the weight never leaks into output
+  expect_equal(names(w_nps),
+               c("n", "nps", "pct_detractors", "pct_passives", "pct_promoters",
+                 "detractors", "passives", "promoters"))
   expect_equal(names(w_sum), c("n", "mean", "median", "sd"))
   # weighting moves the (unrounded) means; the headline NPS may round the same
   expect_false(isTRUE(all.equal(w_nps_mean, base_nps_mean)))

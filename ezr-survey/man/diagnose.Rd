@@ -59,11 +59,6 @@ report-appendix "Data info" block; for the narrative bullet-point version see
 }
 \examples{
 diagnose(podracing_survey, demo_gender, nps_value)
-#> # A tibble: 2 x 9
-#>   variable    type  unit      n estimate    se   rse   moe precision
-#>   <chr>       <chr> <chr> <int>    <dbl> <dbl> <dbl> <dbl> <chr>
-#> 1 demo_gender prop  ppt     951     55.2  1.61  2.92  3.16 high precision
-#> 2 nps_value   mean  points 1000      7.56 0.06  0.74  0.11 high precision
 
 diagnose(podracing_survey, starts_with("ratings_"))
 }

@@ -19,8 +19,11 @@ When weighting is active \code{nps} is the weighted score (\code{n} stays the
 unweighted base).}
 }
 \value{
-A \link[tibble:tibble]{tibble} with \code{n} (valid responses) and \code{nps} (an
-integer from -100 to 100), one row per group when \code{by} is given.
+A \link[tibble:tibble]{tibble} with \code{n} (valid responses), \code{nps} (an
+integer from -100 to 100), the three group shares (\code{pct_detractors},
+\code{pct_passives}, \code{pct_promoters}) and the counts behind them (\code{detractors},
+\code{passives}, \code{promoters}), one row per group when \code{by} is given. The shares
+come first because they are what a report quotes.
 }
 \description{
 Computes NPS from a 0-10 recommendation question. The score is
@@ -35,13 +38,17 @@ the percentage of detractors, which equals \code{100 * mean()} of the signed
 Text answers are coerced with \code{\link[=ensure_numeric]{ensure_numeric()}}. Use \code{\link[=plot_nps]{plot_nps()}} for the
 full 0--10 distribution chart and \code{\link[=plot_nps_gauge]{plot_nps_gauge()}} for a single-number
 gauge.
+
+The three group counts and shares are reported alongside the score because a
+single NPS hides how it was reached: +20 from 40\% promoters and 20\%
+detractors is a different picture from +20 with 25\% and 5\%. Counts are always
+unweighted respondent counts; the shares follow \code{nps}, so they are weighted
+when a weighting scheme is active. All three shares and \code{nps} are rounded to
+whole numbers independently, so \code{pct_promoters - pct_detractors} can land one
+point away from \code{nps}; the identity holds exactly before rounding.
 }
 \examples{
 calc_nps(podracing_survey, nps_value)
-#> # A tibble: 1 x 2
-#>       n   nps
-#>   <int> <dbl>
-#> 1  1000     7
 
 calc_nps(podracing_survey, nps_value, by = region)
 }

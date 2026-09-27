@@ -79,12 +79,6 @@ answer -- the shape you want for a slide table or an Excel tab.
 }
 \examples{
 calc_percentage(podracing_survey, demo_gender)
-#> # A tibble: 3 x 3
-#>   demo_gender     n   pct
-#>   <chr>       <int> <dbl>
-#> 1 Female        399    42
-#> 2 Male          525    55
-#> 3 Non-binary     27     3
 
 # largest first
 calc_percentage(podracing_survey, demo_gender, sort = "desc")

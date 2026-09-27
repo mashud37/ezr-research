@@ -18,7 +18,6 @@
 #' @seealso [se_prop()], [rse()], [margin_of_error()], [diagnose()].
 #' @examples
 #' se_mean(c(4, 5, 3, 4, 5, 2, 4))
-#' #> [1] 0.4285714
 #' @export
 se_mean <- function(x) {
   x <- as.numeric(x)
@@ -38,35 +37,37 @@ se_mean <- function(x) {
 #' @param p The proportion, either as a fraction in `[0, 1]` or as a percentage
 #'   in `(1, 100]` (values above 1 are divided by 100 automatically).
 #' @param n The sample size (number of respondents).
+#' @param pctp Return the answer in percentage points instead of on the `[0, 1]`
+#'   proportion scale. Defaults to `FALSE`.
 #'
 #' @return The standard error of the proportion, on the same `[0, 1]` scale as a
-#'   fractional `p`. Multiply by 100 for percentage points.
+#'   fractional `p`, or in percentage points when `pctp = TRUE`.
 #'
 #' @details
 #' For a percentage from a survey, the sampling error is `sqrt(p * (1 - p) / n)`.
 #' It is largest when `p = 0.5` (a 50/50 split is the hardest to pin down) and
 #' shrinks towards the extremes. The result is on the same 0--1 scale as a
-#' fractional `p`; multiply by 100 to express it in percentage points, the form
-#' used in report footnotes. Inputs above 1 are treated as percentages and
-#' divided by 100, so `se_prop(33, n)` and `se_prop(0.33, n)` agree.
+#' fractional `p`; pass `pctp = TRUE` for percentage points, the form used in
+#' report footnotes and the one [margin_of_error()] needs if you want the margin
+#' in points. Inputs above 1 are treated as percentages and divided by 100, so
+#' `se_prop(33, n)` and `se_prop(0.33, n)` agree.
 #'
 #' @family diagnostics
 #' @seealso [se_mean()], [rse()], [margin_of_error()], [diagnose()].
 #' @examples
 #' se_prop(0.33, 1184)
-#' #> [1] 0.01366
 #'
-#' se_prop(0.33, 1184) * 100      # in percentage points
-#' #> [1] 1.366
+#' se_prop(0.33, 1184, pctp = TRUE)
 #' @export
-se_prop <- function(p, n) {
+se_prop <- function(p, n, pctp = FALSE) {
   p <- as.numeric(p)
   p[!is.na(p) & p > 1] <- p[!is.na(p) & p > 1] / 100
   if (any(!is.na(p) & (p < 0 | p > 1))) {
     stop("`p` must be a proportion in [0, 1] (or a percentage in [0, 100]).",
          call. = FALSE)
   }
-  sqrt(p * (1 - p) / n)
+  se <- sqrt(p * (1 - p) / n)
+  if (pctp) se * 100 else se
 }
 
 #' Relative standard error
@@ -90,7 +91,6 @@ se_prop <- function(p, n) {
 #' @seealso [se_mean()], [se_prop()], [margin_of_error()], [diagnose()].
 #' @examples
 #' rse(estimate = 4.1, se = se_mean(c(4, 5, 3, 4, 5)))
-#' #> [1] 9.611
 #' @export
 rse <- function(estimate, se) {
   se / estimate * 100
@@ -113,16 +113,14 @@ rse <- function(estimate, se) {
 #' gives the standard 95% interval; `z = 2` reproduces the "two standard errors"
 #' rule of thumb often quoted in survey reports; `z = 2.58` gives 99%. The result
 #' is on the same scale as `se`, so for a proportion error in percentage points,
-#' pass `se_prop(p, n) * 100`.
+#' pass `se_prop(p, n, pctp = TRUE)`.
 #'
 #' @family diagnostics
 #' @seealso [se_mean()], [se_prop()], [diagnose()].
 #' @examples
-#' margin_of_error(se_prop(0.33, 1184)) * 100   # 95% margin, percentage points
-#' #> [1] 2.677
+#' margin_of_error(se_prop(0.33, 1184, pctp = TRUE))   # in percentage points
 #'
 #' margin_of_error(0.02, z = 2)
-#' #> [1] 0.04
 #' @export
 margin_of_error <- function(se, z = 1.96) {
   z * se
@@ -140,20 +138,20 @@ margin_of_error <- function(se, z = 1.96) {
 #' @details
 #' The bands are: under 5% "high precision", under 10% "precise", under 15%
 #' "satisfactory", under 25% "use with caution", and 25% or more "likely
-#' reliability issues". Rating estimates by their relative standard error is the
-#' approach used by national statistical agencies (notably the Australian Bureau
-#' of Statistics) to signal when a survey number is solid enough to report; the
-#' specific cut-offs here are tuned for consumer-survey work. This drives the
-#' `precision` column of [diagnose()] and the overall verdict of
-#' [precision_summary()].
+#' reliability issues". Rating estimates by their relative standard error is how
+#' national statistical agencies signal whether a survey number is solid enough
+#' to publish: the Australian Bureau of Statistics treats an RSE of 25% or more
+#' as "not reliable for most purposes", flags 25--50% with an asterisk as
+#' estimates to use with caution, and suppresses anything above 50%. The 25%
+#' boundary here is that same one. The tighter bands below it are specific to
+#' consumer-survey work, where the question is usually which of several
+#' adequately precise numbers to lead a report with. This drives the `precision`
+#' column of [diagnose()] and the overall verdict of [precision_summary()].
 #'
 #' @family diagnostics
 #' @seealso [rse()], [diagnose()], [precision_summary()].
 #' @examples
 #' rse_rating(c(3, 8, 12, 20, 40))
-#' #> [1] "high precision"            "precise"
-#' #> [3] "satisfactory"             "use with caution"
-#' #> [5] "likely reliability issues"
 #' @export
 rse_rating <- function(rse) {
   dplyr::case_when(
@@ -246,11 +244,6 @@ diagnose_one <- function(x, type, z) {
 #' @seealso [precision_summary()], [rse_rating()], [se_mean()], [se_prop()].
 #' @examples
 #' diagnose(podracing_survey, demo_gender, nps_value)
-#' #> # A tibble: 2 x 9
-#' #>   variable    type  unit      n estimate    se   rse   moe precision
-#' #>   <chr>       <chr> <chr> <int>    <dbl> <dbl> <dbl> <dbl> <chr>
-#' #> 1 demo_gender prop  ppt     951     55.2  1.61  2.92  3.16 high precision
-#' #> 2 nps_value   mean  points 1000      7.56 0.06  0.74  0.11 high precision
 #'
 #' diagnose(podracing_survey, starts_with("ratings_"))
 #' @export
@@ -382,7 +375,7 @@ precision_summary <- function(data = NULL, ..., z = 1.96) {
     ))
   }
   if (nrow(prop) > 0) {
-    worst <- z * se_prop(0.5, stats::median(prop$n)) * 100
+    worst <- z * se_prop(0.5, stats::median(prop$n), pctp = TRUE)
     bullets <- c(bullets, sprintf(
       paste0("Percentages carry a sampling margin of about +/-%.1f percentage ",
              "points (worst case +/-%.1f at a 50/50 split)."),

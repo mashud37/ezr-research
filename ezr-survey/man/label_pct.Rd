@@ -30,10 +30,8 @@ Because the input is assumed to be on a 0--100 scale, \code{label_pct()(42)} is
 \examples{
 f <- label_pct()
 f(c(0, 33.4, 100))
-#> [1] "0\%"   "33\%"  "100\%"
 
 label_pct(1)(33.45)
-#> [1] "33.5\%"
 }
 \seealso{
 \code{\link[=scale_y_pct]{scale_y_pct()}}.

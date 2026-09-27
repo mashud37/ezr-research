@@ -29,11 +29,20 @@ Pair it with \code{\link[=set_weights]{set_weights()}}'s reported design effect 
 precision the weighting costs.
 }
 \examples{
-w <- weight_vector(podracing_survey,
-                   c(variable = "demo_gender",
-                     "Male" = 0.49, "Female" = 0.50,
-                     "Non-binary" = 0.01))
-round(range(w), 2)
+target <- c(variable = "demo_gender",
+            "Male" = 0.49, "Female" = 0.50, "Non-binary" = 0.01)
+w <- weight_vector(podracing_survey, target)
+
+# The sample under-represents women, so their weights are above 1 and the
+# weighted share moves towards the target. Categories the target does not
+# mention keep a weight of 1, which is why their shares do not move.
+podracing_survey \%>\%
+  mutate(weight = w) \%>\%
+  group_by(demo_gender) \%>\%
+  summarise(
+    unweighted_pct = round(n() / nrow(podracing_survey) * 100, 1),
+    weighted_pct = round(sum(weight) / nrow(podracing_survey) * 100, 1)
+  )
 }
 \seealso{
 \code{\link[=set_weights]{set_weights()}}, \code{\link[=calc_percentage]{calc_percentage()}}.

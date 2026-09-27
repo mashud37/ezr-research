@@ -27,11 +27,6 @@
 #' a <- data.frame(feature = c("price", "quality"), performance = c(3.1, 4.2))
 #' b <- data.frame(feature = c("price", "quality"), performance = c(2.8, 4.4))
 #' compare_values(current = b, previous = a)
-#' #> # A tibble: 2 x 4
-#' #>   feature previous current difference
-#' #>   <chr>      <dbl>   <dbl>      <dbl>
-#' #> 1 price        3.1     2.8      -0.3
-#' #> 2 quality      4.2     4.4       0.2
 #' @export
 compare_values <- function(current, previous, by = "feature",
                            value = "performance") {
@@ -84,8 +79,7 @@ compare_values <- function(current, previous, by = "feature",
 #'                 performance = c(3.1, 4.2, 3.5))
 #' b <- data.frame(feature = c("price", "quality", "service"),
 #'                 performance = c(2.8, 4.4, 3.9))
-#' p <- compare_values(b, a) %>% plot_diff()
-#' # p is a ggplot; print(p) to draw it
+#' compare_values(b, a) %>% plot_diff()
 #' @export
 plot_diff <- function(data, label = feature, difference = difference,
                       limits = NULL, digits = 2,

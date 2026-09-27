@@ -49,7 +49,6 @@ their range was. A closed top band such as \code{35} to \code{40.5} under a labe
 bin_numeric(c(15, 19, 27, 41),
             breaks = c(0, 18, 25, 35, Inf),
             labels = c("<18", "18-24", "25-34", "35+"))
-#> [1] "<18"   "18-24" "25-34" "35+"
 }
 \seealso{
 \code{\link[=recode_age]{recode_age()}} for a ready-made age-band wrapper, \code{\link[=ensure_numeric]{ensure_numeric()}}.
@@ -65,6 +64,7 @@ Other recode:
 \code{\link[=recode_age]{recode_age()}},
 \code{\link[=recode_generation]{recode_generation()}},
 \code{\link[=recode_likert]{recode_likert()}},
-\code{\link[=recode_region]{recode_region()}}
+\code{\link[=recode_region]{recode_region()}},
+\code{\link[=split_multi]{split_multi()}}
 }
 \concept{recode}

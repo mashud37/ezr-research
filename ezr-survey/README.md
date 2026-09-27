@@ -50,6 +50,16 @@ calc_percentage(podracing_survey, demo_job, drop = "Unemployed")
 # Check-all-that-apply questions, by prefix
 calc_percentage_multi(podracing_survey, "motivations_", id = respondent_id, sort = "desc")
 
+# ...or packed into one cell per respondent, the way spreadsheets export them.
+# The delimiter (";", "|" or ",") is found for you
+packed <- data.frame(respondent = 1:3,
+                     motivations = c("Speed; Drivers", "Speed", "Betting"))
+calc_percentage_multi(packed, "motivations", id = respondent)
+
+# split_multi() widens that column into one column per answer instead, so
+# crosstabs, plots and everything else can use it too
+split_multi(packed, motivations)
+
 # Grouped + pivoted to a wide cross-tab
 calc_percentage(podracing_survey, satis_return, by = region, wide = TRUE)
 
@@ -97,7 +107,7 @@ export_summary_xlsx(podracing_survey, demo_gender, satis_return, nps_value)
 | Area | Functions |
 | --- | --- |
 | **Import** | `read_folder()`, `select_prefix()`, `select_suffix()`, `parse_filename()` |
-| **Recode** | `na_blank()`, `drop_items()`, `ensure_numeric()`, `bin_numeric()`, `recode_age()`, `recode_generation()`, `recode_likert()`, `nps_group()`, `clean_label()` |
+| **Recode** | `na_blank()`, `drop_items()`, `ensure_numeric()`, `bin_numeric()`, `recode_age()`, `recode_generation()`, `recode_likert()`, `nps_group()`, `split_multi()`, `clean_label()` |
 | **Country → region** | `add_region()`, `recode_region()`, `recode_subregion()`, `country_region` |
 | **Config / profile** | `ezrsurvey_options()`, `reset_ezrsurvey_options()`, `use_ezrsurvey_profile()`, `load_ezrsurvey_profile()` |
 | **Comments** | `sample_comments()`, `sample_comments_diverse()` |

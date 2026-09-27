@@ -20,12 +20,6 @@
 #' @seealso [recode_generation()].
 #' @examples
 #' generation_scheme("pew")
-#' #> # A tibble: 6 x 3
-#' #>   label        from   to
-#' #>   <chr>       <dbl> <dbl>
-#' #> 1 Silent       1928  1945
-#' #> 2 Baby Boomer  1946  1964
-#' #> # ... Gen X, Millennial, Gen Z, Gen Alpha
 #' @export
 generation_scheme <- function(scheme = c("pew")) {
   scheme <- match.arg(scheme)
@@ -71,11 +65,9 @@ generation_scheme <- function(scheme = c("pew")) {
 #' @seealso [generation_scheme()], [recode_age()], [ezrsurvey_options()].
 #' @examples
 #' recode_generation(c(1990, 2001, 1968), input = "year")
-#' #> [1] "Millennial" "Gen Z"      "Gen X"
 #'
 #' # from age, with an explicit reference year
 #' recode_generation(c(36, 25), input = "age", year = 2026)
-#' #> [1] "Millennial" "Gen Z"
 #' @export
 recode_generation <- function(x, input = c("age", "year"), year = NULL,
                               scheme = NULL) {

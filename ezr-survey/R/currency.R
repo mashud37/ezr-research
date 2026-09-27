@@ -77,7 +77,6 @@ resolve_rates <- function(rates = NULL) {
 #' @seealso [add_currency()], [list_currencies()], [currency_rates].
 #' @examples
 #' convert_currency(100, "EUR", "USD")
-#' #> [1] 108.7
 #'
 #' convert_currency(c(100, 50), from = c("EUR", "GBP"), to = "USD")
 #'
@@ -172,7 +171,6 @@ add_currency <- function(data = NULL, amount, from, to = "USD", into = NULL,
 #' @seealso [currency_rates], [convert_currency()].
 #' @examples
 #' list_currencies()
-#' #> [1] "USD" "EUR" "GBP" "JPY" "CNY" "CHF" ... (39 codes)
 #' @export
 list_currencies <- function(rates = NULL) {
   names(resolve_rates(rates))

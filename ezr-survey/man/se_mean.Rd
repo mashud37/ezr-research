@@ -25,7 +25,6 @@ average rating. Fewer than two values gives \code{NA} (no spread to estimate).
 }
 \examples{
 se_mean(c(4, 5, 3, 4, 5, 2, 4))
-#> [1] 0.4285714
 }
 \seealso{
 \code{\link[=se_prop]{se_prop()}}, \code{\link[=rse]{rse()}}, \code{\link[=margin_of_error]{margin_of_error()}}, \code{\link[=diagnose]{diagnose()}}.

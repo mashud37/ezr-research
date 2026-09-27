@@ -23,11 +23,9 @@
 #' @seealso [calc_percentage_batch()], [calc_percentage_multi()].
 #' @examples
 #' clean_label("Broadcast.quality...audio")
-#' #> [1] "Broadcast quality / audio"
 #'
 #' clean_label(c("ratings_Camera.work", "ratings_Talent...analysis"),
 #'             prefix = "ratings_")
-#' #> [1] "Camera work"       "Talent / analysis"
 #' @export
 clean_label <- function(x, prefix = NULL) {
   if (!is.null(prefix)) {
@@ -50,6 +48,28 @@ drop_rows <- function(df, col, drop) {
   }
   dropped <- is.na(drop_items(df[[col]], drop)) & !is.na(df[[col]])
   df[!dropped, , drop = FALSE]
+}
+
+# Internal: the delimiter packing a multi-select question into one cell, or NULL
+# when this is an ordinary block of one-column-per-option. A block of several
+# columns can never be packed, so the usual shape is never mistaken for one.
+packed_delimiter <- function(df, opt_cols, split) {
+  if (is.null(split) || isFALSE(split) || length(opt_cols) != 1L) {
+    return(NULL)
+  }
+  values <- na_blank(df[[opt_cols]])
+  if (identical(split, "auto")) detect_delimiter(values) else split
+}
+
+# Internal: one row per respondent-answer pair from a packed column, taking the
+# answer text itself as the option label. Respondents who ticked nothing
+# contribute no rows, which keeps them out of the denominator.
+unpack_long <- function(df, opt_col, keep, delim) {
+  chosen <- unpack_answers(na_blank(df[[opt_col]]), delim)
+  out <- df[rep(seq_len(nrow(df)), lengths(chosen)), keep, drop = FALSE]
+  out[["option"]] <- unlist(chosen, use.names = FALSE)
+  out[["value"]] <- out[["option"]]
+  tibble::as_tibble(out)
 }
 
 # Internal: order the levels of `key` by `pct` (or by `key` itself) and reorder
@@ -141,12 +161,6 @@ order_factor <- function(df, key, sort = c("none", "desc", "asc"),
 #'
 #' @examples
 #' calc_percentage(podracing_survey, demo_gender)
-#' #> # A tibble: 3 x 3
-#' #>   demo_gender     n   pct
-#' #>   <chr>       <int> <dbl>
-#' #> 1 Female        399    42
-#' #> 2 Male          525    55
-#' #> 3 Non-binary     27     3
 #'
 #' # largest first
 #' calc_percentage(podracing_survey, demo_gender, sort = "desc")
@@ -248,6 +262,10 @@ calc_percentage <- function(data = NULL, column, by = NULL,
 #'   the `drop_answers` option. See [drop_items()].
 #' @param clean_names If `TRUE` (default), tidy the option labels by stripping
 #'   `prefix` and un-mangling exporter artefacts (`"A...B"` -> `"A / B"`).
+#' @param split How to handle a question that arrives packed into a single cell
+#'   per respondent (`"Speed; Drivers"`). `"auto"` (default) detects `";"`, `"|"`
+#'   or `","` and splits on it; pass a string to force a delimiter, or `FALSE`
+#'   never to split. Only ever applies when `prefix` selects exactly one column.
 #'
 #' @return A [tibble][tibble::tibble] with `option`, `n` (respondents choosing
 #'   it) and `pct`.
@@ -262,24 +280,34 @@ calc_percentage <- function(data = NULL, column, by = NULL,
 #' `clean_names = TRUE` the option labels are stripped of `prefix` and exporter
 #' artefacts like `"A...B"` are turned back into `"A / B"`.
 #'
+#' Two export shapes are handled. The usual one is a block of columns, one per
+#' option, named with a shared `prefix`; that is what `prefix` selects. The other
+#' is a single column holding every answer a respondent ticked, joined by a
+#' delimiter, which is what Google Forms and most spreadsheet exports produce. If
+#' `prefix` matches exactly one column and a delimiter is found in it, that
+#' column is unpacked automatically and the answer text itself becomes the option
+#' label (`clean_names` is not applied, since the answers are real wording rather
+#' than mangled column names). Behaviour on a column block is unchanged. Use
+#' [split_multi()] when you want those unpacked columns kept for other work.
+#'
 #' @family summaries
-#' @seealso [calc_percentage()], [plot_bars()].
+#' @seealso [calc_percentage()], [split_multi()], [plot_bars()].
 #'
 #' @examples
 #' calc_percentage_multi(podracing_survey, "motivations_",
 #'                       id = respondent_id, sort = "desc")
-#' #> # A tibble: 5 x 3
-#' #>   option        n   pct
-#' #>   <fct>     <int> <dbl>
-#' #> 1 speed       772    79
-#' #> 2 drivers     533    54
-#' #> 3 social      437    45
-#' #> 4 tradition   349    36
-#' #> 5 betting     295    30
+#'
+#' # a spreadsheet export that packs every answer into one cell
+#' packed <- data.frame(
+#'   respondent = 1:4,
+#'   motivations = c("Speed; Drivers", "Speed", "", "Betting; Speed")
+#' )
+#' calc_percentage_multi(packed, "motivations", id = respondent, sort = "desc")
 #' @export
 calc_percentage_multi <- function(data = NULL, prefix, id = NULL, by = NULL,
                                   sort = c("none", "desc", "asc"),
-                                  digits = 0, drop = NULL, clean_names = TRUE) {
+                                  digits = 0, drop = NULL, clean_names = TRUE,
+                                  split = "auto") {
   r <- resolve_data_columns(rlang::enquo(data), list(rlang::enquo(prefix)),
                             missing(prefix))
   data <- r$data
@@ -307,24 +335,30 @@ calc_percentage_multi <- function(data = NULL, prefix, id = NULL, by = NULL,
     intersect(as.character(ezrsurvey_default("default_by")), names(d))
   }
 
-  long <- d %>%
-    dplyr::select(dplyr::all_of(c(id_col, by_names)),
-                  dplyr::all_of(opt_cols)) %>%
-    tidyr::pivot_longer(dplyr::all_of(opt_cols),
-                        names_to = "option", values_to = "value") %>%
-    dplyr::mutate(value = na_blank(.data$value)) %>%
-    dplyr::filter(!is.na(.data$value))
+  delim <- packed_delimiter(d, opt_cols, split)
 
-  if (clean_names) {
-    long <- dplyr::mutate(
-      long,
-      option = clean_label(stringr::str_remove(.data$option, stringr::fixed(prefix)))
-    )
+  if (!is.null(delim)) {
+    long <- unpack_long(d, opt_cols, c(id_col, by_names), delim)
   } else {
-    long <- dplyr::mutate(
-      long,
-      option = stringr::str_remove(.data$option, stringr::fixed(prefix))
-    )
+    long <- d %>%
+      dplyr::select(dplyr::all_of(c(id_col, by_names)),
+                    dplyr::all_of(opt_cols)) %>%
+      tidyr::pivot_longer(dplyr::all_of(opt_cols),
+                          names_to = "option", values_to = "value") %>%
+      dplyr::mutate(value = na_blank(.data$value)) %>%
+      dplyr::filter(!is.na(.data$value))
+
+    if (clean_names) {
+      long <- dplyr::mutate(
+        long,
+        option = clean_label(stringr::str_remove(.data$option, stringr::fixed(prefix)))
+      )
+    } else {
+      long <- dplyr::mutate(
+        long,
+        option = stringr::str_remove(.data$option, stringr::fixed(prefix))
+      )
+    }
   }
 
   long <- drop_rows(long, "option", drop)
@@ -384,10 +418,6 @@ calc_percentage_multi <- function(data = NULL, prefix, id = NULL, by = NULL,
 #'
 #' @examples
 #' calc_summary(podracing_survey, demo_age)
-#' #> # A tibble: 1 x 4
-#' #>       n  mean median    sd
-#' #>   <int> <dbl>  <dbl> <dbl>
-#' #> 1  1000  32.6     32  11.2
 #'
 #' calc_summary(podracing_survey, demo_age, by = region)
 #' @export
@@ -471,12 +501,6 @@ calc_summary <- function(data = NULL, column, by = NULL, na_rm = TRUE,
 #' @seealso [calc_percentage()], [clean_label()], [export_xlsx()].
 #' @examples
 #' calc_percentage_batch(podracing_survey, demo_gender, demo_job)
-#' #> # A tibble: 8 x 4
-#' #>   variable    answer                n   pct
-#' #>   <chr>       <chr>             <int> <dbl>
-#' #> 1 demo_gender Female              399    42
-#' #> 2 demo_gender Male                525    55
-#' #> # ... and so on for each answer of each variable
 #'
 #' calc_percentage_batch(podracing_survey, starts_with("demo_"))
 #'

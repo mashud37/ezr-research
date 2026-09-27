@@ -39,11 +39,9 @@ generational reporting; for simple age bands use \code{\link[=recode_age]{recode
 }
 \examples{
 recode_generation(c(1990, 2001, 1968), input = "year")
-#> [1] "Millennial" "Gen Z"      "Gen X"
 
 # from age, with an explicit reference year
 recode_generation(c(36, 25), input = "age", year = 2026)
-#> [1] "Millennial" "Gen Z"
 }
 \seealso{
 \code{\link[=generation_scheme]{generation_scheme()}}, \code{\link[=recode_age]{recode_age()}}, \code{\link[=ezrsurvey_options]{ezrsurvey_options()}}.
@@ -59,6 +57,7 @@ Other recode:
 \code{\link[=nps_group]{nps_group()}},
 \code{\link[=recode_age]{recode_age()}},
 \code{\link[=recode_likert]{recode_likert()}},
-\code{\link[=recode_region]{recode_region()}}
+\code{\link[=recode_region]{recode_region()}},
+\code{\link[=split_multi]{split_multi()}}
 }
 \concept{recode}

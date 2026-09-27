@@ -25,14 +25,12 @@ A confidence interval is the estimate plus or minus this margin. \code{z = 1.96}
 gives the standard 95\% interval; \code{z = 2} reproduces the "two standard errors"
 rule of thumb often quoted in survey reports; \code{z = 2.58} gives 99\%. The result
 is on the same scale as \code{se}, so for a proportion error in percentage points,
-pass \code{se_prop(p, n) * 100}.
+pass \code{se_prop(p, n, pctp = TRUE)}.
 }
 \examples{
-margin_of_error(se_prop(0.33, 1184)) * 100   # 95\% margin, percentage points
-#> [1] 2.677
+margin_of_error(se_prop(0.33, 1184, pctp = TRUE))   # in percentage points
 
 margin_of_error(0.02, z = 2)
-#> [1] 0.04
 }
 \seealso{
 \code{\link[=se_mean]{se_mean()}}, \code{\link[=se_prop]{se_prop()}}, \code{\link[=diagnose]{diagnose()}}.

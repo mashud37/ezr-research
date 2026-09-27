@@ -35,7 +35,6 @@ of passing them on every call. For \emph{generational} cohorts (Gen Z, Millennia
 }
 \examples{
 recode_age(c("17", "22 years", "31", "47"))
-#> [1] "17 or younger" "22 to 25"      "30 to 34"      "35+"
 }
 \seealso{
 \code{\link[=bin_numeric]{bin_numeric()}}, \code{\link[=recode_generation]{recode_generation()}}, \code{\link[=ezrsurvey_options]{ezrsurvey_options()}}.
@@ -51,6 +50,7 @@ Other recode:
 \code{\link[=nps_group]{nps_group()}},
 \code{\link[=recode_generation]{recode_generation()}},
 \code{\link[=recode_likert]{recode_likert()}},
-\code{\link[=recode_region]{recode_region()}}
+\code{\link[=recode_region]{recode_region()}},
+\code{\link[=split_multi]{split_multi()}}
 }
 \concept{recode}

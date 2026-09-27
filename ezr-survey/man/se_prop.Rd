@@ -4,17 +4,20 @@
 \alias{se_prop}
 \title{Standard error of a proportion}
 \usage{
-se_prop(p, n)
+se_prop(p, n, pctp = FALSE)
 }
 \arguments{
 \item{p}{The proportion, either as a fraction in \verb{[0, 1]} or as a percentage
 in \verb{(1, 100]} (values above 1 are divided by 100 automatically).}
 
 \item{n}{The sample size (number of respondents).}
+
+\item{pctp}{Return the answer in percentage points instead of on the \verb{[0, 1]}
+proportion scale. Defaults to \code{FALSE}.}
 }
 \value{
 The standard error of the proportion, on the same \verb{[0, 1]} scale as a
-fractional \code{p}. Multiply by 100 for percentage points.
+fractional \code{p}, or in percentage points when \code{pctp = TRUE}.
 }
 \description{
 \code{sqrt(p * (1 - p) / n)}, the sampling error of a percentage. Packages the
@@ -24,16 +27,15 @@ inline proportion-error calculation from the report appendix.
 For a percentage from a survey, the sampling error is \code{sqrt(p * (1 - p) / n)}.
 It is largest when \code{p = 0.5} (a 50/50 split is the hardest to pin down) and
 shrinks towards the extremes. The result is on the same 0--1 scale as a
-fractional \code{p}; multiply by 100 to express it in percentage points, the form
-used in report footnotes. Inputs above 1 are treated as percentages and
-divided by 100, so \code{se_prop(33, n)} and \code{se_prop(0.33, n)} agree.
+fractional \code{p}; pass \code{pctp = TRUE} for percentage points, the form used in
+report footnotes and the one \code{\link[=margin_of_error]{margin_of_error()}} needs if you want the margin
+in points. Inputs above 1 are treated as percentages and divided by 100, so
+\code{se_prop(33, n)} and \code{se_prop(0.33, n)} agree.
 }
 \examples{
 se_prop(0.33, 1184)
-#> [1] 0.01366
 
-se_prop(0.33, 1184) * 100      # in percentage points
-#> [1] 1.366
+se_prop(0.33, 1184, pctp = TRUE)
 }
 \seealso{
 \code{\link[=se_mean]{se_mean()}}, \code{\link[=rse]{rse()}}, \code{\link[=margin_of_error]{margin_of_error()}}, \code{\link[=diagnose]{diagnose()}}.

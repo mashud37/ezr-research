@@ -103,7 +103,12 @@ Any function that writes a file routes its `path` through one resolver
 ## 5. Documentation standard
 
 Every exported function has: `@description`, fully documented `@param`,
-`@return`, **runnable `@examples` with `#>` results**, and an `@family` tag.
+`@return`, **runnable `@examples`**, and an `@family` tag. Examples carry the
+code only: **never paste the expected output in as `#>` comments.** pkgdown runs
+every example and prints its real result, so a hand-written copy is rendered
+directly beneath the genuine one, and the page shows every answer twice. The
+pasted copy also goes stale silently, since nothing checks it. If an output is
+worth asserting, assert it in `tests/`, which does fail when it drifts.
 Add `@details` where the how/why is not already plain from the description: a
 function that dispatches on its input, picks defaults, or resolves a conflict
 earns one, and a one-line verb like `clear_brand()` or `list_orders()` does not.

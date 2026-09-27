@@ -27,7 +27,6 @@ threshold \code{\link[=diagnose]{diagnose()}} uses for its \code{precision} flag
 }
 \examples{
 rse(estimate = 4.1, se = se_mean(c(4, 5, 3, 4, 5)))
-#> [1] 9.611
 }
 \seealso{
 \code{\link[=se_mean]{se_mean()}}, \code{\link[=se_prop]{se_prop()}}, \code{\link[=margin_of_error]{margin_of_error()}}, \code{\link[=diagnose]{diagnose()}}.

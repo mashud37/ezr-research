@@ -27,14 +27,11 @@
 #' @seealso [add_region()], [country_region].
 #' @examples
 #' recode_region(c("Germany", "Japan", "Brazil"))
-#' #> [1] "Europe"        "Asia"          "South America"
 #'
 #' recode_subregion(c("Germany", "Japan"))
-#' #> [1] "Western Europe" "East Asia"
 #'
 #' # unmatched -> NA (warning suppressed here)
 #' recode_region(c("Germany", "Atlantis"), quiet = TRUE)
-#' #> [1] "Europe" NA
 #' @export
 recode_region <- function(x, which = c("region", "subregion"), quiet = FALSE) {
   which <- match.arg(which)
@@ -91,12 +88,6 @@ recode_subregion <- function(x, quiet = FALSE) {
 #' @examples
 #' df <- tibble::tibble(demo_country = c("Germany", "Japan", "Brazil"))
 #' add_region(df, demo_country, subregion = TRUE)
-#' #> # A tibble: 3 x 3
-#' #>   demo_country region        subregion
-#' #>   <chr>        <chr>         <chr>
-#' #> 1 Germany      Europe        Western Europe
-#' #> 2 Japan        Asia          East Asia
-#' #> 3 Brazil       South America South America
 #' @export
 add_region <- function(data = NULL, country, region_to = "region",
                        subregion = FALSE, quiet = FALSE) {

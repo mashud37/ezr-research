@@ -47,21 +47,17 @@ character, would quietly land on the shorter level.
 }
 \examples{
 recode_likert(c("Very bad", "Ok", "Good", "Very good"))
-#> [1] 1 3 4 5
 
 # substring fallback copes with numbered labels
 recode_likert("4 - Good")
-#> [1] 4
 
 # nested wordings resolve to the level the answer names, not the shorter one
 recode_likert(c("\U0001F642 Very good", "\U0001F610 Good"))
-#> [1] 5 4
 
 # map another tool's wording onto the same scale
 recode_likert(c("Dissatisfied", "Satisfied"),
               synonyms = list(Bad = "Dissatisfied", Good = "Satisfied"),
               levels = c("Very bad", "Bad", "Ok", "Good", "Very good"))
-#> [1] 2 4
 }
 \seealso{
 \code{\link[=nps_group]{nps_group()}}, \code{\link[=ipm_model]{ipm_model()}}, \code{\link[=calc_summary]{calc_summary()}}.
@@ -77,6 +73,7 @@ Other recode:
 \code{\link[=nps_group]{nps_group()}},
 \code{\link[=recode_age]{recode_age()}},
 \code{\link[=recode_generation]{recode_generation()}},
-\code{\link[=recode_region]{recode_region()}}
+\code{\link[=recode_region]{recode_region()}},
+\code{\link[=split_multi]{split_multi()}}
 }
 \concept{recode}

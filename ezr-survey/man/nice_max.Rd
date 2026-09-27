@@ -39,16 +39,12 @@ why their bars never quite touch the top of the panel.
 }
 \examples{
 nice_max(c(12, 63, 40))
-#> [1] 75
 
 nice_max(80, unit = 25)        # already need >75, so jumps to 100
-#> [1] 100
 
 nice_max(75, unit = 25)        # exact multiple still advances, for headroom
-#> [1] 100
 
 nice_max(c(8, 17), unit = 5, pad = 10)   # next multiple of 5 (20) + 10
-#> [1] 30
 }
 \seealso{
 \code{\link[=scale_y_pct]{scale_y_pct()}}, \code{\link[=label_pct]{label_pct()}}.

@@ -8,6 +8,7 @@ ipm_model(
   data = NULL,
   outcome,
   rating_prefix,
+  method = c("rwa", "forest", "correlation"),
   recode = TRUE,
   likert_levels = c("Very bad", "Bad", "Ok", "Good", "Very good")
 )
@@ -19,6 +20,9 @@ ipm_model(
 
 \item{rating_prefix}{Column-name prefix identifying the rating block, e.g.
 \code{"ratings_"}.}
+
+\item{method}{How to measure importance, passed to \code{\link[=calc_importance]{calc_importance()}}.
+Defaults to \code{"rwa"}.}
 
 \item{recode}{If \code{TRUE} (default), character rating columns are mapped to
 1-5 with \code{\link[=recode_likert]{recode_likert()}}; numeric columns are left as-is.}
@@ -32,7 +36,7 @@ A \link[tibble:tibble]{tibble} with \code{feature}, \code{importance},
 its integer part so a 3.57 mean sits in band 3, used for colouring).
 }
 \description{
-Combines driver \strong{importance} (relative weights against \code{outcome}) with
+Combines driver \strong{importance} (against \code{outcome}) with
 feature \strong{performance} (mean rating) into the tidy table consumed by
 \code{\link[=plot_ipm]{plot_ipm()}}. Worded rating columns are recoded to 1-5 automatically.
 }
@@ -45,7 +49,9 @@ low-performance features are where to invest. Worded rating columns are mapped
 to 1--5 with \code{\link[=recode_likert]{recode_likert()}} automatically (\code{recode = TRUE}); the prefix is
 stripped from feature names; and \code{perf_class} buckets performance into a 1--5
 factor by its integer part (a 3.57 mean is band 3, not 4) for colouring.
-Requires the suggested \code{rwa} package.
+Importance comes from \code{\link[=calc_importance]{calc_importance()}}, so \code{method} chooses between
+relative weights (the default, requiring the suggested \code{rwa} package), a
+random forest and a plain correlation.
 }
 \examples{
 \dontshow{if (requireNamespace("rwa", quietly = TRUE)) withAutoprint(\{ # examplesIf}

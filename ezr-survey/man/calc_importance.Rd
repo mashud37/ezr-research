@@ -2,12 +2,13 @@
 % Please edit documentation in R/model.R
 \name{calc_importance}
 \alias{calc_importance}
-\title{Driver importance via relative weights analysis}
+\title{Driver importance}
 \usage{
 calc_importance(
   data = NULL,
   outcome,
   predictors,
+  method = c("rwa", "forest", "correlation"),
   recode = TRUE,
   likert_levels = c("Very bad", "Bad", "Ok", "Good", "Very good")
 )
@@ -20,6 +21,11 @@ calc_importance(
 \item{predictors}{The predictor columns, using tidyselect (e.g.
 \code{starts_with("ratings_")}).}
 
+\item{method}{How to measure importance. \code{"rwa"} (default) is relative
+weights analysis via \code{\link[rwa:rwa]{rwa::rwa()}}; \code{"forest"} is random-forest permutation
+importance via \code{\link[randomForest:randomForest]{randomForest::randomForest()}}; \code{"correlation"} is the
+absolute correlation with the outcome. See Details.}
+
 \item{recode}{If \code{TRUE} (default), character predictor columns are mapped to
 1-5 with \code{\link[=recode_likert]{recode_likert()}}; numeric columns are left as-is.}
 
@@ -27,25 +33,51 @@ calc_importance(
 recoding.}
 }
 \value{
-A \link[tibble:tibble]{tibble} with \code{feature} and \code{importance}.
+A \link[tibble:tibble]{tibble} with \code{feature} and \code{importance}, the
+latter rescaled to sum to 100 whichever \code{method} produced it, strongest
+driver first.
 }
 \description{
-Thin wrapper around \code{\link[rwa:rwa]{rwa::rwa()}} that returns the rescaled relative weights
-(importance, summing to ~100) of a set of predictors against an outcome such
-as the NPS rating. Requires the suggested \code{rwa} package.
+Ranks how much each predictor drives an outcome such as the NPS rating, as
+importance scores summing to 100. Relative weights analysis is the default;
+a random forest and a plain correlation are available as alternatives.
 }
 \details{
-Relative weights analysis (Johnson's epsilon) shares out the model's explained
-variance between correlated predictors, which ordinary regression
-coefficients handle poorly. The weights are rescaled to sum to ~100, so each
-feature's \code{importance} reads as "this feature accounts for X\% of what drives
-the outcome". Only complete cases are used. Worded rating columns are recoded
-to 1-5 automatically (\code{recode = TRUE}). Most users call \code{\link[=ipm_model]{ipm_model()}}, which
-pairs this with performance for the importance/performance matrix.
+All three methods answer the same question and are scaled the same way, so
+each feature's \code{importance} reads as "this feature accounts for X\% of what
+drives the outcome" and any of them can be fed to \code{\link[=plot_ipm]{plot_ipm()}}. They differ in
+what they can see:
+\itemize{
+\item \code{"rwa"}, relative weights analysis (Johnson's epsilon), shares out the
+linear model's explained variance between correlated predictors, which
+ordinary regression coefficients handle poorly. This is the default because
+rating batteries are almost always heavily correlated.
+\item \code{"forest"} grows a random forest and measures how much prediction error
+rises when each predictor is permuted, so it picks up non-linear effects and
+interactions that relative weights cannot. It is the useful cross-check: if
+a feature ranks high here and low under \code{"rwa"}, its effect is not linear.
+Being a random method, it moves a little between runs; call \code{\link[=set.seed]{set.seed()}}
+first for a figure you intend to publish.
+\item \code{"correlation"} is the crude one, ignoring the other predictors entirely, so
+correlated features double-count. Its merit is that it needs no suggested
+package and cannot fail to converge, which makes it a reasonable sanity
+check on the other two.
+}
+
+Only complete cases are used. Worded rating columns are recoded to 1-5
+automatically (\code{recode = TRUE}). Negative importances (which permutation
+importance can produce for a predictor that is pure noise) are floored at
+zero before rescaling. Most users call \code{\link[=ipm_model]{ipm_model()}}, which pairs this with
+performance for the importance/performance matrix.
 }
 \examples{
-\dontshow{if (requireNamespace("rwa", quietly = TRUE)) withAutoprint(\{ # examplesIf}
+\dontshow{if (requireNamespace("rwa", quietly = TRUE) && requireNamespace("randomForest", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 calc_importance(podracing_survey, nps_value, starts_with("ratings_"))
+
+# a cross-check that can see non-linear effects
+set.seed(1)
+calc_importance(podracing_survey, nps_value, starts_with("ratings_"),
+                method = "forest")
 \dontshow{\}) # examplesIf}
 }
 \seealso{

@@ -38,7 +38,6 @@ set a session-wide default with \code{ezrsurvey_options(drop_answers = ...)}.
 \examples{
 drop_items(c("Yes", "No", "Other", "Don't know"),
            items = c("Other", "Don't know"))
-#> [1] "Yes" "No"  NA    NA
 }
 \seealso{
 \code{\link[=na_blank]{na_blank()}}, \code{\link[=calc_percentage]{calc_percentage()}}.
@@ -54,6 +53,7 @@ Other recode:
 \code{\link[=recode_age]{recode_age()}},
 \code{\link[=recode_generation]{recode_generation()}},
 \code{\link[=recode_likert]{recode_likert()}},
-\code{\link[=recode_region]{recode_region()}}
+\code{\link[=recode_region]{recode_region()}},
+\code{\link[=split_multi]{split_multi()}}
 }
 \concept{recode}

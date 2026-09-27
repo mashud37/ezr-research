@@ -32,13 +32,10 @@
 #' @seealso [recode_age()], [recode_likert()], [na_blank()].
 #' @examples
 #' ensure_numeric(c("25 years", "31", "forty"), quiet = TRUE)
-#' #> [1] 25 31 NA
 #'
 #' ensure_numeric(c("8 - very likely", "10", "3.5/5"), quiet = TRUE)
-#' #> [1]  8.0 10.0  3.5
 #'
 #' ensure_numeric(c(1, 2, 3))    # already numeric, returned as-is
-#' #> [1] 1 2 3
 #' @export
 ensure_numeric <- function(x, name = NULL, quiet = FALSE) {
   if (is.numeric(x)) {

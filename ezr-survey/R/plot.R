@@ -116,13 +116,13 @@ auto_bar_layout <- function(labels, n_items, orientation, is_ordinal, sort,
 #' @seealso [calc_percentage()], [scale_y_pct()], [annotate_bands()].
 #' @examples
 #' # auto layout: few short labels -> vertical columns, largest on the left
-#' p <- calc_percentage(podracing_survey, demo_gender) %>% plot_bars()
+#' calc_percentage(podracing_survey, demo_gender) %>% plot_bars()
 #'
 #' # many long labels -> horizontal bars, wrapped, largest on top
-#' p2 <- calc_percentage(podracing_survey, fav_driver) %>% plot_bars()
+#' calc_percentage(podracing_survey, fav_driver) %>% plot_bars()
 #'
 #' # an ordinal scale keeps its order; force horizontal with orientation
-#' p3 <- calc_percentage(podracing_survey, demo_edu) %>%
+#' calc_percentage(podracing_survey, demo_edu) %>%
 #'   plot_bars(orientation = "bars")
 #' @export
 plot_bars <- function(data, label = NULL, value = pct,
@@ -257,8 +257,7 @@ plot_bars <- function(data, label = NULL, value = pct,
 #'   group_by(feature) %>%
 #'   mutate(pct = n / sum(n) * 100) %>%
 #'   ungroup()
-#' p <- plot_stacked_rating(rating_long, feature, level)
-#' @export
+#' plot_stacked_rating(rating_long, feature, level)
 #' @export
 plot_stacked_rating <- function(data, feature, level, value = pct,
                                 palette = NULL, label_min = 1,
@@ -411,8 +410,9 @@ plot_rating_grid <- function(data = NULL, prefix, levels = NULL, digits = 2,
 #' @seealso [calc_nps()], [plot_nps()].
 #' @examples
 #' nps <- calc_nps(podracing_survey, nps_value)$nps
-#' p <- plot_nps_gauge(nps)
-#' p_rating <- plot_nps_gauge(3.8, scale = "rating")
+#' plot_nps_gauge(nps)
+#'
+#' plot_nps_gauge(3.8, scale = "rating")
 #' @export
 plot_nps_gauge <- function(score, scale = c("nps", "rating"),
                            title = NULL, height = 0.5, label_size = NULL) {
@@ -509,8 +509,8 @@ infer_gauge_scale <- function(score) {
 #' @examples
 #' nps <- calc_nps(podracing_survey, nps_value)$nps
 #' quality <- 3.4
-#' p <- plot_gauges(c("Net Promoter Score" = nps,
-#'                    "Average quality rating" = quality))
+#' plot_gauges(c("Net Promoter Score" = nps,
+#'               "Average quality rating" = quality))
 #' @export
 plot_gauges <- function(scores, scales = NULL, title = NULL, height = 0.5,
                         label_size = NULL) {
@@ -612,8 +612,7 @@ plot_gauges <- function(scores, scales = NULL, title = NULL, height = 0.5,
 #' @family plots
 #' @seealso [calc_nps()], [plot_nps_gauge()].
 #' @examples
-#' p <- plot_nps(podracing_survey, nps_value)
-#' # p is a ggplot; print(p) to draw it
+#' plot_nps(podracing_survey, nps_value)
 #' @export
 plot_nps <- function(data = NULL, value, title = NULL) {
   r <- resolve_data_columns(rlang::enquo(data), list(rlang::enquo(value)),

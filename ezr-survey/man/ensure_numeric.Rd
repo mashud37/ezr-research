@@ -41,13 +41,10 @@ pass \code{quiet = TRUE} so they don't spam your console. Truly blank entries
 }
 \examples{
 ensure_numeric(c("25 years", "31", "forty"), quiet = TRUE)
-#> [1] 25 31 NA
 
 ensure_numeric(c("8 - very likely", "10", "3.5/5"), quiet = TRUE)
-#> [1]  8.0 10.0  3.5
 
 ensure_numeric(c(1, 2, 3))    # already numeric, returned as-is
-#> [1] 1 2 3
 }
 \seealso{
 \code{\link[=recode_age]{recode_age()}}, \code{\link[=recode_likert]{recode_likert()}}, \code{\link[=na_blank]{na_blank()}}.
@@ -63,6 +60,7 @@ Other recode:
 \code{\link[=recode_age]{recode_age()}},
 \code{\link[=recode_generation]{recode_generation()}},
 \code{\link[=recode_likert]{recode_likert()}},
-\code{\link[=recode_region]{recode_region()}}
+\code{\link[=recode_region]{recode_region()}},
+\code{\link[=split_multi]{split_multi()}}
 }
 \concept{recode}

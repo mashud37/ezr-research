@@ -41,8 +41,9 @@ scale with BAD/OK/GOOD bands. Pair it with \code{\link[=calc_nps]{calc_nps()}} f
 }
 \examples{
 nps <- calc_nps(podracing_survey, nps_value)$nps
-p <- plot_nps_gauge(nps)
-p_rating <- plot_nps_gauge(3.8, scale = "rating")
+plot_nps_gauge(nps)
+
+plot_nps_gauge(3.8, scale = "rating")
 }
 \seealso{
 \code{\link[=calc_nps]{calc_nps()}}, \code{\link[=plot_nps]{plot_nps()}}.

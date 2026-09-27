@@ -59,12 +59,6 @@ on the question name.
 }
 \examples{
 calc_percentage_batch(podracing_survey, demo_gender, demo_job)
-#> # A tibble: 8 x 4
-#>   variable    answer                n   pct
-#>   <chr>       <chr>             <int> <dbl>
-#> 1 demo_gender Female              399    42
-#> 2 demo_gender Male                525    55
-#> # ... and so on for each answer of each variable
 
 calc_percentage_batch(podracing_survey, starts_with("demo_"))
 

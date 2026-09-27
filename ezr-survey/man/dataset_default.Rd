@@ -32,14 +32,11 @@ script or between analyses of different datasets.
 }
 \examples{
 has_dataset()
-#> [1] FALSE
 
 use_dataset(podracing_survey)
 has_dataset()
-#> [1] TRUE
 
 nrow(get_dataset())
-#> [1] 1000
 
 clear_dataset()
 }

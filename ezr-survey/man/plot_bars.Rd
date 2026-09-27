@@ -97,13 +97,13 @@ of the first one's bars turning into slabs.
 }
 \examples{
 # auto layout: few short labels -> vertical columns, largest on the left
-p <- calc_percentage(podracing_survey, demo_gender) \%>\% plot_bars()
+calc_percentage(podracing_survey, demo_gender) \%>\% plot_bars()
 
 # many long labels -> horizontal bars, wrapped, largest on top
-p2 <- calc_percentage(podracing_survey, fav_driver) \%>\% plot_bars()
+calc_percentage(podracing_survey, fav_driver) \%>\% plot_bars()
 
 # an ordinal scale keeps its order; force horizontal with orientation
-p3 <- calc_percentage(podracing_survey, demo_edu) \%>\%
+calc_percentage(podracing_survey, demo_edu) \%>\%
   plot_bars(orientation = "bars")
 }
 \seealso{

@@ -12,7 +12,8 @@ calc_percentage_multi(
   sort = c("none", "desc", "asc"),
   digits = 0,
   drop = NULL,
-  clean_names = TRUE
+  clean_names = TRUE,
+  split = "auto"
 )
 }
 \arguments{
@@ -36,6 +37,11 @@ the \code{drop_answers} option. See \code{\link[=drop_items]{drop_items()}}.}
 
 \item{clean_names}{If \code{TRUE} (default), tidy the option labels by stripping
 \code{prefix} and un-mangling exporter artefacts (\code{"A...B"} -> \code{"A / B"}).}
+
+\item{split}{How to handle a question that arrives packed into a single cell
+per respondent (\code{"Speed; Drivers"}). \code{"auto"} (default) detects \code{";"}, \code{"|"}
+or \code{","} and splits on it; pass a string to force a delimiter, or \code{FALSE}
+never to split. Only ever applies when \code{prefix} selects exactly one column.}
 }
 \value{
 A \link[tibble:tibble]{tibble} with \code{option}, \code{n} (respondents choosing
@@ -58,21 +64,30 @@ motivation, each option's percentage is "out of 700", and the percentages can
 respondents exactly; without it, each row counts as one respondent. With
 \code{clean_names = TRUE} the option labels are stripped of \code{prefix} and exporter
 artefacts like \code{"A...B"} are turned back into \code{"A / B"}.
+
+Two export shapes are handled. The usual one is a block of columns, one per
+option, named with a shared \code{prefix}; that is what \code{prefix} selects. The other
+is a single column holding every answer a respondent ticked, joined by a
+delimiter, which is what Google Forms and most spreadsheet exports produce. If
+\code{prefix} matches exactly one column and a delimiter is found in it, that
+column is unpacked automatically and the answer text itself becomes the option
+label (\code{clean_names} is not applied, since the answers are real wording rather
+than mangled column names). Behaviour on a column block is unchanged. Use
+\code{\link[=split_multi]{split_multi()}} when you want those unpacked columns kept for other work.
 }
 \examples{
 calc_percentage_multi(podracing_survey, "motivations_",
                       id = respondent_id, sort = "desc")
-#> # A tibble: 5 x 3
-#>   option        n   pct
-#>   <fct>     <int> <dbl>
-#> 1 speed       772    79
-#> 2 drivers     533    54
-#> 3 social      437    45
-#> 4 tradition   349    36
-#> 5 betting     295    30
+
+# a spreadsheet export that packs every answer into one cell
+packed <- data.frame(
+  respondent = 1:4,
+  motivations = c("Speed; Drivers", "Speed", "", "Betting; Speed")
+)
+calc_percentage_multi(packed, "motivations", id = respondent, sort = "desc")
 }
 \seealso{
-\code{\link[=calc_percentage]{calc_percentage()}}, \code{\link[=plot_bars]{plot_bars()}}.
+\code{\link[=calc_percentage]{calc_percentage()}}, \code{\link[=split_multi]{split_multi()}}, \code{\link[=plot_bars]{plot_bars()}}.
 
 Other summaries:
 \code{\link[=calc_percentage]{calc_percentage()}},

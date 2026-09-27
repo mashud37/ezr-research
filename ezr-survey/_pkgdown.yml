@@ -42,6 +42,10 @@ reference:
   desc: Presentation-ready charts.
   contents:
   - has_concept("plots")
+- title: Brand
+  desc: Adopt an organisation's colours and typefaces for every chart.
+  contents:
+  - has_concept("brand")
 - title: Themes, palettes & decisions
   desc: Visual identity and decision-band annotations.
   contents:

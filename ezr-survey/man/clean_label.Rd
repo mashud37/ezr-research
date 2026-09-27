@@ -31,11 +31,9 @@ disagree will not join, which is what silently empties a comparison chart.
 }
 \examples{
 clean_label("Broadcast.quality...audio")
-#> [1] "Broadcast quality / audio"
 
 clean_label(c("ratings_Camera.work", "ratings_Talent...analysis"),
             prefix = "ratings_")
-#> [1] "Camera work"       "Talent / analysis"
 }
 \seealso{
 \code{\link[=calc_percentage_batch]{calc_percentage_batch()}}, \code{\link[=calc_percentage_multi]{calc_percentage_multi()}}.
@@ -51,6 +49,7 @@ Other recode:
 \code{\link[=recode_age]{recode_age()}},
 \code{\link[=recode_generation]{recode_generation()}},
 \code{\link[=recode_likert]{recode_likert()}},
-\code{\link[=recode_region]{recode_region()}}
+\code{\link[=recode_region]{recode_region()}},
+\code{\link[=split_multi]{split_multi()}}
 }
 \concept{recode}

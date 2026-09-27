@@ -54,8 +54,7 @@ a <- data.frame(feature = c("price", "quality", "service"),
                 performance = c(3.1, 4.2, 3.5))
 b <- data.frame(feature = c("price", "quality", "service"),
                 performance = c(2.8, 4.4, 3.9))
-p <- compare_values(b, a) \%>\% plot_diff()
-# p is a ggplot; print(p) to draw it
+compare_values(b, a) \%>\% plot_diff()
 }
 \seealso{
 \code{\link[=compare_values]{compare_values()}}.

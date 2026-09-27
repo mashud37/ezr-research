@@ -30,10 +30,8 @@ classified correctly. Values outside 0--10 (and \code{NA}) return \code{NA}.
 }
 \examples{
 nps_group(c(0, 6, 7, 8, 9, 10))
-#> [1] -1 -1  0  0  1  1
 
 nps_group(c(3, 8, 10), labels = TRUE)
-#> [1] "Detractor" "Passive"   "Promoter"
 }
 \seealso{
 \code{\link[=calc_nps]{calc_nps()}}, \code{\link[=plot_nps]{plot_nps()}}.
@@ -49,6 +47,7 @@ Other recode:
 \code{\link[=recode_age]{recode_age()}},
 \code{\link[=recode_generation]{recode_generation()}},
 \code{\link[=recode_likert]{recode_likert()}},
-\code{\link[=recode_region]{recode_region()}}
+\code{\link[=recode_region]{recode_region()}},
+\code{\link[=split_multi]{split_multi()}}
 }
 \concept{recode}

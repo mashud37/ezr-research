@@ -39,10 +39,6 @@ measure of how precise the \code{mean} is, pair this with \code{\link[=diagnose]
 }
 \examples{
 calc_summary(podracing_survey, demo_age)
-#> # A tibble: 1 x 4
-#>       n  mean median    sd
-#>   <int> <dbl>  <dbl> <dbl>
-#> 1  1000  32.6     32  11.2
 
 calc_summary(podracing_survey, demo_age, by = region)
 }

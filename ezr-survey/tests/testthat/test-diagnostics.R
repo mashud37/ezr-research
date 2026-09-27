@@ -11,6 +11,11 @@ test_that("se_prop matches the closed form and accepts percentages", {
   expect_error(se_prop(150, 100))                       # invalid even as a percent
 })
 
+test_that("se_prop returns percentage points on request", {
+  expect_equal(se_prop(0.33, 1184, pctp = TRUE), se_prop(0.33, 1184) * 100)
+  expect_equal(se_prop(0.33, 1184, pctp = FALSE), se_prop(0.33, 1184))
+})
+
 test_that("rse and margin_of_error compose", {
   se <- se_prop(0.33, 1184)
   expect_equal(rse(0.33, se), se / 0.33 * 100)

@@ -45,7 +45,6 @@ warning rather than a silent wrong number.
 }
 \examples{
 convert_currency(100, "EUR", "USD")
-#> [1] 108.7
 
 convert_currency(c(100, 50), from = c("EUR", "GBP"), to = "USD")
 

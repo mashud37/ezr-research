@@ -24,7 +24,6 @@ clears it too.
 }
 \examples{
 clear_weights_cache()
-#> invisible(TRUE)
 }
 \seealso{
 \code{\link[=set_weights]{set_weights()}}, \code{\link[=weight_vector]{weight_vector()}}.

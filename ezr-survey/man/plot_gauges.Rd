@@ -52,8 +52,8 @@ are thin and stacked, this is the summary-slide companion to the detailed
 \examples{
 nps <- calc_nps(podracing_survey, nps_value)$nps
 quality <- 3.4
-p <- plot_gauges(c("Net Promoter Score" = nps,
-                   "Average quality rating" = quality))
+plot_gauges(c("Net Promoter Score" = nps,
+              "Average quality rating" = quality))
 }
 \seealso{
 \code{\link[=plot_nps_gauge]{plot_nps_gauge()}}, \code{\link[=calc_nps]{calc_nps()}}, \code{\link[=ipm_model]{ipm_model()}}.
