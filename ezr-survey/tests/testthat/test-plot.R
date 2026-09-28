@@ -84,6 +84,44 @@ test_that("plot_gauges stacks scores and infers scales", {
   expect_error(plot_gauges(c(10, 20)), "named")
 })
 
+test_that("each gauge bar carries the breaks of its own scale", {
+  g <- ezrsurvey:::gauge_layout(c("Net Promoter Score" = 23, "Quality" = 3.4),
+                                c("nps", "rating"), 0.5)
+  # the first gauge is drawn on top, so its ticks sit at the higher y
+  top <- g$ticks[g$ticks$y > 1, ]
+  bottom <- g$ticks[g$ticks$y < 1, ]
+  expect_equal(top$label, c("-100", "0", "30", "70", "100"))
+  expect_equal(bottom$label, c("1", "3", "4", "5"))
+  # both scales are normalised onto the same bar, so both span it end to end
+  expect_equal(range(top$x), c(0, 1))
+  expect_equal(range(bottom$x), c(0, 1))
+})
+
+test_that("a band too narrow for its name is left to its numbers", {
+  # the NPS scale gives EXCELLENT a 30-point band, a fifteenth of the bar
+  expect_false(ezrsurvey:::band_fits(0.15, "EXCELLENT"))
+  expect_true(ezrsurvey:::band_fits(0.50, "NEEDS WORK"))
+  g <- ezrsurvey:::gauge_layout(c("Net Promoter Score" = 23), "nps", 0.5)
+  expect_equal(g$rects$label[!g$rects$wide], "EXCELLENT")
+})
+
+test_that("each NPS callout is centred over the bars it describes", {
+  p <- plot_nps(podracing_survey, nps_value)
+  # annotate() keeps the text in aes_params and the position in the layer's data
+  callout_x <- function(word) {
+    for (layer in p$layers) {
+      text <- layer$aes_params$label
+      if (!is.null(text) && grepl(word, text)) return(layer$data$x[[1]])
+    }
+    NA_real_
+  }
+  # scores 0-10 are drawn at 1-11, so detractors occupy 1-7, passives 8-9 and
+  # promoters 10-11; each callout belongs at the midpoint of its own block
+  expect_equal(callout_x("DETRACTOR"), 4)
+  expect_equal(callout_x("PASSIVE"), 8.5)
+  expect_equal(callout_x("PROMOTER"), 10.5)
+})
+
 test_that("plot_ipm builds", {
   skip_if_not_installed("rwa")
   m <- ipm_model(podracing_survey, nps_value, "ratings_")

@@ -34,10 +34,25 @@ before, because a respondent who ticked three options is one row, not three.
   they are directly comparable and any of them can be fed to `plot_ipm()`.
   `ipm_model(method = )` passes the choice through.
 
+## `plot_gauges()` says what its bars are measuring
+
+* Each bar now prints its own band boundaries underneath, so a Net Promoter bar
+  reads `-100 0 30 70 100` and a quality bar reads `1 3 4 5`. The bars share one
+  panel but not one scale, so no axis could serve them both and they carried no
+  scale at all: a marker two thirds along the bar said nothing about the score it
+  marked.
+* A band name too wide for its band is now left out instead of being drawn over
+  its neighbours or cut off at the edge of the panel. `"EXCELLENT"` in the
+  30-point band at the top of the NPS scale was printed as `"EXCELLEN"`.
+
 ## Smaller changes
 
 * **`se_prop(pctp = TRUE)`** returns the standard error in percentage points, the
   form report footnotes use, instead of leaving you to multiply by 100.
+* The promoter callout in `plot_nps()` is centred over the promoter bars, like
+  the detractor and passive callouts beside it. It had been pinned to the right
+  edge of the panel, which left `"Very likely"` hanging off to one side of the
+  `"% PROMOTER"` line above it.
 * Help pages no longer print every example's output twice. The examples carried a
   hand-written copy of their own results, which the website then rendered
   alongside the real thing.

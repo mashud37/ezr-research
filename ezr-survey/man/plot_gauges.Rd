@@ -48,6 +48,14 @@ the rating gauge uses \code{\link[=bands_rating_3]{bands_rating_3()}}). The scor
 beside its label, and a black marker shows where it lands. Because the bars
 are thin and stacked, this is the summary-slide companion to the detailed
 \code{\link[=plot_nps]{plot_nps()}} distribution and the \code{\link[=plot_ipm]{plot_ipm()}} driver matrix.
+
+Since the bars share one panel but not one scale, no axis can serve them
+both. Each bar therefore carries its own band boundaries as small numbers
+underneath, so an NPS bar reads \verb{-100 0 30 70 100} and a rating bar reads
+\verb{1 3 4 5}; without them a marker two thirds along says nothing about the
+score it marks. A band too narrow to hold its name is left unlabelled rather
+than having the text run over its neighbours, and those numbers are what
+still place it.
 }
 \examples{
 nps <- calc_nps(podracing_survey, nps_value)$nps

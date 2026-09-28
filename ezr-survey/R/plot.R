@@ -472,6 +472,65 @@ infer_gauge_scale <- function(score) {
   if (!is.finite(score) || score < 1 || score > 5) "nps" else "rating"
 }
 
+# Internal: place a raw score on its gauge's own 0..1 bar.
+norm_gauge <- function(value, scale) {
+  (value - scale$lo) / (scale$hi - scale$lo)
+}
+
+# Internal: has a band room for its name? Only the drawing device knows how wide
+# text really is, so this estimates it from the character count against a
+# 6-inch panel, the width report_add_plot() uses. The estimate is deliberately
+# generous, because a name that overflows its band reads as a mistake while a
+# missing one is merely quiet: the break numbers under the bar still place it.
+band_fits <- function(width, label) {
+  width > nchar(label) * 0.030
+}
+
+# Internal: geometry for every gauge row: the coloured bands, the score marker,
+# the break numbers under the bar, and the label beside it.
+gauge_layout <- function(scores, scales, height) {
+  n <- length(scores)
+  rects <- vector("list", n)
+  markers <- vector("list", n)
+  ticks <- vector("list", n)
+  ybreaks <- numeric(n)
+  ylabels <- character(n)
+  for (i in seq_len(n)) {
+    yc <- n - i + 1                         # first gauge on top
+    sc <- gauge_scale(scales[[i]])
+    b <- sc$bands
+    xmin <- pmax(0, norm_gauge(b$from, sc))
+    xmax <- pmin(1, norm_gauge(b$to, sc))
+    rects[[i]] <- data.frame(
+      xmin = xmin, xmax = xmax, xmid = (xmin + xmax) / 2,
+      ymin = yc - height / 2, ymax = yc + height / 2,
+      colour = b$colour, label = b$label,
+      wide = band_fits(xmax - xmin, b$label),
+      stringsAsFactors = FALSE
+    )
+    edges <- sort(unique(c(b$from, b$to)))
+    ticks[[i]] <- data.frame(
+      x = norm_gauge(edges, sc),
+      y = yc - height / 2 - 0.09,
+      label = format(edges, trim = TRUE),
+      stringsAsFactors = FALSE
+    )
+    mx <- min(1, max(0, norm_gauge(scores[[i]], sc)))
+    markers[[i]] <- data.frame(x = mx,
+                               ymin = yc - height / 2 - 0.06,
+                               ymax = yc + height / 2 + 0.06)
+    ybreaks[i] <- yc
+    ylabels[i] <- paste0(names(scores)[i], "\n", sc$fmt(scores[[i]]))
+  }
+  list(
+    rects = do.call(rbind, rects),
+    markers = do.call(rbind, markers),
+    ticks = do.call(rbind, ticks),
+    ybreaks = ybreaks,
+    ylabels = ylabels
+  )
+}
+
 #' Stacked score gauges (NPS over average quality, etc.)
 #'
 #' Draws two or more scores as thin banded gauge bars stacked one above another,
@@ -504,6 +563,14 @@ infer_gauge_scale <- function(score) {
 #' are thin and stacked, this is the summary-slide companion to the detailed
 #' [plot_nps()] distribution and the [plot_ipm()] driver matrix.
 #'
+#' Since the bars share one panel but not one scale, no axis can serve them
+#' both. Each bar therefore carries its own band boundaries as small numbers
+#' underneath, so an NPS bar reads `-100 0 30 70 100` and a rating bar reads
+#' `1 3 4 5`; without them a marker two thirds along says nothing about the
+#' score it marks. A band too narrow to hold its name is left unlabelled rather
+#' than having the text run over its neighbours, and those numbers are what
+#' still place it.
+#'
 #' @family plots
 #' @seealso [plot_nps_gauge()], [calc_nps()], [ipm_model()].
 #' @examples
@@ -519,65 +586,42 @@ plot_gauges <- function(scores, scales = NULL, title = NULL, height = 0.5,
     stop("`scores` must be a named numeric vector; the names label the gauges.",
          call. = FALSE)
   }
-  n <- length(scores)
   scales <- if (is.null(scales)) {
     vapply(unname(scores), infer_gauge_scale, character(1))
   } else {
-    rep_len(scales, n)
+    rep_len(scales, length(scores))
   }
   label_size <- label_size %||% (10 / ggplot2::.pt)
-  norm <- function(v, lo, hi) (v - lo) / (hi - lo)
-
-  rects <- vector("list", n)
-  markers <- vector("list", n)
-  ybreaks <- numeric(n)
-  ylabels <- character(n)
-  for (i in seq_len(n)) {
-    yc <- n - i + 1                         # first gauge on top
-    sc <- gauge_scale(scales[[i]])
-    b <- sc$bands
-    xmin <- pmax(0, norm(b$from, sc$lo, sc$hi))
-    xmax <- pmin(1, norm(b$to, sc$lo, sc$hi))
-    rects[[i]] <- data.frame(
-      xmin = xmin, xmax = xmax, xmid = (xmin + xmax) / 2,
-      ymin = yc - height / 2, ymax = yc + height / 2,
-      colour = b$colour, label = b$label,
-      wide = (xmax - xmin) > 0.14,
-      stringsAsFactors = FALSE
-    )
-    mx <- min(1, max(0, norm(scores[[i]], sc$lo, sc$hi)))
-    markers[[i]] <- data.frame(x = mx,
-                               ymin = yc - height / 2 - 0.06,
-                               ymax = yc + height / 2 + 0.06)
-    ybreaks[i] <- yc
-    ylabels[i] <- paste0(names(scores)[i], "\n", sc$fmt(scores[[i]]))
-  }
-  rects <- do.call(rbind, rects)
-  markers <- do.call(rbind, markers)
+  g <- gauge_layout(scores, scales, height)
 
   ggplot2::ggplot() +
     ggplot2::geom_rect(
-      data = rects,
+      data = g$rects,
       ggplot2::aes(xmin = .data$xmin, xmax = .data$xmax,
                    ymin = .data$ymin, ymax = .data$ymax, fill = .data$colour)
     ) +
     ggplot2::geom_text(
-      data = rects[rects$wide, , drop = FALSE],
+      data = g$rects[g$rects$wide, , drop = FALSE],
       ggplot2::aes(x = .data$xmid, y = (.data$ymin + .data$ymax) / 2,
                    label = .data$label),
       colour = "white", fontface = "bold", size = label_size
     ) +
+    ggplot2::geom_text(
+      data = g$ticks,
+      ggplot2::aes(x = .data$x, y = .data$y, label = .data$label),
+      colour = "grey35", size = 8 / ggplot2::.pt, vjust = 1
+    ) +
     ggplot2::geom_segment(
-      data = markers,
+      data = g$markers,
       ggplot2::aes(x = .data$x, xend = .data$x, y = .data$ymin,
                    yend = .data$ymax),
       colour = "black", linewidth = 1.2
     ) +
     ggplot2::scale_fill_identity() +
-    ggplot2::scale_x_continuous(limits = c(0, 1), expand = c(0, 0)) +
-    ggplot2::scale_y_continuous(breaks = ybreaks, labels = ylabels,
-                                limits = c(min(ybreaks) - height,
-                                           max(ybreaks) + height)) +
+    ggplot2::scale_x_continuous(limits = c(-0.05, 1.05), expand = c(0, 0)) +
+    ggplot2::scale_y_continuous(breaks = g$ybreaks, labels = g$ylabels,
+                                limits = c(min(g$ybreaks) - height,
+                                           max(g$ybreaks) + height)) +
     ggplot2::labs(title = title, x = "", y = "") +
     theme_ezrsurvey(transparent = TRUE) +
     ggplot2::theme(
@@ -650,10 +694,10 @@ plot_nps <- function(data = NULL, value, title = NULL) {
                       label = paste0(share(0), "% PASSIVE\nSomewhat likely"),
                       colour = pal_nps[["0"]], fontface = "bold",
                       size = 10 / ggplot2::.pt, vjust = 1, lineheight = 0.9) +
-    ggplot2::annotate("text", x = Inf, y = ymax,
+    ggplot2::annotate("text", x = 10.5, y = ymax,
                       label = paste0(share(1), "% PROMOTER\nVery likely"),
                       colour = pal_nps[["1"]], fontface = "bold",
-                      size = 10 / ggplot2::.pt, vjust = 1, hjust = 1,
+                      size = 10 / ggplot2::.pt, vjust = 1,
                       lineheight = 0.9) +
     ggplot2::scale_y_continuous(limits = c(0, ymax), labels = NULL) +
     scale_fill_nps() +
