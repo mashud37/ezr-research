@@ -55,6 +55,10 @@ jobs:
     permissions:
       contents: write
     steps:
+      # The deploy action needs a git repository to work in, even though the
+      # page it publishes is written from scratch below.
+      - uses: actions/checkout@v4
+
       - name: Write the index that lists the packages
         run: |
           mkdir -p root
