@@ -28,8 +28,8 @@ An integer vector the same length as \code{x}; unmatched values become
 \description{
 Maps the worded answers of an ordinal rating question (e.g. "Very bad" ...
 "Very good") onto integers \code{1:length(levels)}. Matching is case-insensitive
-and tolerant of common synonyms supplied via \code{synonyms}, reproducing the
-\verb{case_when(str_detect("Very bad") ...)} recoding blocks from the reports.
+and tolerant of common synonyms supplied via \code{synonyms}, in place of a
+\verb{case_when(str_detect("Very bad") ...)} recoding block.
 }
 \details{
 Matching happens in three passes, in order: (1) an exact, case-insensitive,

@@ -45,8 +45,8 @@ theme's base font size (11 pt) instead of a fixed geom size.}
 The plot with the band layers added.
 }
 \description{
-Programmatically adds the BAD / OK / GOOD style decision markers seen across
-the original survey charts: for each band a thin coloured marker line runs
+Programmatically adds the BAD / OK / GOOD style decision markers survey
+charts carry: for each band a thin coloured marker line runs
 along one axis, with a bold centred label. This turns the copy-pasted
 \code{geom_rect()} + \code{annotate("text", x = median(seq(from, to, .1)), ...)} blocks
 into one call, so any chart can be given consistent "where's good, where's

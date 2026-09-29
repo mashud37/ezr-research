@@ -1,10 +1,127 @@
+# Internal: the spellings people actually type for the countries that dominate
+# consumer research, plus their ISO 3166-1 codes. Nine thousand respondents
+# wrote "United States" in the Ask a Manager salary survey and eight thousand
+# wrote "USA", so a table keyed only on the formal name loses half a real
+# country column. Keys are already normalised (see normalise_country); values
+# are the country as `country_region` spells it. Extend it freely: one line per
+# spelling is the whole maintenance burden.
+country_aliases <- c(
+  # the two that account for most of the misses
+  "us" = "United States",
+  "usa" = "United States",
+  "u s" = "United States",
+  "u s a" = "United States",
+  "america" = "United States",
+  "united states of america" = "United States",
+  "states" = "United States",
+  "uk" = "United Kingdom",
+  "gb" = "United Kingdom",
+  "gbr" = "United Kingdom",
+  "britain" = "United Kingdom",
+  "great britain" = "United Kingdom",
+  "england" = "United Kingdom",
+  "scotland" = "United Kingdom",
+  "wales" = "United Kingdom",
+  "northern ireland" = "United Kingdom",
+  "united kingdom of great britain and northern ireland" = "United Kingdom",
+  # endonyms, which arrive whenever a survey runs in more than one language
+  "deutschland" = "Germany",
+  "de" = "Germany", "deu" = "Germany", "ger" = "Germany",
+  "holland" = "Netherlands",
+  "nl" = "Netherlands", "nld" = "Netherlands",
+  "espana" = "Spain", "es" = "Spain", "esp" = "Spain",
+  "italia" = "Italy", "it" = "Italy", "ita" = "Italy",
+  "suisse" = "Switzerland", "schweiz" = "Switzerland",
+  "ch" = "Switzerland", "che" = "Switzerland",
+  "osterreich" = "Austria", "at" = "Austria", "aut" = "Austria",
+  "sverige" = "Sweden", "se" = "Sweden", "swe" = "Sweden",
+  "norge" = "Norway", "no" = "Norway", "nor" = "Norway",
+  "danmark" = "Denmark", "dk" = "Denmark", "dnk" = "Denmark",
+  "suomi" = "Finland", "fi" = "Finland", "fin" = "Finland",
+  "polska" = "Poland", "pl" = "Poland", "pol" = "Poland",
+  "eire" = "Ireland", "republic of ireland" = "Ireland",
+  "ie" = "Ireland", "irl" = "Ireland",
+  "brasil" = "Brazil", "br" = "Brazil", "bra" = "Brazil",
+  "nippon" = "Japan", "jp" = "Japan", "jpn" = "Japan",
+  "turkiye" = "Turkey", "tr" = "Turkey", "tur" = "Turkey",
+  "czechia" = "Czech Republic", "cz" = "Czech Republic",
+  "cze" = "Czech Republic",
+  "aotearoa" = "New Zealand", "nz" = "New Zealand", "nzl" = "New Zealand",
+  # remaining alpha-2 / alpha-3 for the countries seen most often
+  "fr" = "France", "fra" = "France",
+  "ca" = "Canada", "can" = "Canada",
+  "au" = "Australia", "aus" = "Australia",
+  "be" = "Belgium", "bel" = "Belgium",
+  "pt" = "Portugal", "prt" = "Portugal",
+  "gr" = "Greece", "grc" = "Greece",
+  "ro" = "Romania", "rou" = "Romania",
+  "hu" = "Hungary", "hun" = "Hungary",
+  "ua" = "Ukraine", "ukr" = "Ukraine",
+  "ru" = "Russia", "rus" = "Russia",
+  "russian federation" = "Russia",
+  "cn" = "China", "chn" = "China",
+  "peoples republic of china" = "China",
+  "in" = "India", "ind" = "India",
+  "mx" = "Mexico", "mex" = "Mexico",
+  "ar" = "Argentina", "arg" = "Argentina",
+  "cl" = "Chile", "chl" = "Chile",
+  "co" = "Colombia", "col" = "Colombia",
+  "za" = "South Africa", "zaf" = "South Africa",
+  "rsa" = "South Africa",
+  "ng" = "Nigeria", "nga" = "Nigeria",
+  "ke" = "Kenya", "ken" = "Kenya",
+  "eg" = "Egypt", "egy" = "Egypt",
+  "il" = "Israel", "isr" = "Israel",
+  "sg" = "Singapore", "sgp" = "Singapore",
+  "hk" = "Hong Kong", "hkg" = "Hong Kong",
+  "ph" = "Philippines", "phl" = "Philippines",
+  "id" = "Indonesia", "idn" = "Indonesia",
+  "my" = "Malaysia", "mys" = "Malaysia",
+  "th" = "Thailand", "tha" = "Thailand",
+  "vn" = "Vietnam", "vnm" = "Vietnam",
+  "kr" = "South Korea", "kor" = "South Korea",
+  "korea" = "South Korea", "republic of korea" = "South Korea",
+  "uae" = "United Arab Emirates", "ae" = "United Arab Emirates",
+  "are" = "United Arab Emirates"
+)
+
+# Internal: fold a typed country down to something matchable. Case, stray
+# punctuation, accents and a leading "the" are all noise here.
+normalise_country <- function(x) {
+  out <- tolower(trimws(as.character(x)))
+  out <- iconv(out, to = "ASCII//TRANSLIT")
+  out <- gsub("[.,'`]", "", out)
+  out <- gsub("[^a-z ]", " ", out)
+  out <- trimws(gsub(" +", " ", out))
+  sub("^the ", "", out)
+}
+
+# Internal: alpha-2 codes that are also ordinary English words. These are read
+# as countries only when typed in capitals, so "NO" is Norway and "no" is
+# somebody answering a different question. Every other code matches either way,
+# which is what lets "Uk" and "us" through.
+ambiguous_codes <- c("no", "it", "at", "be", "in", "my", "id")
+
+# Internal: the country name to look up, after aliases.
+canonical_country <- function(raw) {
+  key <- normalise_country(raw)
+  hit <- unname(country_aliases[key])
+  # nchar(NA) is 2, so the missing values need excluding before the width test.
+  risky <- !is.na(key) & key %in% ambiguous_codes
+  typed_lower <- !is.na(raw) & raw != toupper(raw)
+  hit[risky & typed_lower] <- NA_character_
+  ifelse(is.na(hit), key, normalise_country(hit))
+}
+
 #' Look up the region or subregion for a country
 #'
 #' Vectorised lookup from country name to world `region` or finer `subregion`,
 #' using the bundled [country_region] table. Matching is case-insensitive and
-#' whitespace-tolerant; blanks and non-answers (see [na_blank()]) become `NA`,
-#' and unmatched countries become `NA` with a one-line warning so spelling
-#' mismatches are easy to spot.
+#' whitespace-tolerant, and understands the spellings people type as well as
+#' ISO 3166-1 alpha-2 and alpha-3 codes, so `"USA"`, `"U.S."`, `"us"` and
+#' `"United States"` all resolve alike; blanks and non-answers (see
+#' [na_blank()]) become `NA`, and unmatched countries become `NA` with a
+#' one-line warning so spelling mismatches are easy to spot.
 #'
 #' @param x A character vector of country names.
 #' @param which `"region"` (default) or `"subregion"`.
@@ -14,19 +131,36 @@
 #' @return A character vector of regions (or subregions), `NA` where unmatched.
 #'
 #' @details
-#' Matching is done on a lower-cased, trimmed country name against the bundled
-#' [country_region] table (182 countries), so case and stray whitespace don't
-#' matter. Blanks and non-answers are blanked with [na_blank()] first, and any
-#' country that doesn't match -- usually a spelling variant the table doesn't
-#' carry -- returns `NA` with a warning listing the offenders, so you can spot
-#' and fix them. Set `quiet = TRUE` inside pipelines where you have already
-#' checked the coverage. `region` is the coarse level (e.g. "Europe");
-#' `subregion` is finer (e.g. "Western Europe").
+#' A country column that people typed themselves is rarely tidy: in one real
+#' open salary survey, nine thousand respondents wrote "United States" and
+#' eight thousand wrote "USA". So the name is folded down before it is looked
+#' up -- case, stray punctuation, accents and a leading "the" are all dropped
+#' -- and then tried against the bundled [country_region] table (182
+#' countries), then against a table of the spellings people actually use.
+#' That table carries endonyms (`"Deutschland"`, `"Brasil"`), the constituent
+#' countries of the United Kingdom, and ISO 3166-1 alpha-2 and alpha-3 codes
+#' (`"US"`, `"USA"`, `"DE"`, `"DEU"`), so a column already coded to the
+#' standard needs no preparation at all.
+#'
+#' A two-letter code is only read as a code when it was typed in capitals,
+#' because `"NO"` is Norway but `"no"` is an answer to a different question.
+#' Blanks and non-answers are blanked with [na_blank()] first, and anything
+#' still unmatched returns `NA` with a warning listing the offenders, so a
+#' spelling the table does not carry is easy to spot and add. Set
+#' `quiet = TRUE` inside pipelines where you have already checked the coverage.
+#' `region` is the coarse level (e.g. "Europe"); `subregion` is finer (e.g.
+#' "Western Europe").
 #'
 #' @family recode
 #' @seealso [add_region()], [country_region].
 #' @examples
 #' recode_region(c("Germany", "Japan", "Brazil"))
+#'
+#' # the spellings a free-text country question actually collects
+#' recode_region(c("USA", "U.S.", "England", "Deutschland", "Holland"))
+#'
+#' # a column already coded to ISO 3166-1
+#' recode_region(c("US", "GBR", "DE", "JPN"))
 #'
 #' recode_subregion(c("Germany", "Japan"))
 #'
@@ -37,8 +171,7 @@ recode_region <- function(x, which = c("region", "subregion"), quiet = FALSE) {
   which <- match.arg(which)
   lut <- country_region
   raw <- na_blank(as.character(x))
-  key <- tolower(trimws(raw))
-  idx <- match(key, tolower(trimws(lut$country)))
+  idx <- match(canonical_country(raw), tolower(trimws(lut$country)))
   out <- lut[[which]][idx]
 
   if (!quiet) {

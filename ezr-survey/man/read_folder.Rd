@@ -9,6 +9,7 @@ read_folder(
   pattern = "\\\\.csv$",
   id = "file",
   all_character = TRUE,
+  question_row = NULL,
   locale = readr::locale(encoding = "UTF-8"),
   ...
 )
@@ -26,6 +27,10 @@ Defaults to \code{"file"}. Set to \code{NULL} to omit it.}
 This keeps ragged survey exports stackable; recode types afterwards with
 the \verb{recode_*} helpers. If \code{FALSE}, types are guessed per file.}
 
+\item{question_row}{What to do with a second header row of question wording.
+\code{NULL} (default) keeps it and warns when a file looks like it has one;
+\code{TRUE} drops the first row of every file; \code{FALSE} keeps it silently.}
+
 \item{locale}{A \code{\link[readr:locale]{readr::locale()}} controlling encoding etc. Defaults to a
 UTF-8 locale; pass \code{readr::locale(encoding = "windows-1252")} for legacy
 exports.}
@@ -40,8 +45,7 @@ columns differ across files, missing columns are filled with \code{NA}.
 Loads all CSV files matching \code{pattern} in \code{path}, reading each as character
 (so survey codes never get silently coerced), tags every row with its source
 filename, and row-binds the lot into one tibble. Generalises the
-\code{list.files() \%>\% map(read.csv) \%>\% bind_rows()} opening of the original
-scripts.
+\code{list.files() \%>\% map(read.csv) \%>\% bind_rows()} opening of a survey script.
 }
 \details{
 Every matching file is read and the results are row-bound, so a folder of
@@ -53,6 +57,12 @@ types you need afterwards with \verb{recode_*()} / \code{\link[=ensure_numeric]{
 column records which file each row came from -- split it into metadata with
 \code{\link[=parse_filename]{parse_filename()}}. For legacy encodings pass a \code{locale}, e.g.
 \code{readr::locale(encoding = "windows-1252")}.
+
+Survey platforms commonly write the question wording as a second header row,
+which reads back as respondent number one and quietly skews every count by
+one. A file whose first row is long, spaced prose in most columns at once
+and numeric in none is reported as such; \code{question_row = TRUE} drops that
+row from every file, and \code{FALSE} keeps it without comment.
 }
 \examples{
 # build a tiny folder of CSVs, then read them back

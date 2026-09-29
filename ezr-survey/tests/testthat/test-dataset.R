@@ -74,3 +74,16 @@ test_that("open-text comments are globally unique across comment columns", {
   sv <- sv[nzchar(sv)]
   expect_false(anyDuplicated(sv) > 0)
 })
+
+test_that("a mistyped column name is named, not reported as a length mismatch", {
+  d <- data.frame(gender = c("Male", "Female"), nps_value = c(9, 3))
+  expect_error(calc_percentage(d, gendr), "Column `gendr` not found")
+  expect_error(calc_percentage(d, gendr), "Did you mean `gender`")
+  expect_error(calc_summary(d, nps_valu), "Column `nps_valu` not found")
+  expect_error(crosstab(d, gendr, nps_value), "Column `gendr` not found")
+  expect_error(calc_nps(d, nps_valu), "Column `nps_valu` not found")
+  expect_error(plot_nps(d, nps_valu), "Column `nps_valu` not found")
+  expect_error(split_multi(d, gendr), "Column `gendr` not found")
+  # a name with no near neighbour still names itself
+  expect_error(calc_percentage(d, wholly_unrelated), "not found in the data")
+})

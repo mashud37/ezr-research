@@ -27,8 +27,7 @@ become \code{NA}).
 A thin, survey-friendly wrapper around \code{\link[base:cut]{base::cut()}} that returns a character
 vector (not a factor) and uses left-closed, right-open intervals by default
 so that age bands like 18-21 behave intuitively. Generalises the
-\code{case_when(age \%in\% seq(...))} age-grouping pattern from the original
-reports.
+\code{case_when(age \%in\% seq(...))} age-grouping pattern.
 }
 \details{
 Bands are built with \code{\link[base:cut]{base::cut()}} using \code{include.lowest = TRUE}, so the very

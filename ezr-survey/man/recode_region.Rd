@@ -23,22 +23,41 @@ A character vector of regions (or subregions), \code{NA} where unmatched.
 \description{
 Vectorised lookup from country name to world \code{region} or finer \code{subregion},
 using the bundled \link{country_region} table. Matching is case-insensitive and
-whitespace-tolerant; blanks and non-answers (see \code{\link[=na_blank]{na_blank()}}) become \code{NA},
-and unmatched countries become \code{NA} with a one-line warning so spelling
-mismatches are easy to spot.
+whitespace-tolerant, and understands the spellings people type as well as
+ISO 3166-1 alpha-2 and alpha-3 codes, so \code{"USA"}, \code{"U.S."}, \code{"us"} and
+\code{"United States"} all resolve alike; blanks and non-answers (see
+\code{\link[=na_blank]{na_blank()}}) become \code{NA}, and unmatched countries become \code{NA} with a
+one-line warning so spelling mismatches are easy to spot.
 }
 \details{
-Matching is done on a lower-cased, trimmed country name against the bundled
-\link{country_region} table (182 countries), so case and stray whitespace don't
-matter. Blanks and non-answers are blanked with \code{\link[=na_blank]{na_blank()}} first, and any
-country that doesn't match -- usually a spelling variant the table doesn't
-carry -- returns \code{NA} with a warning listing the offenders, so you can spot
-and fix them. Set \code{quiet = TRUE} inside pipelines where you have already
-checked the coverage. \code{region} is the coarse level (e.g. "Europe");
-\code{subregion} is finer (e.g. "Western Europe").
+A country column that people typed themselves is rarely tidy: in one real
+open salary survey, nine thousand respondents wrote "United States" and
+eight thousand wrote "USA". So the name is folded down before it is looked
+up -- case, stray punctuation, accents and a leading "the" are all dropped
+-- and then tried against the bundled \link{country_region} table (182
+countries), then against a table of the spellings people actually use.
+That table carries endonyms (\code{"Deutschland"}, \code{"Brasil"}), the constituent
+countries of the United Kingdom, and ISO 3166-1 alpha-2 and alpha-3 codes
+(\code{"US"}, \code{"USA"}, \code{"DE"}, \code{"DEU"}), so a column already coded to the
+standard needs no preparation at all.
+
+A two-letter code is only read as a code when it was typed in capitals,
+because \code{"NO"} is Norway but \code{"no"} is an answer to a different question.
+Blanks and non-answers are blanked with \code{\link[=na_blank]{na_blank()}} first, and anything
+still unmatched returns \code{NA} with a warning listing the offenders, so a
+spelling the table does not carry is easy to spot and add. Set
+\code{quiet = TRUE} inside pipelines where you have already checked the coverage.
+\code{region} is the coarse level (e.g. "Europe"); \code{subregion} is finer (e.g.
+"Western Europe").
 }
 \examples{
 recode_region(c("Germany", "Japan", "Brazil"))
+
+# the spellings a free-text country question actually collects
+recode_region(c("USA", "U.S.", "England", "Deutschland", "Holland"))
+
+# a column already coded to ISO 3166-1
+recode_region(c("US", "GBR", "DE", "JPN"))
 
 recode_subregion(c("Germany", "Japan"))
 

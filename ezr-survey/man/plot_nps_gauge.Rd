@@ -30,8 +30,8 @@ A ggplot object.
 }
 \description{
 A horizontal gauge that places a single score (NPS or mean rating) onto a
-banded scale, with a "you are here" marker. Generalises the NPS and quality
-gauges from the original summary slide.
+banded scale, with a "you are here" marker: the NPS and quality gauges a
+summary slide carries.
 }
 \details{
 Takes a single number (not a dataset) and places it on a coloured band scale

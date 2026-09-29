@@ -120,3 +120,9 @@ test_that("detect_delimiter prefers a semicolon over a comma", {
   expect_equal(detect_delimiter(c("a|b", "c")), "|")
   expect_null(detect_delimiter(c("a", "b", "")))
 })
+
+test_that("recode_age reports answers that held no number", {
+  expect_message(recode_age(c("young", "old", "31")), "held no number")
+  expect_silent(recode_age(c("young", "31"), quiet = TRUE))
+  expect_equal(recode_age(c("young", "31"), quiet = TRUE)[[1]], NA_character_)
+})

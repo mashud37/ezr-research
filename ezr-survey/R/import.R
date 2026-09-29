@@ -3,8 +3,7 @@
 #' Loads all CSV files matching `pattern` in `path`, reading each as character
 #' (so survey codes never get silently coerced), tags every row with its source
 #' filename, and row-binds the lot into one tibble. Generalises the
-#' `list.files() %>% map(read.csv) %>% bind_rows()` opening of the original
-#' scripts.
+#' `list.files() %>% map(read.csv) %>% bind_rows()` opening of a survey script.
 #'
 #' @param path Directory to read from.
 #' @param pattern Regular expression matching the files to load. Defaults to
@@ -14,6 +13,9 @@
 #' @param all_character If `TRUE` (default), every column is read as character.
 #'   This keeps ragged survey exports stackable; recode types afterwards with
 #'   the `recode_*` helpers. If `FALSE`, types are guessed per file.
+#' @param question_row What to do with a second header row of question wording.
+#'   `NULL` (default) keeps it and warns when a file looks like it has one;
+#'   `TRUE` drops the first row of every file; `FALSE` keeps it silently.
 #' @param locale A [readr::locale()] controlling encoding etc. Defaults to a
 #'   UTF-8 locale; pass `readr::locale(encoding = "windows-1252")` for legacy
 #'   exports.
@@ -33,6 +35,12 @@
 #' [parse_filename()]. For legacy encodings pass a `locale`, e.g.
 #' `readr::locale(encoding = "windows-1252")`.
 #'
+#' Survey platforms commonly write the question wording as a second header row,
+#' which reads back as respondent number one and quietly skews every count by
+#' one. A file whose first row is long, spaced prose in most columns at once
+#' and numeric in none is reported as such; `question_row = TRUE` drops that
+#' row from every file, and `FALSE` keeps it without comment.
+#'
 #' @family import
 #' @seealso [select_prefix()], [parse_filename()].
 #' @examples
@@ -43,7 +51,7 @@
 #' read_folder(dir)[, c("file", "respondent_id")]
 #' @export
 read_folder <- function(path, pattern = "\\.csv$", id = "file",
-                        all_character = TRUE,
+                        all_character = TRUE, question_row = NULL,
                         locale = readr::locale(encoding = "UTF-8"), ...) {
   if (!dir.exists(path)) {
     stop("Directory does not exist: ", path, call. = FALSE)
@@ -67,6 +75,7 @@ read_folder <- function(path, pattern = "\\.csv$", id = "file",
       show_col_types = FALSE,
       ...
     )
+    inp <- drop_question_row(inp, question_row, f)
     if (!is.null(id)) {
       inp[[id]] <- f
     }
@@ -75,6 +84,46 @@ read_folder <- function(path, pattern = "\\.csv$", id = "file",
   progress_done(run)
 
   dplyr::bind_rows(pieces)
+}
+
+# Internal: survey platforms often write the question wording as a second
+# header row, which reads back as respondent number one. `question_row = TRUE`
+# drops it, FALSE keeps it, and NULL (the default) keeps it but says so, since
+# guessing wrong either way is worse than a sentence of warning.
+drop_question_row <- function(inp, question_row, file) {
+  if (isFALSE(question_row)) {
+    return(inp)
+  }
+  if (isTRUE(question_row)) {
+    return(if (nrow(inp) > 0L) inp[-1, , drop = FALSE] else inp)
+  }
+  if (looks_like_question_row(inp)) {
+    warning("In ", file, ", the first row reads like question wording rather ",
+            "than an answer, which is how survey platforms export a second ",
+            "header row. Pass `question_row = TRUE` to drop it, or FALSE to ",
+            "keep it and silence this.", call. = FALSE)
+  }
+  inp
+}
+
+# Internal: question wording is long, spaced prose in most columns at once,
+# and never a number. One sentence in one column is a real answer, so only a
+# row that reads that way across the board is called out.
+looks_like_question_row <- function(inp) {
+  if (nrow(inp) == 0L || ncol(inp) < 3L) {
+    return(FALSE)
+  }
+  first <- trimws(as.character(unlist(inp[1, ], use.names = FALSE)))
+  filled <- first[!is.na(first) & nzchar(first)]
+  if (length(filled) < 3L) {
+    return(FALSE)
+  }
+  numeric_looking <- !is.na(suppressWarnings(as.numeric(filled)))
+  if (any(numeric_looking)) {
+    return(FALSE)
+  }
+  wordy <- nchar(filled) > 20L & grepl(" ", filled, fixed = TRUE)
+  mean(wordy) >= 0.5
 }
 
 #' Select identifier and prefixed columns
@@ -155,8 +204,7 @@ select_suffix <- function(data = NULL, suffix, keep = NULL) {
 #' Survey exports often encode metadata in the filename (e.g.
 #' `"podracing_wave1_NA_2026.csv"`). This splits a filename column on a
 #' separator into named metadata columns, dropping the file extension first.
-#' Replaces the brittle `str_split(file, "_")[[1]][n]` indexing in the original
-#' scripts.
+#' Replaces the brittle `str_split(file, "_")[[1]][n]` indexing this saves you.
 #'
 #' @param data A data frame.
 #' @param col Name of the column holding the filename (string or unquoted).

@@ -42,7 +42,7 @@ A ggplot object.
 \description{
 Draws a 100\%-stacked bar per feature across an ordinal rating scale, labels
 each segment, and orders features by their weighted mean rating -- the
-likeability / purchase / feature-rating charts from the original reports.
+likeability, purchase and feature-rating charts a survey deck is built from.
 }
 \details{
 Each feature becomes a 100\%-stacked bar across the rating scale, and features

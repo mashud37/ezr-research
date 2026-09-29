@@ -52,8 +52,7 @@ Multi-select questions arrive as a block of columns sharing a prefix, each
 holding the chosen option (or blank). This computes, per option, the share of
 respondents who selected it -- so the percentages can (and usually do) sum to
 more than 100. The denominator is the number of distinct respondents who
-selected at least one option, reproducing the \code{freq_multiple()} helper from
-the original reports.
+selected at least one option.
 }
 \details{
 The crucial difference from \code{\link[=calc_percentage]{calc_percentage()}} is the denominator: it is the

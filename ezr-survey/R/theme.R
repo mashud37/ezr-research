@@ -1,7 +1,7 @@
 #' ezrsurvey ggplot2 themes
 #'
-#' A clean, presentation-oriented theme family generalised from the original
-#' report themes (`theme_legacy*`). The base theme strips chart junk -- no ticks,
+#' A clean, presentation-oriented theme family for survey reporting. The base
+#' theme strips chart junk -- no ticks,
 #' no gridlines, centred bold titles -- which suits labelled bar charts that
 #' carry their own data labels. The `_x` / `_y` / `_xy` variants add back faint
 #' major gridlines on the named axes.

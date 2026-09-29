@@ -59,7 +59,6 @@ auto_bar_layout <- function(labels, n_items, orientation, is_ordinal, sort,
 #' for a few short labels, horizontal bars for many or long ones, with long
 #' labels wrapped, the text size stepped down as bars multiply, and the bars
 #' ordered so the longest sits at the top (bars) or on the left (cols).
-#' Generalises the `bars_freq()` helper from the original reports.
 #'
 #' @param data A data frame with a category column and a value column.
 #' @param label Category column (unquoted). If `NULL` (default), the first
@@ -217,7 +216,7 @@ plot_bars <- function(data, label = NULL, value = pct,
 #'
 #' Draws a 100%-stacked bar per feature across an ordinal rating scale, labels
 #' each segment, and orders features by their weighted mean rating -- the
-#' likeability / purchase / feature-rating charts from the original reports.
+#' likeability, purchase and feature-rating charts a survey deck is built from.
 #'
 #' @param data Long data with one row per feature x rating level.
 #' @param feature Feature column (unquoted).
@@ -262,6 +261,14 @@ plot_bars <- function(data, label = NULL, value = pct,
 plot_stacked_rating <- function(data, feature, level, value = pct,
                                 palette = NULL, label_min = 1,
                                 show_average = TRUE) {
+  # Without this, forgetting `level` surfaces as a missing `level_sym`, an
+  # argument the function does not have.
+  if (missing(feature) || missing(level)) {
+    stop("plot_stacked_rating() needs `feature` and `level`: the columns ",
+         "holding the question and its answer. It takes one row per ",
+         "question and answer, which plot_rating_grid(data, prefix) builds ",
+         "for you from a block of rating columns.", call. = FALSE)
+  }
   feature_sym <- rlang::ensym(feature)
   level_sym <- rlang::ensym(level)
   value_sym <- rlang::ensym(value)
@@ -380,6 +387,20 @@ plot_rating_grid <- function(data = NULL, prefix, levels = NULL, digits = 2,
             "ranked: ", paste(unknown, collapse = ", "),
             ". Check `levels` against the data.")
   }
+  # Two different answers on one rank means `levels` is short of a level:
+  # recode_likert() falls back to substring matching, and "Neither agree nor
+  # disagree" contains "disagree". The chart that results looks plausible and
+  # is wrong, so say so rather than drawing two segments numbered alike.
+  seen <- unique(data.frame(rank = ranks, answer = tab$answer,
+                            stringsAsFactors = FALSE))
+  seen <- seen[!is.na(seen$rank), , drop = FALSE]
+  for (clash in unique(seen$rank[duplicated(seen$rank)])) {
+    message("plot_rating_grid: ",
+            paste(seen$answer[seen$rank == clash], collapse = " and "),
+            " both came out as ", clash, " on the '", prefix, "' scale. ",
+            "`levels` is missing one of them.")
+  }
+
   tab$answer <- paste(ranks, "-", tab$answer)
   plot_stacked_rating(tab, variable, answer, ...)
 }
@@ -387,8 +408,8 @@ plot_rating_grid <- function(data = NULL, prefix, levels = NULL, digits = 2,
 #' Score gauge with decision bands and a value marker
 #'
 #' A horizontal gauge that places a single score (NPS or mean rating) onto a
-#' banded scale, with a "you are here" marker. Generalises the NPS and quality
-#' gauges from the original summary slide.
+#' banded scale, with a "you are here" marker: the NPS and quality gauges a
+#' summary slide carries.
 #'
 #' @param score The score to mark (NPS on -100..100, or a mean rating on 1..5).
 #' @param scale `"nps"` (default) or `"rating"`, selecting the band layout and
@@ -636,7 +657,7 @@ plot_gauges <- function(scores, scales = NULL, title = NULL, height = 0.5,
 #' The canonical Net Promoter Score chart: the full 0-10 recommendation
 #' distribution as labelled bars coloured by NPS group, with the detractor /
 #' passive / promoter shares called out in coloured boxes across the top and the
-#' overall NPS in the title. Reproduces the NPS slide from the original report.
+#' overall NPS in the title: the NPS slide of a survey deck, in one call.
 #'
 #' @param data A data frame. If omitted, the session default ([use_dataset()])
 #'   is used.
@@ -662,7 +683,7 @@ plot_nps <- function(data = NULL, value, title = NULL) {
   r <- resolve_data_columns(rlang::enquo(data), list(rlang::enquo(value)),
                             missing(value))
   data <- r$data
-  col_name <- col_label(r$cols[[1]])
+  col_name <- col_label(r$cols[[1]], data)
   v <- ensure_numeric(data[[col_name]], quiet = TRUE)
   v <- v[!is.na(v) & v >= 0 & v <= 10]
   if (length(v) == 0L) {
@@ -709,7 +730,7 @@ plot_nps <- function(data = NULL, value, title = NULL) {
 #'
 #' Plots an [ipm_model()] table as a scatter of feature performance (x) vs.
 #' importance (y), coloured by performance band, with decision bands across the
-#' top. Reproduces the IPM slide from the original report.
+#' top: the importance / performance slide of a survey deck, in one call.
 #'
 #' @param model An [ipm_model()] output (`feature`, `importance`, `performance`,
 #'   `perf_class`).
@@ -775,8 +796,8 @@ plot_ipm <- function(model, title = NULL, repel = TRUE,
 
 #' Treemap of selected quotes
 #'
-#' A treemap where each tile is a comment sized by length -- the quote slides
-#' from the original report. Requires the suggested `treemapify` package.
+#' A treemap where each tile is a comment sized by length -- the quote slide of
+#' a survey deck. Requires the suggested `treemapify` package.
 #'
 #' @param data A data frame of quotes, e.g. from [sample_comments()].
 #' @param label Text column (unquoted). Defaults to `comment`.
@@ -806,6 +827,18 @@ plot_quotes_tree <- function(data, label = comment, area = length,
   }
   label_sym <- rlang::ensym(label)
   area_sym <- rlang::ensym(area)
+
+  # Both defaults are columns sample_comments() adds. Without this, a missing
+  # one resolves to the base function of the same name and surfaces much later
+  # as a ggplot aesthetic error about an object of type <function>.
+  for (col in c(rlang::as_name(label_sym), rlang::as_name(area_sym))) {
+    if (!col %in% names(data)) {
+      stop("plot_quotes_tree() needs a `", col, "` column, and the data has ",
+           "none. It expects what sample_comments() returns, which carries ",
+           "`comment` and `length`; name your own columns with `label =` and ",
+           "`area =`.", call. = FALSE)
+    }
+  }
 
   ggplot2::ggplot(data, ggplot2::aes(area = !!area_sym, label = !!label_sym)) +
     treemapify::geom_treemap(fill = NA, colour = colour) +

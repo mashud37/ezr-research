@@ -19,14 +19,30 @@ resolve_data <- function(data) {
 # `demo_gender` or a string like "motivations_"). Anything else is a mistake
 # worth naming: an expression here usually means a vector was passed where a
 # column of the data was meant.
-col_label <- function(q) {
+col_label <- function(q, data = NULL) {
   expr <- rlang::quo_get_expr(q)
   if (!rlang::is_symbol(expr) && !is.character(expr)) {
     stop("Expected a column name, got `", rlang::as_label(expr), "`. ",
          "Pass an unquoted column of the data (and the data frame itself, or ",
          "set one with use_dataset()).", call. = FALSE)
   }
-  rlang::as_name(expr)
+  name <- rlang::as_name(expr)
+  if (!is.null(data)) check_column(name, data)
+  name
+}
+
+# Internal: a column name the data does not have is the commonest mistake there
+# is, and without this the pull-and-assign that follows reports it as an
+# internal length mismatch ("replacement has 0 rows"). Name the column that
+# failed, and offer the nearest spelling the data does have.
+check_column <- function(name, data) {
+  if (name %in% names(data)) {
+    return(invisible(name))
+  }
+  near <- names(data)[agrepl(name, names(data), max.distance = 0.3,
+                             ignore.case = TRUE)]
+  hint <- if (length(near)) paste0(" Did you mean `", near[[1]], "`?") else ""
+  stop("Column `", name, "` not found in the data.", hint, call. = FALSE)
 }
 
 # Internal: resolve the leading (data, columns...) so the column(s) may be

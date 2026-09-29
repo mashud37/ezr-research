@@ -155,3 +155,45 @@ test_that("plot_rating_grid reports answers that are not on the scale", {
 test_that("plot_rating_grid errors when no column matches the prefix", {
   expect_error(plot_rating_grid(podracing_survey, "nothing_"), "start with")
 })
+
+test_that("plot_stacked_rating names the argument the caller forgot", {
+  d <- data.frame(feature = "a", level = "Good", pct = 100)
+  expect_error(plot_stacked_rating(d), "needs `feature` and `level`")
+  expect_error(plot_stacked_rating(d, feature), "needs `feature` and `level`")
+  expect_no_error(ggplot2::ggplot_build(plot_stacked_rating(d, feature, level)))
+})
+
+test_that("plot_quotes_tree says which column it is missing", {
+  skip_if_not_installed("treemapify")
+  raw <- data.frame(comment = c("a quote", "another quote"),
+                    stringsAsFactors = FALSE)
+  # `length` is a base function, so without a guard this fails much later as a
+  # ggplot aesthetic error rather than here
+  expect_error(plot_quotes_tree(raw, comment), "needs a `length` column")
+  expect_error(plot_quotes_tree(raw, no_such_col), "needs a `no_such_col`")
+  quotes <- sample_comments(podracing_survey, nps_com, n = 4)
+  expect_no_error(ggplot2::ggplot_build(plot_quotes_tree(quotes)))
+})
+
+test_that("plot_rating_grid reports two answers landing on one rank", {
+  d <- data.frame(
+    rate_a = c("Agree", "Disagree", "Neither agree nor disagree"),
+    rate_b = c("Strongly agree", "Agree", "Neither agree nor disagree"),
+    stringsAsFactors = FALSE
+  )
+  # recode_likert() falls back to substring matching, so without the check
+  # "Neither agree nor disagree" quietly becomes "Disagree"
+  expect_message(
+    plot_rating_grid(d, "rate_",
+                     levels = c("Strongly disagree", "Disagree",
+                                "Agree", "Strongly agree")),
+    "both came out as"
+  )
+  # naming the level it was missing settles it
+  expect_no_message(
+    plot_rating_grid(d, "rate_",
+                     levels = c("Strongly disagree", "Disagree",
+                                "Neither agree nor disagree",
+                                "Agree", "Strongly agree"))
+  )
+})

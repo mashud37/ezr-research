@@ -5,16 +5,21 @@
 \alias{country_region}
 \title{Country to region lookup}
 \format{
-A \link[tibble:tibble]{tibble} with 182 rows and 3 columns:
+A \link[tibble:tibble]{tibble} with 180 rows and 5 columns:
 \describe{
 \item{country}{Country name.}
+\item{iso2}{ISO 3166-1 alpha-2 code (e.g. \code{"DE"}). \code{NA} for Kosovo, which
+has no code of its own.}
+\item{iso3}{ISO 3166-1 alpha-3 code (e.g. \code{"DEU"}).}
 \item{region}{World region (Africa, Asia, Europe, Middle East,
 North America, Oceania, South America).}
 \item{subregion}{Finer subregion (e.g. Western Europe, East Asia).}
 }
+Note that Namibia's alpha-2 code is the two letters \code{"NA"}, not a missing
+value, which is worth knowing before filtering on the column.
 }
 \source{
-Compiled from a standard country/region classification. See
+Regions are the package's own grouping. Codes are ISO 3166-1. See
 \code{data-raw/make_country_region.R}.
 }
 \usage{
@@ -23,7 +28,8 @@ country_region
 \description{
 A tidy lookup table mapping country names to a world \code{region} and a finer
 \code{subregion}, used by \code{\link[=recode_region]{recode_region()}} / \code{\link[=add_region]{add_region()}} to turn a country
-column into regions.
+column into regions. Each country also carries its ISO 3166-1 codes, so a
+result can be reported against the standard.
 }
 \examples{
 head(country_region)

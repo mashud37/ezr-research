@@ -484,6 +484,14 @@ crosstab_banner <- function(data = NULL, rows, cols,
   cell <- match.arg(cell)
   stats <- match.arg(stats, several.ok = TRUE)
 
+  # A banner over no respondents has no groups and no rows to put in them, and
+  # filtering to an empty segment is the usual way to arrive here.
+  if (nrow(data) == 0L) {
+    stop("crosstab_banner() needs at least one row; the data has none. ",
+         "A filter that matched no respondents is the usual cause.",
+         call. = FALSE)
+  }
+
   # With no rows / cols, cross every eligible variable against every other.
   auto <- missing(rows) || missing(cols)
   sel <- if (auto) banner_auto_select(data, max_levels) else NULL
@@ -515,7 +523,7 @@ crosstab_banner <- function(data = NULL, rows, cols,
   num_digits <- digits %||% 2
 
   d_all <- data
-  d_all[[".all"]] <- "Overall"
+  d_all[[".all"]] <- rep("Overall", nrow(d_all))
 
   group_levels <- stats::setNames(lapply(col_vars, function(g) {
     gp <- crosstab(d_all, !!rlang::sym(g), !!rlang::sym(".all"),

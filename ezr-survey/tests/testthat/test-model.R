@@ -93,3 +93,10 @@ test_that("perf_class buckets by integer part, not rounding", {
   expect_equal(as.character(cut_perf_band(3.0)), "3")
   expect_equal(as.character(cut_perf_band(4.99)), "4")
 })
+
+test_that("calc_nps survives a frame filtered down to nothing", {
+  empty <- data.frame(nps_value = numeric(0), region = character(0))
+  out <- calc_nps(empty, nps_value)
+  expect_s3_class(out, "tbl_df")
+  expect_equal(out$n, 0L)
+})

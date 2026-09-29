@@ -74,7 +74,6 @@ ezrsurvey theme. By default the \strong{layout is chosen for you}: vertical colu
 for a few short labels, horizontal bars for many or long ones, with long
 labels wrapped, the text size stepped down as bars multiply, and the bars
 ordered so the longest sits at the top (bars) or on the left (cols).
-Generalises the \code{bars_freq()} helper from the original reports.
 }
 \details{
 Expects a summary table (from \code{\link[=calc_percentage]{calc_percentage()}} and friends), not raw survey

@@ -36,3 +36,25 @@ test_that("parse_filename splits metadata and drops the extension", {
   expect_equal(out$year, "2026")
   expect_true("file" %in% names(out))       # kept by default
 })
+
+test_that("a second header row of question wording is reported", {
+  dir <- withr::local_tempdir()
+  writeLines(
+    c("id,gender,satisfaction",
+      '"Response ID","What is your gender please?","How satisfied were you?"',
+      "1,Male,Good", "2,Female,Ok"),
+    file.path(dir, "export.csv")
+  )
+  expect_warning(read_folder(dir), "question wording")
+  kept <- read_folder(dir, question_row = FALSE)
+  expect_equal(nrow(kept), 3L)
+  dropped <- read_folder(dir, question_row = TRUE)
+  expect_equal(nrow(dropped), 2L)
+  expect_equal(dropped$gender[[1]], "Male")
+})
+
+test_that("an ordinary export is not mistaken for one", {
+  dir <- withr::local_tempdir()
+  readr::write_csv(head(podracing_survey, 3), file.path(dir, "a.csv"))
+  expect_silent(read_folder(dir))
+})

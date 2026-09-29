@@ -126,8 +126,8 @@ order_factor <- function(df, key, sort = c("none", "desc", "asc"),
 #'   automatically (see [register_order()]).
 #' @param digits Decimal places for the percentage. Defaults to `0`.
 #' @param wide If `TRUE`, pivot to one row per `by` group and one column per
-#'   answer (dropping `n`), matching the wide summary tables in the original
-#'   workflow. Defaults to `FALSE` (tidy long form).
+#'   answer (dropping `n`), the shape a wide summary table needs. Defaults to
+#'   `FALSE` (tidy long form).
 #' @param na_rm If `TRUE` (default), blanks and "Prefer not to answer" responses
 #'   (see [na_blank()]) are dropped before counting.
 #' @param drop Optional character vector of answer values to remove before
@@ -177,7 +177,7 @@ calc_percentage <- function(data = NULL, column, by = NULL,
                             missing(column))
   data <- r$data
   sort <- match.arg(sort)
-  col_name <- col_label(r$cols[[1]])
+  col_name <- col_label(r$cols[[1]], data)
   col_sym <- rlang::sym(col_name)
   by_q <- rlang::enquo(by)
   has_by <- !rlang::quo_is_null(by_q)
@@ -245,8 +245,7 @@ calc_percentage <- function(data = NULL, column, by = NULL,
 #' holding the chosen option (or blank). This computes, per option, the share of
 #' respondents who selected it -- so the percentages can (and usually do) sum to
 #' more than 100. The denominator is the number of distinct respondents who
-#' selected at least one option, reproducing the `freq_multiple()` helper from
-#' the original reports.
+#' selected at least one option.
 #'
 #' @param data A data frame.
 #' @param prefix Common column-name prefix identifying the option block, e.g.
@@ -426,7 +425,7 @@ calc_summary <- function(data = NULL, column, by = NULL, na_rm = TRUE,
   r <- resolve_data_columns(rlang::enquo(data), list(rlang::enquo(column)),
                             missing(column))
   data <- r$data
-  col_name <- col_label(r$cols[[1]])
+  col_name <- col_label(r$cols[[1]], data)
   col_sym <- rlang::sym(col_name)
   by_q <- rlang::enquo(by)
   has_by <- !rlang::quo_is_null(by_q)

@@ -1,5 +1,84 @@
 # ezrsurvey 0.7.0
 
+## A country column people typed themselves
+
+Free-text country questions do not come back tidy. In one real open salary
+survey of 26,232 people, nine thousand wrote "United States" and eight thousand
+wrote "USA"; the bundled table matched the first and missed the second, so
+`recode_region()` resolved 49% of the column.
+
+* **`recode_region()`, `recode_subregion()` and `add_region()`** now fold the
+  answer down before looking it up (case, punctuation, accents and a leading
+  "the" are dropped) and then try a table of the spellings people actually use.
+  It carries endonyms (`"Deutschland"`, `"Brasil"`, `"Espana"`), the constituent
+  countries of the United Kingdom, and ISO 3166-1 alpha-2 and alpha-3 codes, so
+  a column already coded to the standard needs no preparation. On that same
+  survey the three functions now resolve 99.3%, and what remains are real typos
+  worth seeing.
+* A two-letter code that is also an ordinary English word is read as a country
+  only when it was typed in capitals, so `"NO"` is Norway and `"no"` stays
+  unmatched. Unambiguous codes match either way.
+* **`country_region`** gains `iso2` and `iso3` columns, so a region breakdown
+  can be reported against ISO 3166-1 rather than against country names. Every
+  country carries both except Kosovo, which has no code of its own. Namibia's
+  alpha-2 code is the two letters `"NA"`, which is worth knowing before
+  filtering on the column.
+* Three countries in that table were misspelled and so could never match an
+  answer: `"Ise of Man"`, `"America Samoa"` and `"Kazakstan"`. Bermuda was
+  missing altogether. All four are fixed, and the duplicate rows the
+  corrections exposed are gone, which takes the table from 182 rows to 180.
+
+## Errors that name what went wrong
+
+* A **mistyped column name** now says which name failed and offers the nearest
+  one the data has. `calc_percentage(d, gendr)` reported `replacement has 0
+  rows, data has 3`, which describes an assignment the caller never made; it now
+  says ``Column `gendr` not found in the data. Did you mean `gender`?``. The
+  same applies to `calc_summary()`, `calc_nps()`, `crosstab()`, `plot_nps()` and
+  `split_multi()`.
+* **`calc_nps()`** works on a frame filtered down to no rows instead of failing
+  with `replacement has 1 row, data has 0`. Filtering to a segment nobody fell
+  into is ordinary, and the answer is a zero count, not an error.
+* **`crosstab_banner()`** refuses a frame with no rows in a sentence that says
+  a filter is the usual cause, rather than reporting the same internal mismatch.
+* **`plot_stacked_rating()`** names the argument the caller actually omitted.
+  Leaving out `level` reported a missing `level_sym`, which is not an argument
+  it has.
+* **`plot_rating_grid()`** reports two answers that land on the same rank.
+  `recode_likert()` falls back to matching on a substring, and "Neither agree
+  nor disagree" contains "disagree", so a five-point scale handed only four
+  levels drew two segments both numbered 2. The chart looked plausible and was
+  wrong; now it says which level is missing.
+* **`plot_quotes_tree()`** says which column it cannot find. Its defaults are
+  the `comment` and `length` columns `sample_comments()` produces, and handed
+  anything else it failed at drawing time with a ggplot error about an object
+  of type `<function>`, because `length` had resolved to the base function.
+
+## Reading an export that has a second header row
+
+* **`read_folder()`** notices when the first row of a file is question wording
+  rather than an answer, which is how survey platforms export the question text,
+  and says so. Read as data it becomes respondent number one and shifts every
+  count by one. The new `question_row` argument drops that row from every file
+  (`TRUE`), keeps it silently (`FALSE`), or keeps it and warns (`NULL`, the
+  default).
+
+## Smaller fixes
+
+* **`recode_age()`** reports answers that held no number at all. `"young"` and
+  `"prefer not to say"` became `NA` in silence, which made a column that was
+  never numeric look like a column of missing ages. New `quiet` argument.
+* The package has a **logo**. `README.md` had pointed at `man/figures/logo.png`
+  since the first release without that file ever existing, so the front page of
+  the README and of the documentation site both opened with a broken image.
+* The bundled PowerPoint templates are **built from a blank presentation of the
+  project's own**, not from another package's file.
+* The documentation no longer describes the package in terms of the work it was
+  extracted from. Nineteen references to "the original reports", "the original
+  survey charts" and similar reached sixteen shipped help pages, and one named
+  a theme function that was never part of this package.
+
+
 ## Multi-select questions packed into one cell
 
 Google Forms and most spreadsheet exports put every answer a respondent ticked

@@ -38,8 +38,7 @@ The data frame with the new metadata columns added.
 Survey exports often encode metadata in the filename (e.g.
 \code{"podracing_wave1_NA_2026.csv"}). This splits a filename column on a
 separator into named metadata columns, dropping the file extension first.
-Replaces the brittle \code{str_split(file, "_")[[1]][n]} indexing in the original
-scripts.
+Replaces the brittle \code{str_split(file, "_")[[1]][n]} indexing this saves you.
 }
 \details{
 Pairs naturally with \code{\link[=read_folder]{read_folder()}}, whose \code{file} column carries the source

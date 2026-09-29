@@ -19,8 +19,8 @@ plot_quotes_tree(data, label = comment, area = length, colour = "black")
 A ggplot object.
 }
 \description{
-A treemap where each tile is a comment sized by length -- the quote slides
-from the original report. Requires the suggested \code{treemapify} package.
+A treemap where each tile is a comment sized by length -- the quote slide of
+a survey deck. Requires the suggested \code{treemapify} package.
 }
 \details{
 Lays selected verbatims out as a treemap, each tile sized by comment length,

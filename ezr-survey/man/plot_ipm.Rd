@@ -24,7 +24,7 @@ A ggplot object.
 \description{
 Plots an \code{\link[=ipm_model]{ipm_model()}} table as a scatter of feature performance (x) vs.
 importance (y), coloured by performance band, with decision bands across the
-top. Reproduces the IPM slide from the original report.
+top: the importance / performance slide of a survey deck, in one call.
 }
 \details{
 Each feature is a point: performance on the x-axis (mean 1--5 rating, with a

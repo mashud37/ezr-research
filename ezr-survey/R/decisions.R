@@ -28,8 +28,8 @@ infer_panel_range <- function(plot, axis) {
 
 #' Annotate a plot with labelled decision bands
 #'
-#' Programmatically adds the BAD / OK / GOOD style decision markers seen across
-#' the original survey charts: for each band a thin coloured marker line runs
+#' Programmatically adds the BAD / OK / GOOD style decision markers survey
+#' charts carry: for each band a thin coloured marker line runs
 #' along one axis, with a bold centred label. This turns the copy-pasted
 #' `geom_rect()` + `annotate("text", x = median(seq(from, to, .1)), ...)` blocks
 #' into one call, so any chart can be given consistent "where's good, where's

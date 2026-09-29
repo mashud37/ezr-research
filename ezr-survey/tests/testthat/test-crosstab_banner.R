@@ -259,3 +259,9 @@ test_that("clear_checkpoints empties the managed folder", {
   expect_length(list.files(cache, pattern = "^banner-"), 0)
   expect_true(file.exists(file.path(cache, "notes.txt")))
 })
+
+test_that("crosstab_banner refuses a frame with no rows, in words", {
+  empty <- podracing_survey[0, ]
+  expect_error(crosstab_banner(empty, rows = demo_gender, cols = region),
+               "needs at least one row")
+})

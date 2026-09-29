@@ -38,8 +38,8 @@ automatically (see \code{\link[=register_order]{register_order()}}).}
 \item{digits}{Decimal places for the percentage. Defaults to \code{0}.}
 
 \item{wide}{If \code{TRUE}, pivot to one row per \code{by} group and one column per
-answer (dropping \code{n}), matching the wide summary tables in the original
-workflow. Defaults to \code{FALSE} (tidy long form).}
+answer (dropping \code{n}), the shape a wide summary table needs. Defaults to
+\code{FALSE} (tidy long form).}
 
 \item{na_rm}{If \code{TRUE} (default), blanks and "Prefer not to answer" responses
 (see \code{\link[=na_blank]{na_blank()}}) are dropped before counting.}

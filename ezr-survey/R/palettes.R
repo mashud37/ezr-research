@@ -2,8 +2,8 @@
 
 #' ezrsurvey colour palettes
 #'
-#' A small set of named, semantic palettes generalised from the original survey
-#' reports. Each is a plain character vector of hex colours (some named) that you
+#' A small set of named, semantic palettes for survey reporting. Each is a
+#' plain character vector of hex colours (some named) that you
 #' can use directly or via the `scale_*_rating()` / `scale_fill_nps()` helpers.
 #'
 #' @format Each palette is a character vector of hex colour strings:

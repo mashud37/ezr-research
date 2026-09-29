@@ -22,7 +22,7 @@ A ggplot object.
 The canonical Net Promoter Score chart: the full 0-10 recommendation
 distribution as labelled bars coloured by NPS group, with the detractor /
 passive / promoter shares called out in coloured boxes across the top and the
-overall NPS in the title. Reproduces the NPS slide from the original report.
+overall NPS in the title: the NPS slide of a survey deck, in one call.
 }
 \details{
 Unlike \code{\link[=plot_nps_gauge]{plot_nps_gauge()}} (which takes a single score), this reads the raw

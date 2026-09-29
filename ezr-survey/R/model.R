@@ -46,14 +46,14 @@ calc_nps <- function(data = NULL, value, by = NULL, weights = NULL) {
   r <- resolve_data_columns(rlang::enquo(data), list(rlang::enquo(value)),
                             missing(value))
   data <- r$data
-  col_name <- col_label(r$cols[[1]])
+  col_name <- col_label(r$cols[[1]], data)
   by_q <- rlang::enquo(by)
   has_by <- !rlang::quo_is_null(by_q)
 
   w <- resolve_weights(data, weights)
 
   d <- data
-  d[[".w"]] <- if (is.null(w)) 1 else w
+  d[[".w"]] <- if (is.null(w)) rep(1, nrow(d)) else w
   d[[col_name]] <- ensure_numeric(d[[col_name]], name = col_name)
   d[[".nps_group"]] <- nps_group(d[[col_name]])
   d <- dplyr::filter(d, !is.na(.data$.nps_group))
@@ -219,7 +219,7 @@ calc_importance <- function(data = NULL, outcome, predictors,
                             missing(predictors))
   data <- r$data
   method <- match.arg(method)
-  out_name <- col_label(r$cols[[1]])
+  out_name <- col_label(r$cols[[1]], data)
   pred_names <- names(dplyr::select(data, !!r$cols[[2]]))
   if (length(pred_names) == 0L) {
     stop("No predictor columns selected.", call. = FALSE)
@@ -289,7 +289,7 @@ ipm_model <- function(data = NULL, outcome, rating_prefix,
                             missing(rating_prefix))
   data <- r$data
   method <- match.arg(method)
-  out_name <- col_label(r$cols[[1]])
+  out_name <- col_label(r$cols[[1]], data)
   rating_prefix <- rlang::eval_tidy(r$cols[[2]])
   rate_cols <- names(dplyr::select(data, dplyr::starts_with(rating_prefix)))
   if (length(rate_cols) == 0L) {

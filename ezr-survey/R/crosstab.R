@@ -79,8 +79,8 @@ crosstab <- function(data = NULL, x, y, cell = c("count", "row_pct", "col_pct",
                             list(rlang::enquo(x), rlang::enquo(y)), missing(y))
   data <- r$data
   cell <- match.arg(cell)
-  x_name <- col_label(r$cols[[1]])
-  y_name <- col_label(r$cols[[2]])
+  x_name <- col_label(r$cols[[1]], data)
+  y_name <- col_label(r$cols[[2]], data)
   value_q <- rlang::enquo(value)
   has_value <- !rlang::quo_is_null(value_q)
   if (is.null(digits)) digits <- if (has_value) 2 else 0

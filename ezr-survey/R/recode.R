@@ -89,8 +89,7 @@ drop_items <- function(x, items, trim = TRUE) {
 #' A thin, survey-friendly wrapper around [base::cut()] that returns a character
 #' vector (not a factor) and uses left-closed, right-open intervals by default
 #' so that age bands like 18-21 behave intuitively. Generalises the
-#' `case_when(age %in% seq(...))` age-grouping pattern from the original
-#' reports.
+#' `case_when(age %in% seq(...))` age-grouping pattern.
 #'
 #' @param x A numeric vector.
 #' @param breaks Numeric vector of cut points. With `n` labels you need `n + 1`
@@ -149,20 +148,25 @@ bin_numeric <- function(x, breaks, labels, right = FALSE, quiet = FALSE) {
 
 #' Recode age into standard survey bands
 #'
-#' Convenience wrapper over [bin_numeric()] using the default age bands from the
-#' original consumer surveys. Also tolerates messy inputs such as "25 years" by
+#' Convenience wrapper over [bin_numeric()] using the standard survey age
+#' bands. Also tolerates messy inputs such as "25 years" by
 #' extracting the first run of digits.
 #'
 #' @param x A numeric or character vector of ages.
 #' @param breaks,labels Override the default bands if needed; the defaults come
 #'   from the `age_breaks` / `age_labels` options (see [ezrsurvey_options()]).
+#' @param quiet If `FALSE` (default), report answers that held no number and
+#'   answers that fell outside the bands. Set `TRUE` to silence both.
 #'
 #' @return A character vector of age-band labels.
 #'
 #' @details
 #' Ages are first passed through [ensure_numeric()], so messy entries like
 #' `"22 years"` or `"age: 31"` are handled, then binned with [bin_numeric()]
-#' using left-closed bands. The default bands come from the `age_breaks` /
+#' using left-closed bands. An answer with no number in it at all (`"young"`,
+#' `"prefer not to say"`) becomes `NA` and is counted in a message, so a column
+#' that was never numeric does not pass for a column of missing ages. The
+#' default bands come from the `age_breaks` /
 #' `age_labels` options, so you can set your study's standard cohorts once with
 #' `ezrsurvey_options(age_breaks = ..., age_labels = ...)` (or a profile) instead
 #' of passing them on every call. For *generational* cohorts (Gen Z, Millennial,
@@ -175,17 +179,24 @@ bin_numeric <- function(x, breaks, labels, right = FALSE, quiet = FALSE) {
 #' @export
 recode_age <- function(x,
                        breaks = ezrsurvey_default("age_breaks"),
-                       labels = ezrsurvey_default("age_labels")) {
+                       labels = ezrsurvey_default("age_labels"),
+                       quiet = FALSE) {
   num <- ensure_numeric(x, quiet = TRUE)
-  bin_numeric(num, breaks = breaks, labels = labels)
+  # bin_numeric() reports ages that fall outside the bands, but an answer that
+  # held no number at all is already NA by then and would vanish in silence.
+  unparsed <- sum(is.na(num) & !is.na(x) & nzchar(trimws(as.character(x))))
+  if (!quiet && unparsed > 0) {
+    message("recode_age: ", unparsed, " value(s) held no number and became NA.")
+  }
+  bin_numeric(num, breaks = breaks, labels = labels, quiet = quiet)
 }
 
 #' Recode a worded rating scale to integers
 #'
 #' Maps the worded answers of an ordinal rating question (e.g. "Very bad" ...
 #' "Very good") onto integers `1:length(levels)`. Matching is case-insensitive
-#' and tolerant of common synonyms supplied via `synonyms`, reproducing the
-#' `case_when(str_detect("Very bad") ...)` recoding blocks from the reports.
+#' and tolerant of common synonyms supplied via `synonyms`, in place of a
+#' `case_when(str_detect("Very bad") ...)` recoding block.
 #'
 #' @param x A character (or factor) vector of worded answers.
 #' @param levels Character vector of the scale's answer wordings in ascending
@@ -410,7 +421,7 @@ split_multi <- function(data = NULL, column, split = "auto", prefix = NULL) {
   r <- resolve_data_columns(rlang::enquo(data), list(rlang::enquo(column)),
                             missing(column))
   data <- r$data
-  col_name <- col_label(r$cols[[1]])
+  col_name <- col_label(r$cols[[1]], data)
   if (is.null(prefix)) prefix <- paste0(col_name, "_")
 
   values <- na_blank(data[[col_name]])

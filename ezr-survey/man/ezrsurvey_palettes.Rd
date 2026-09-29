@@ -29,8 +29,8 @@ pal_sequential_blue
 pal_neutral
 }
 \description{
-A small set of named, semantic palettes generalised from the original survey
-reports. Each is a plain character vector of hex colours (some named) that you
+A small set of named, semantic palettes for survey reporting. Each is a
+plain character vector of hex colours (some named) that you
 can use directly or via the \verb{scale_*_rating()} / \code{scale_fill_nps()} helpers.
 }
 \details{

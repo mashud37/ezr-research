@@ -7,7 +7,8 @@
 recode_age(
   x,
   breaks = ezrsurvey_default("age_breaks"),
-  labels = ezrsurvey_default("age_labels")
+  labels = ezrsurvey_default("age_labels"),
+  quiet = FALSE
 )
 }
 \arguments{
@@ -15,19 +16,25 @@ recode_age(
 
 \item{breaks, labels}{Override the default bands if needed; the defaults come
 from the \code{age_breaks} / \code{age_labels} options (see \code{\link[=ezrsurvey_options]{ezrsurvey_options()}}).}
+
+\item{quiet}{If \code{FALSE} (default), report answers that held no number and
+answers that fell outside the bands. Set \code{TRUE} to silence both.}
 }
 \value{
 A character vector of age-band labels.
 }
 \description{
-Convenience wrapper over \code{\link[=bin_numeric]{bin_numeric()}} using the default age bands from the
-original consumer surveys. Also tolerates messy inputs such as "25 years" by
+Convenience wrapper over \code{\link[=bin_numeric]{bin_numeric()}} using the standard survey age
+bands. Also tolerates messy inputs such as "25 years" by
 extracting the first run of digits.
 }
 \details{
 Ages are first passed through \code{\link[=ensure_numeric]{ensure_numeric()}}, so messy entries like
 \code{"22 years"} or \code{"age: 31"} are handled, then binned with \code{\link[=bin_numeric]{bin_numeric()}}
-using left-closed bands. The default bands come from the \code{age_breaks} /
+using left-closed bands. An answer with no number in it at all (\code{"young"},
+\code{"prefer not to say"}) becomes \code{NA} and is counted in a message, so a column
+that was never numeric does not pass for a column of missing ages. The
+default bands come from the \code{age_breaks} /
 \code{age_labels} options, so you can set your study's standard cohorts once with
 \code{ezrsurvey_options(age_breaks = ..., age_labels = ...)} (or a profile) instead
 of passing them on every call. For \emph{generational} cohorts (Gen Z, Millennial,

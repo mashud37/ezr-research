@@ -1,13 +1,14 @@
-# Builds the two bundled 16:9 PowerPoint templates from officer's 4:3 base:
+# Builds the two bundled 16:9 PowerPoint templates:
 #
 #   inst/templates/ezrsurvey-16x9.pptx        styled ("elevated") default
 #   inst/templates/ezrsurvey-16x9-plain.pptx  undecorated white
 #
-# Both convert the base template to widescreen the way PowerPoint itself does
-# (uniform horizontal scale), add the "Content with Caption" layout Pandoc
-# expects, replace the dated Office colour scheme with a navy/gold identity, and
-# bring the title/body sizes down to deck-appropriate values with shrink-to-fit
-# on every text placeholder so descriptive question headlines never overflow.
+# The base is data-raw/blank-16x9.pptx, a blank widescreen presentation saved
+# from PowerPoint. It already carries all eleven standard layouts, including
+# the "Content with Caption" one Pandoc looks for, so both files need only the
+# identity applied: the dated Office colour scheme replaced with navy/gold, and
+# title/body sizes brought down to deck-appropriate values with shrink-to-fit on
+# every text placeholder so descriptive question headlines never overflow.
 # Layout names stay the PowerPoint standards ("Title Slide", "Title and
 # Content", ...) so either file also works as a Quarto reference-doc.
 #
@@ -32,7 +33,6 @@ ns <- c(
 EMU_IN <- 914400
 WIDE_CX <- 12192000            # 13.333in
 SLIDE_CY <- 6858000            # 7.5in
-BASE_CX <- 9144000             # officer's 4:3 width
 
 # ---- brand identity ------------------------------------------------------
 
@@ -89,18 +89,45 @@ add_background <- function(doc, fragment) {
   invisible(doc)
 }
 
-# ---- geometry ------------------------------------------------------------
+# ---- slides --------------------------------------------------------------
 
-scale_x <- function(path, factor) {
-  doc <- read_xml(path)
-  for (node in xml_find_all(doc, "//a:off", ns)) {
-    xml_set_attr(node, "x", emu(as.numeric(xml_attr(node, "x")) * factor))
+# Remove every slide from an unpacked presentation: the files themselves, the
+# ids that list them, the relationships that reach them, and their content-type
+# overrides. What is left is the layouts, which is what a template is.
+strip_slides <- function(work) {
+  slide_dir <- file.path(work, "ppt", "slides")
+  slides <- list.files(slide_dir, pattern = "^slide[0-9]+[.]xml$")
+  if (length(slides) == 0L) {
+    return(invisible(work))
   }
-  for (node in xml_find_all(doc, "//a:ext", ns)) {
-    xml_set_attr(node, "cx", emu(as.numeric(xml_attr(node, "cx")) * factor))
+
+  pres_path <- file.path(work, "ppt", "presentation.xml")
+  pres <- read_xml(pres_path)
+  id_list <- xml_find_first(pres, "//p:sldIdLst", ns)
+  if (!inherits(id_list, "xml_missing")) {
+    xml_remove(xml_find_all(id_list, "./p:sldId", ns))
   }
-  write_xml(doc, path)
+  write_xml(pres, pres_path)
+
+  rels_path <- file.path(work, "ppt", "_rels", "presentation.xml.rels")
+  rels <- read_xml(rels_path)
+  for (node in xml_find_all(rels, "//*[@Type]")) {
+    if (grepl("/slide$", xml_attr(node, "Type"))) xml_remove(node)
+  }
+  write_xml(rels, rels_path)
+
+  types_path <- file.path(work, "[Content_Types].xml")
+  types <- read_xml(types_path)
+  for (node in xml_find_all(types, "//*[@PartName]")) {
+    if (grepl("^/ppt/slides/slide", xml_attr(node, "PartName"))) xml_remove(node)
+  }
+  write_xml(types, types_path)
+
+  unlink(slide_dir, recursive = TRUE)
+  invisible(work)
 }
+
+# ---- geometry ------------------------------------------------------------
 
 # The title box a layout actually draws in. Layout placeholders usually inherit
 # their geometry from the master (no own a:xfrm), so fall back to the master's
@@ -260,8 +287,11 @@ ensure_autofit <- function(path) {
 # ---- build ---------------------------------------------------------------
 
 build_template <- function(out, decorate) {
-  src <- system.file("template/template.pptx", package = "officer")
-  stopifnot(nzchar(src))
+  src <- file.path("data-raw", "blank-16x9.pptx")
+  if (!file.exists(src)) {
+    stop("Base template not found at ", src, ". It is a blank widescreen ",
+         "presentation saved from PowerPoint; run this from the package root.")
+  }
   work <- file.path(tempdir(), paste0("ezr-tpl-", if (decorate) "styled" else "plain"))
   unlink(work, recursive = TRUE)
   dir.create(work, recursive = TRUE)
@@ -270,69 +300,45 @@ build_template <- function(out, decorate) {
   lay_dir <- file.path(work, "ppt", "slideLayouts")
   master_path <- file.path(work, "ppt", "slideMasters", "slideMaster1.xml")
 
-  # 1. widescreen
-  pres <- file.path(work, "ppt", "presentation.xml")
-  doc <- read_xml(pres)
-  sldsz <- xml_find_first(doc, "//p:sldSz", ns)
-  xml_set_attr(sldsz, "cx", emu(WIDE_CX))
-  xml_set_attr(sldsz, "type", NULL)
-  write_xml(doc, pres)
-
-  factor <- WIDE_CX / BASE_CX
-  for (f in c(master_path,
-              list.files(lay_dir, pattern = "^slideLayout[0-9]+[.]xml$",
-                         full.names = TRUE))) {
-    scale_x(f, factor)
+  # 1. the base is already widescreen and already carries all eleven standard
+  # layouts, so there is nothing to rescale or clone. Check rather than assume.
+  pres <- read_xml(file.path(work, "ppt", "presentation.xml"))
+  sldsz <- xml_find_first(pres, "//p:sldSz", ns)
+  if (as.numeric(xml_attr(sldsz, "cx")) != WIDE_CX) {
+    stop("Base template is not 16:9 (expected cx=", WIDE_CX, ", found ",
+         xml_attr(sldsz, "cx"), "). Save it as Widescreen and try again.")
+  }
+  caption <- file.path(lay_dir, "slideLayout8.xml")
+  if (!file.exists(caption)) {
+    stop("Base template has no slideLayout8; the 'Content with Caption' ",
+         "layout Pandoc expects is missing.")
   }
 
-  # 2. the "Content with Caption" layout Pandoc looks for (clone Two Content)
-  doc <- read_xml(file.path(lay_dir, "slideLayout4.xml"))
-  xml_set_attr(xml_find_first(doc, "//p:cSld", ns), "name",
-               "Content with Caption")
-  write_xml(doc, file.path(lay_dir, "slideLayout8.xml"))
-  file.copy(file.path(lay_dir, "_rels", "slideLayout4.xml.rels"),
-            file.path(lay_dir, "_rels", "slideLayout8.xml.rels"))
+  # 2. a template is layouts, not slides. PowerPoint always saves at least one
+  # slide, and left in place it becomes slide one of every deck built from the
+  # file: empty, unnumbered, ahead of the title. Take it back out.
+  strip_slides(work)
 
-  types_path <- file.path(work, "[Content_Types].xml")
-  types <- read_xml(types_path)
-  ct <- paste0("application/vnd.openxmlformats-officedocument.",
-               "presentationml.slideLayout+xml")
-  xml_add_child(types, read_xml(sprintf(
-    paste0('<Override xmlns="http://schemas.openxmlformats.org/package/2006/',
-           'content-types" PartName="/ppt/slideLayouts/slideLayout8.xml" ',
-           'ContentType="%s"/>'), ct
-  )))
-  write_xml(types, types_path)
+  # 3. blank the authoring metadata, so the shipped files carry no one's name.
+  core_path <- file.path(work, "docProps", "core.xml")
+  if (file.exists(core_path)) {
+    core <- read_xml(core_path)
+    for (tag in c("dc:creator", "cp:lastModifiedBy")) {
+      node <- xml_find_first(core, paste0("//", tag), c(
+        dc = "http://purl.org/dc/elements/1.1/",
+        cp = paste0("http://schemas.openxmlformats.org/package/2006/",
+                    "metadata/core-properties")
+      ))
+      if (!inherits(node, "xml_missing")) xml_text(node) <- ""
+    }
+    write_xml(core, core_path)
+  }
 
-  master_rels <- file.path(work, "ppt", "slideMasters", "_rels",
-                           "slideMaster1.xml.rels")
-  rels <- read_xml(master_rels)
-  rel_ids <- xml_attr(xml_find_all(rels, "//*[@Id]"), "Id")
-  new_rid <- paste0("rId", max(as.integer(sub("^rId", "", rel_ids))) + 1)
-  xml_add_child(rels, read_xml(sprintf(
-    paste0('<Relationship xmlns="http://schemas.openxmlformats.org/package/',
-           '2006/relationships" Id="%s" Type="http://schemas.openxmlformats.',
-           'org/officeDocument/2006/relationships/slideLayout" ',
-           'Target="../slideLayouts/slideLayout8.xml"/>'), new_rid
-  )))
-  write_xml(rels, master_rels)
-
-  master <- read_xml(master_path)
-  id_list <- xml_find_first(master, "//p:sldLayoutIdLst", ns)
-  ids <- as.numeric(xml_attr(xml_find_all(id_list, "./p:sldLayoutId", ns), "id"))
-  xml_add_child(id_list, read_xml(sprintf(
-    paste0('<p:sldLayoutId xmlns:p="%s" xmlns:r="http://schemas.',
-           'openxmlformats.org/officeDocument/2006/relationships" id="%s" ',
-           'r:id="%s"/>'),
-    ns[["p"]], emu(max(ids) + 1), new_rid
-  )))
-  write_xml(master, master_path)
-
-  # 3. brand palette (both templates), so charts, chrome and any use_brand()
+  # 4. brand palette (both templates), so charts, chrome and any use_brand()
   # extraction share the same navy/gold identity.
   set_clrscheme(file.path(work, "ppt", "theme", "theme1.xml"))
 
-  # 4. typography: navy 24pt titles, 14pt body, shrink-to-fit everywhere, and
+  # 5. typography: navy 24pt titles, 14pt body, shrink-to-fit everywhere, and
   # larger cover / section wording. Applies to both templates.
   set_master_style(master_path)
   # cover title + subtitle
@@ -349,7 +355,7 @@ build_template <- function(out, decorate) {
     ensure_autofit(f)
   }
 
-  # 5. styling: full-bleed navy cover and dividers with white text, one slim
+  # 6. styling: full-bleed navy cover and dividers with white text, one slim
   # navy rule under every content title.
   if (decorate) {
     master_box <- master_title_box(master_path)

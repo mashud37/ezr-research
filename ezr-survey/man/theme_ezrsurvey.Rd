@@ -28,8 +28,8 @@ transparent (handy for slides). Defaults to \code{FALSE}.}
 A \code{\link[ggplot2:theme]{ggplot2::theme()}} object to add to a plot with \code{+}.
 }
 \description{
-A clean, presentation-oriented theme family generalised from the original
-report themes (\verb{theme_legacy*}). The base theme strips chart junk -- no ticks,
+A clean, presentation-oriented theme family for survey reporting. The base
+theme strips chart junk -- no ticks,
 no gridlines, centred bold titles -- which suits labelled bar charts that
 carry their own data labels. The \verb{_x} / \verb{_y} / \verb{_xy} variants add back faint
 major gridlines on the named axes.
