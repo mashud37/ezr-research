@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ezr research packages</title>
+  <style>
+    :root { color-scheme: light dark; --ink: #12314e; --bg: #ffffff; }
+    @media (prefers-color-scheme: dark) {
+      :root { --ink: #dce4ee; --bg: #12181f; }
+    }
+    body { background: var(--bg); color: var(--ink);
+           font-family: system-ui, sans-serif; margin: 0;
+           padding: 3rem 1rem; line-height: 1.6; }
+    main { max-width: 34rem; margin: 0 auto; }
+    h1 { font-size: 1.6rem; margin-bottom: 0.25rem; }
+    p.lede { opacity: 0.75; margin-top: 0; }
+    ul { list-style: none; padding: 0; margin-top: 2rem; }
+    li { padding: 0.85rem 0; border-top: 1px solid currentColor; }
+    li:last-child { border-bottom: 1px solid currentColor; }
+    a { color: inherit; font-weight: 600; }
+    span { display: block; font-weight: 400; opacity: 0.75;
+           font-size: 0.95rem; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>ezr research</h1>
+    <p class="lede">R packages for consumer and survey research.</p>
+    <ul>
+      <li><a href="ezr-survey/">ezrsurvey</a>
+        <span>Single-line helpers for consumer survey analysis.</span></li>
+    </ul>
+  </main>
+</body>
+</html>
