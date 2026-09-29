@@ -27,9 +27,14 @@ ezr-learning/book/_bookdown_files/
 ezr-learning/book/*.rds
 ezr-learning/book/libs/
 
-# Job checkpoints (resumable runs; run-specific state, never commit)
-*checkpoint*
+# Job checkpoints (resumable runs; run-specific state, never commit).
+# Keep these narrow. A bare *checkpoint* also matched man/clear_checkpoints.Rd,
+# the help file of an exported function, which left the package shipping an
+# undocumented object and failing R CMD check everywhere but the machine that
+# had the file on disk.
+checkpoints/
 data/checkpoints/
+*.checkpoint.rds
 
 # OS / editor cruft
 .DS_Store
