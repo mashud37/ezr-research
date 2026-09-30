@@ -15,7 +15,7 @@ consumer-survey dataset is included for learning and examples.
 
 Useful links:
 
-- <https://mashud37.github.io/ezr-research/ezr-survey>
+- <https://mashud37.github.io/ezr-research/ezr-survey/>
 
 - <https://github.com/mashud37/ezr-research>
 

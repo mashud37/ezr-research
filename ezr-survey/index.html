@@ -76,7 +76,7 @@
 <h2 id="the-60-second-tour">The 60-second tour<a class="anchor" aria-label="anchor" href="#the-60-second-tour"></a>
 </h2>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mashud37.github.io/ezr-research/ezr-survey">ezrsurvey</a></span><span class="op">)</span>   <span class="co"># attaches dplyr, ggplot2 and the rest with it</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://mashud37.github.io/ezr-research/ezr-survey/">ezrsurvey</a></span><span class="op">)</span>   <span class="co"># attaches dplyr, ggplot2 and the rest with it</span></span>
 <span></span>
 <span><span class="co"># 1. Percentages, no count/mutate/pivot_wider</span></span>
 <span><span class="fu"><a href="reference/calc_percentage.html">calc_percentage</a></span><span class="op">(</span><span class="va">podracing_survey</span>, <span class="va">demo_gender</span>, sort <span class="op">=</span> <span class="st">"desc"</span><span class="op">)</span></span>
@@ -255,17 +255,13 @@
 </table>
 </div>
 <div class="section level2">
-<h2 id="two-small-tricks-worth-knowing">Two small tricks worth knowing<a class="anchor" aria-label="anchor" href="#two-small-tricks-worth-knowing"></a>
+<h2 id="two-things-that-are-not-obvious">Two things that are not obvious<a class="anchor" aria-label="anchor" href="#two-things-that-are-not-obvious"></a>
 </h2>
 <ul>
 <li>
 <strong>Name the dataset once.</strong> <code>use_dataset(podracing_survey)</code> at the top of a script lets every helper drop the data argument entirely – <code>calc_percentage(demo_gender)</code>, <code>calc_nps(nps_value)</code>, <code>diagnose(starts_with("ratings_"))</code>. An explicit data frame or a pipe always wins over the default, and <code><a href="reference/dataset_default.html">clear_dataset()</a></code> ends it.</li>
 <li>
-<strong>Column completion.</strong> Pipe the data in and the IDE completes column names: <code>podracing_survey %&gt;% calc_percentage(&lt;Tab&gt;</code> offers <code>demo_gender</code> etc. This is the same mechanism dplyr relies on – RStudio and Positron only offer a data frame’s columns inside a pipe chain, so the un-piped <code>calc_percentage(df, &lt;Tab&gt;</code> form cannot complete columns for <em>any</em> package (tidyverse included).</li>
-<li>
-<strong>Dynamic axes.</strong> <code>nice_max(x, unit = 25)</code> rounds a chart’s ceiling up to the next tidy multiple, so data labels never collide with the panel top. It powers <code><a href="reference/scale_y_pct.html">scale_y_pct()</a></code> and the plot wrappers.</li>
-<li>
-<strong>Decision bands.</strong> <code><a href="reference/annotate_bands.html">annotate_bands()</a></code> adds consistent “where’s good, where’s bad” guidance to any chart from a small band spec; the presets <code><a href="reference/band_presets.html">bands_rating_3()</a></code> / <code><a href="reference/band_presets.html">bands_nps()</a></code> cover the common cases. Pass <code>from</code> / <code>to</code> to trim a preset to the part of the scale your chart shows.</li>
+<strong>Column completion needs the pipe.</strong> <code>podracing_survey %&gt;% calc_percentage(&lt;Tab&gt;</code> offers <code>demo_gender</code> and the rest; the un-piped <code>calc_percentage(df, &lt;Tab&gt;</code> cannot. That is the mechanism RStudio and Positron use, not a limitation of this package: they only offer a data frame’s columns inside a pipe chain, for any package including the tidyverse.</li>
 </ul>
 </div>
 <div class="section level2">
@@ -280,85 +276,41 @@
 <p>A path that names a directory is used exactly as written, which is how you override that: <code>"./nps.png"</code> for the working directory, <code>"charts/nps.png"</code> for a folder of your own, or any absolute path. <code>ezrsurvey_options(output_dir = )</code> renames the folder for a project, or set it to <code>"."</code> to put bare names back in the working directory.</p>
 </div>
 <div class="section level2">
-<h2 id="long-runs">Long runs<a class="anchor" aria-label="anchor" href="#long-runs"></a>
+<h2 id="articles">Articles<a class="anchor" aria-label="anchor" href="#articles"></a>
 </h2>
-<p>A full every-variable <code><a href="reference/crosstab_banner.html">crosstab_banner()</a></code> is one cross-tab per question per grouping variable, so on a wide survey it takes minutes. Called with no <code>rows</code> / <code>cols</code>, it also picks the variables itself, and that choice decides the whole table, so it shows the choice and waits before spending the time:</p>
-<pre><code>Banner variables chosen automatically: 34 question(s) across 12 grouping variable(s).
-  Questions (34): satis_return, demo_gender, ...
-  Grouping variables (12): demo_gender, region, ...
-  Skipped (11): respondent_id, start_date, nps_com, ...
-  Name `rows` / `cols` yourself, or raise `max_levels` (now 20), to change this.
-Continue? [Y/n]</code></pre>
-<p><code><a href="reference/export_summary_xlsx.html">export_summary_xlsx()</a></code> asks the same way when no variables are named. Naming them yourself is your own choice and is never questioned. The prompt appears in an interactive session only, so an unattended script can never stall on it; <code>ezrsurvey_options(confirm = FALSE)</code> removes it, <code>TRUE</code> forces it.</p>
-<p>Once a run starts, the helpers that can run for minutes say where they are:</p>
-<pre><code>Banner table: 34 question(s) across 12 grouping variable(s)
-[7/34] satis_return  (about 2m left)</code></pre>
-<p>The estimate comes from the throughput measured so far, not a guess. Reporting is on in an interactive session and silent in scripts, vignettes and <code>R CMD check</code>; <code>ezrsurvey_options(progress = FALSE)</code> turns it off everywhere and <code>TRUE</code> forces it on.</p>
-<p>For a table long enough that losing it hurts, ask for a checkpoint:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="reference/crosstab_banner.html">crosstab_banner</a></span><span class="op">(</span><span class="va">survey</span>, checkpoint <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>        <span class="co"># managed for you</span></span>
-<span><span class="fu"><a href="reference/crosstab_banner.html">crosstab_banner</a></span><span class="op">(</span><span class="va">survey</span>, checkpoint <span class="op">=</span> <span class="st">"banner.rds"</span><span class="op">)</span>  <span class="co"># or choose the location</span></span></code></pre></div>
-<p>Each question is saved as it finishes, so re-running the identical call after a crash or an interrupt carries on from where it stopped. The managed file is named after the run’s own fingerprint, so a call finds its own interrupted run, and a call on different data or different arguments never sees it: a stale file cannot quietly corrupt a table. Nothing is written unless you ask, and the file is yours to delete.</p>
-<p>Weights are worked out once per dataset and scheme and reused, rather than re-running the raking loop for every cell; <code><a href="reference/clear_weights_cache.html">clear_weights_cache()</a></code> empties that.</p>
-</div>
-<div class="section level2">
-<h2 id="branding">Branding<a class="anchor" aria-label="anchor" href="#branding"></a>
-</h2>
-<p>Point ezrsurvey at your organisation’s PowerPoint (or Word) template once, and everything downstream matches it:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="reference/use_brand.html">use_brand</a></span><span class="op">(</span><span class="st">"brand/org-template.pptx"</span><span class="op">)</span></span></code></pre></div>
-<p>This extracts the template’s theme colours and fonts, so <code><a href="reference/plot_bars.html">plot_bars()</a></code> fills with your primary accent, <code><a href="reference/pal_brand.html">pal_brand()</a></code> / <code><a href="reference/scale_brand.html">scale_fill_brand()</a></code> expose the full accent palette, <code><a href="reference/theme_ezrsurvey.html">theme_ezrsurvey()</a></code> uses your body font (only when it is installed on the machine), and the template file becomes the default reference document for <code><a href="reference/report_new.html">report_new()</a></code>, <code><a href="reference/report_deck.html">report_deck()</a></code> and <code><a href="reference/scaffold_report.html">scaffold_report()</a></code>. No template handy? <code>use_brand(colors = c("#0B5394", "#E69138"), fonts = "Georgia")</code> sets the same options directly, and they can live in your <code>.ezrsurvey.yml</code> profile. <code><a href="reference/clear_brand.html">clear_brand()</a></code> returns to the neutral look. The semantic palettes (<code>pal_rating</code>, <code>pal_nps</code>) keep their red-amber-green meaning regardless of brand.</p>
-</div>
-<div class="section level2">
-<h2 id="reporting">Reporting<a class="anchor" aria-label="anchor" href="#reporting"></a>
-</h2>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Build a PowerPoint deck directly from R, on your org template</span></span>
-<span><span class="fu"><a href="reference/use_brand.html">use_brand</a></span><span class="op">(</span><span class="st">"brand/org-template.pptx"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="reference/report_deck.html">report_deck</a></span><span class="op">(</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>    <span class="st">"Gender"</span> <span class="op">=</span> <span class="fu"><a href="reference/plot_bars.html">plot_bars</a></span><span class="op">(</span><span class="fu"><a href="reference/calc_percentage.html">calc_percentage</a></span><span class="op">(</span><span class="va">podracing_survey</span>, <span class="va">demo_gender</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>    <span class="st">"NPS"</span>    <span class="op">=</span> <span class="fu"><a href="reference/calc_nps.html">calc_nps</a></span><span class="op">(</span><span class="va">podracing_survey</span>, <span class="va">nps_value</span><span class="op">)</span></span>
-<span>  <span class="op">)</span>,</span>
-<span>  path <span class="op">=</span> <span class="st">"overview.pptx"</span>,</span>
-<span>  title <span class="op">=</span> <span class="st">"Q2 Customer Survey"</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># ...or build it a slide at a time -- one line per slide, each title the</span></span>
-<span><span class="co"># survey question it answers, single-word section dividers between chapters</span></span>
-<span><span class="fu"><a href="reference/report_new.html">report_new</a></span><span class="op">(</span><span class="st">"pptx"</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="reference/report_title_slide.html">report_title_slide</a></span><span class="op">(</span><span class="st">"Pod-Racing Fan Survey"</span>,</span>
-<span>                     subtitle <span class="op">=</span> <span class="st">"1,000 fans | Fieldwork 2026"</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="reference/report_section.html">report_section</a></span><span class="op">(</span><span class="st">"RECOMMENDATION"</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="reference/report_slide.html">report_slide</a></span><span class="op">(</span><span class="st">"How likely are you to recommend pod racing?"</span>,</span>
-<span>               <span class="fu"><a href="reference/plot_nps.html">plot_nps</a></span><span class="op">(</span><span class="va">podracing_survey</span>, <span class="va">nps_value</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="reference/report_section.html">report_section</a></span><span class="op">(</span><span class="st">"RATINGS"</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="reference/report_slide.html">report_slide</a></span><span class="op">(</span><span class="st">"Which aspects matter most, and which fall short?"</span>,</span>
-<span>               <span class="fu"><a href="reference/plot_ipm.html">plot_ipm</a></span><span class="op">(</span><span class="fu"><a href="reference/ipm_model.html">ipm_model</a></span><span class="op">(</span><span class="va">podracing_survey</span>, <span class="va">nps_value</span>, <span class="st">"ratings_"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="reference/report_save.html">report_save</a></span><span class="op">(</span><span class="st">"deck.pptx"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># ...or scaffold a Quarto report you can render to pptx / html / pdf / docx</span></span>
-<span><span class="fu"><a href="reference/scaffold_report.html">scaffold_report</a></span><span class="op">(</span><span class="st">"html"</span>, path <span class="op">=</span> <span class="st">"report.qmd"</span>, title <span class="op">=</span> <span class="st">"Q2 Customer Survey"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="reference/scaffold_report.html">scaffold_report</a></span><span class="op">(</span><span class="st">"pptx"</span>, title <span class="op">=</span> <span class="st">"Q2 Customer Survey"</span>,</span>
-<span>                reference_doc <span class="op">=</span> <span class="st">"brand/org-template.pptx"</span><span class="op">)</span></span></code></pre></div>
-<p><code><a href="reference/report_slide.html">report_slide()</a></code> dispatches on its content: a ggplot becomes a chart, a data frame a table (sized to fill the slide), a character vector a bullet list. The summary slide’s paired gauge – Net Promoter Score over the average feature quality rating – is <code>plot_gauges(c("Net Promoter Score" = nps, "Quality" = avg))</code>.</p>
-<p>Without a brand template, decks default to the package’s own <strong>styled 16:9 template</strong>: a navy/gold identity with a full-bleed navy cover (large title, gold accent rule, subtitle strapline), full-bleed navy section dividers, and content slides with a left-aligned navy title over one slim rule plus a live slide number in the corner. Pass <code>style = "plain"</code> for the same palette with no decoration, or <code>slide_numbers = FALSE</code> to drop the numbering. The same files back the Quarto pptx scaffold, so both routes look consistent out of the box.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="reference/report_deck.html">report_deck</a></span><span class="op">(</span><span class="va">items</span>, path <span class="op">=</span> <span class="st">"deck.pptx"</span><span class="op">)</span>                   <span class="co"># styled (default)</span></span>
-<span><span class="fu"><a href="reference/report_deck.html">report_deck</a></span><span class="op">(</span><span class="va">items</span>, path <span class="op">=</span> <span class="st">"deck.pptx"</span>, style <span class="op">=</span> <span class="st">"plain"</span><span class="op">)</span>  <span class="co"># plain white</span></span></code></pre></div>
-<p>Charts are drawn to a <strong>constant bar thickness</strong> whatever the answer count, so a three-answer chart and a ten-answer chart sit together in a deck instead of the first one’s bars turning into slabs (<code>bar_width</code> / <code>bar_ref_items</code> in <code><a href="reference/ezrsurvey_options.html">ezrsurvey_options()</a></code>).</p>
-<p>The officer path (<code><a href="reference/report_new.html">report_new()</a></code> / <code><a href="reference/report_deck.html">report_deck()</a></code>) works with <strong>any</strong> corporate template: layouts are chosen by inspecting their placeholders (not their names), charts are rendered at the exact size of the content placeholder, and <code><a href="reference/report_layouts.html">report_layouts()</a></code> shows what a template offers. The Quarto scaffolds take your own data as a parameter (<code>-P data:my-survey.csv</code>) and ship with placeholder narrative and a precision appendix.</p>
-<p>For a finished, fully worked report on the bundled data – every chart type, real narrative, plus the matching deck script – copy the example into your project and adapt it:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="reference/example_report.html">example_report</a></span><span class="op">(</span><span class="op">)</span>   <span class="co"># writes ezrsurvey-example/podracing-report.qmd + -deck.R</span></span></code></pre></div>
-<blockquote>
-<p>Quarto’s <code>reference-doc</code> requires the <em>standard</em> layout names (“Title Slide”, “Title and Content”, …). If your organisation’s template renamed its layouts, build the deck with <code><a href="reference/report_deck.html">report_deck()</a></code> instead.</p>
-</blockquote>
-</div>
-<div class="section level2">
-<h2 id="google-slides">Google Slides<a class="anchor" aria-label="anchor" href="#google-slides"></a>
-</h2>
-<p>Google Slides imports PowerPoint natively, so the branded-pptx route above is also the Google Slides route: build the deck with <code><a href="reference/report_deck.html">report_deck()</a></code> (or render the Quarto pptx scaffold), then in Slides use <strong>File &gt; Import slides</strong> (into an existing deck) or open the <code>.pptx</code> directly from Drive. What survives the import: chart images, text boxes, bullets, speaker notes and theme colours. What to watch: fonts that are not available in Google’s catalogue get substituted – if Slides is the destination, brand with a Google-available font (<code>use_brand(..., fonts = "Roboto")</code>) – and intricate table borders may simplify. Chart images are transparent-background PNGs, so they sit cleanly on any Slides background.</p>
+<p>The front page is the tour. The details live in their own articles:</p>
+<table class="table">
+<colgroup>
+<col width="50%">
+<col width="50%">
+</colgroup>
+<thead><tr>
+<th>Article</th>
+<th>What it covers</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><a href="https://mashud37.github.io/ezr-research/ezr-survey/articles/ezrsurvey.html">Getting started</a></td>
+<td>A whole analysis end to end on the bundled data</td>
+</tr>
+<tr>
+<td><a href="https://mashud37.github.io/ezr-research/ezr-survey/articles/banner-tables.html">Banner tables</a></td>
+<td>The client’s working table: cell types, weighting, automatic variable choice, checkpointed runs</td>
+</tr>
+<tr>
+<td><a href="https://mashud37.github.io/ezr-research/ezr-survey/articles/countries-and-currency.html">Countries, regions and currency</a></td>
+<td>Free-text country columns, ISO 3166-1 in and out, converting money people answered in their own currency</td>
+</tr>
+<tr>
+<td><a href="https://mashud37.github.io/ezr-research/ezr-survey/articles/powerpoint-decks.html">PowerPoint decks</a></td>
+<td>One-call decks, slide-at-a-time decks, your org template, Google Slides</td>
+</tr>
+<tr>
+<td><a href="https://mashud37.github.io/ezr-research/ezr-survey/articles/quarto-reports.html">Quarto reports</a></td>
+<td>A report you edit and re-render each wave, in html, pdf, docx or pptx</td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="section level2">
 <h2 id="license">License<a class="anchor" aria-label="anchor" href="#license"></a>

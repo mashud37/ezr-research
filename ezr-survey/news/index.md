@@ -296,7 +296,7 @@ row, not three.
 
 ### Attaching the package attaches seven packages, not the whole tidyverse
 
-- [`library(ezrsurvey)`](https://mashud37.github.io/ezr-research/ezr-survey)
+- [`library(ezrsurvey)`](https://mashud37.github.io/ezr-research/ezr-survey/)
   still puts dplyr, ggplot2, tidyr, tibble, readr, stringr and purrr on
   your search path, so nothing changes in a script. The package now
   names those seven in `Depends` rather than depending on the
@@ -544,7 +544,7 @@ row, not three.
 ### Working without repeating the data
 
 - **The tidyverse metapackage is now attached with ezrsurvey.**
-  [`library(ezrsurvey)`](https://mashud37.github.io/ezr-research/ezr-survey)
+  [`library(ezrsurvey)`](https://mashud37.github.io/ezr-research/ezr-survey/)
   brings `dplyr`, `ggplot2`, `tidyr`, `stringr` and the rest with it, so
   scripts and reports never need to load the packages ezrsurvey wraps.
 - **[`use_dataset()`](https://mashud37.github.io/ezr-research/ezr-survey/reference/use_dataset.md)

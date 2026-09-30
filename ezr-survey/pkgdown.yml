@@ -2,8 +2,12 @@ pandoc: 3.8.3
 pkgdown: 2.2.1
 pkgdown_sha: ~
 articles:
+  banner-tables: banner-tables.html
+  countries-and-currency: countries-and-currency.html
   ezrsurvey: ezrsurvey.html
-last_built: 2026-09-30T10:40Z
+  powerpoint-decks: powerpoint-decks.html
+  quarto-reports: quarto-reports.html
+last_built: 2026-09-30T11:48Z
 urls:
   reference: https://mashud37.github.io/ezr-research/ezr-survey/reference
   article: https://mashud37.github.io/ezr-research/ezr-survey/articles

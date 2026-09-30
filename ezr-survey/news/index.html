@@ -155,7 +155,7 @@
 <div class="section level3">
 <h3 id="attaching-the-package-attaches-seven-packages-not-the-whole-tidyverse-0-6-0">Attaching the package attaches seven packages, not the whole tidyverse<a class="anchor" aria-label="anchor" href="#attaching-the-package-attaches-seven-packages-not-the-whole-tidyverse-0-6-0"></a></h3>
 <ul><li>
-<code><a href="https://mashud37.github.io/ezr-research/ezr-survey">library(ezrsurvey)</a></code> still puts dplyr, ggplot2, tidyr, tibble, readr, stringr and purrr on your search path, so nothing changes in a script. The package now names those seven in <code>Depends</code> rather than depending on the <code>tidyverse</code> meta-package, which had tied it to every package in that tree.</li>
+<code><a href="https://mashud37.github.io/ezr-research/ezr-survey/">library(ezrsurvey)</a></code> still puts dplyr, ggplot2, tidyr, tibble, readr, stringr and purrr on your search path, so nothing changes in a script. The package now names those seven in <code>Depends</code> rather than depending on the <code>tidyverse</code> meta-package, which had tied it to every package in that tree.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="checkpoints-clean-up-after-themselves-0-6-0">Checkpoints clean up after themselves<a class="anchor" aria-label="anchor" href="#checkpoints-clean-up-after-themselves-0-6-0"></a></h3>
@@ -250,7 +250,7 @@
 <div class="section level3">
 <h3 id="working-without-repeating-the-data-0-5-0">Working without repeating the data<a class="anchor" aria-label="anchor" href="#working-without-repeating-the-data-0-5-0"></a></h3>
 <ul><li>
-<strong>The tidyverse metapackage is now attached with ezrsurvey.</strong> <code><a href="https://mashud37.github.io/ezr-research/ezr-survey">library(ezrsurvey)</a></code> brings <code>dplyr</code>, <code>ggplot2</code>, <code>tidyr</code>, <code>stringr</code> and the rest with it, so scripts and reports never need to load the packages ezrsurvey wraps.</li>
+<strong>The tidyverse metapackage is now attached with ezrsurvey.</strong> <code><a href="https://mashud37.github.io/ezr-research/ezr-survey/">library(ezrsurvey)</a></code> brings <code>dplyr</code>, <code>ggplot2</code>, <code>tidyr</code>, <code>stringr</code> and the rest with it, so scripts and reports never need to load the packages ezrsurvey wraps.</li>
 <li>
 <strong><code><a href="../reference/use_dataset.html">use_dataset()</a></code> finally saves the typing it promised.</strong> With a default set, columns can be passed positionally with no <code>data</code> and no <code>column =</code>: <code>calc_percentage(demo_gender)</code>, <code>calc_nps(nps_value)</code>, <code>crosstab(demo_gender, region)</code>, <code>diagnose(starts_with("ratings_"))</code>. The helpers tell a data frame from a column by looking at the first argument, so an explicit data frame or a pipe still wins. Previously only the much longer <code>calc_percentage(column = demo_gender)</code> worked, which saved nothing over just passing the data.</li>
 </ul></div>
