@@ -123,26 +123,18 @@ export_summary_xlsx(podracing_survey, demo_gender, satis_return, nps_value)
 | **Quick save** | `save_plot()` (png/svg/pdf), `save_data()` (csv/tsv/xlsx), `save_output()` (auto-dispatch), `export_xlsx()` (multi-tab), `export_summary_xlsx()` (table + chart per question) |
 | **Data** | `podracing_survey` (1,000 simulated pod-racing fans), `shopping_survey` (800 Edwardian shoppers) |
 
-## Two small tricks worth knowing
+## Two things that are not obvious
 
 - **Name the dataset once.** `use_dataset(podracing_survey)` at the top of a
   script lets every helper drop the data argument entirely --
   `calc_percentage(demo_gender)`, `calc_nps(nps_value)`,
   `diagnose(starts_with("ratings_"))`. An explicit data frame or a pipe always
   wins over the default, and `clear_dataset()` ends it.
-- **Column completion.** Pipe the data in and the IDE completes column names:
-  `podracing_survey %>% calc_percentage(<Tab>` offers `demo_gender` etc.
-  This is the same mechanism dplyr relies on -- RStudio and Positron only
-  offer a data frame's columns inside a pipe chain, so the un-piped
-  `calc_percentage(df, <Tab>` form cannot complete columns for *any* package
-  (tidyverse included).
-- **Dynamic axes.** `nice_max(x, unit = 25)` rounds a chart's ceiling up to the
-  next tidy multiple, so data labels never collide with the panel top. It powers
-  `scale_y_pct()` and the plot wrappers.
-- **Decision bands.** `annotate_bands()` adds consistent "where's good, where's
-  bad" guidance to any chart from a small band spec; the presets
-  `bands_rating_3()` / `bands_nps()` cover the common cases. Pass `from` / `to`
-  to trim a preset to the part of the scale your chart shows.
+- **Column completion needs the pipe.** `podracing_survey %>%
+  calc_percentage(<Tab>` offers `demo_gender` and the rest; the un-piped
+  `calc_percentage(df, <Tab>` cannot. That is the mechanism RStudio and
+  Positron use, not a limitation of this package: they only offer a data
+  frame's columns inside a pipe chain, for any package including the tidyverse.
 
 ## Where output goes
 
@@ -164,164 +156,17 @@ folder of your own, or any absolute path. `ezrsurvey_options(output_dir = )`
 renames the folder for a project, or set it to `"."` to put bare names back in
 the working directory.
 
-## Long runs
+## Articles
 
-A full every-variable `crosstab_banner()` is one cross-tab per question per
-grouping variable, so on a wide survey it takes minutes. Called with no `rows` /
-`cols`, it also picks the variables itself, and that choice decides the whole
-table, so it shows the choice and waits before spending the time:
+The front page is the tour. The details live in their own articles:
 
-```
-Banner variables chosen automatically: 34 question(s) across 12 grouping variable(s).
-  Questions (34): satis_return, demo_gender, ...
-  Grouping variables (12): demo_gender, region, ...
-  Skipped (11): respondent_id, start_date, nps_com, ...
-  Name `rows` / `cols` yourself, or raise `max_levels` (now 20), to change this.
-Continue? [Y/n]
-```
-
-`export_summary_xlsx()` asks the same way when no variables are named. Naming
-them yourself is your own choice and is never questioned. The prompt appears in
-an interactive session only, so an unattended script can never stall on it;
-`ezrsurvey_options(confirm = FALSE)` removes it, `TRUE` forces it.
-
-Once a run starts, the helpers that can run for minutes say where they are:
-
-```
-Banner table: 34 question(s) across 12 grouping variable(s)
-[7/34] satis_return  (about 2m left)
-```
-
-The estimate comes from the throughput measured so far, not a guess. Reporting
-is on in an interactive session and silent in scripts, vignettes and `R CMD
-check`; `ezrsurvey_options(progress = FALSE)` turns it off everywhere and
-`TRUE` forces it on.
-
-For a table long enough that losing it hurts, ask for a checkpoint:
-
-```r
-crosstab_banner(survey, checkpoint = TRUE)        # managed for you
-crosstab_banner(survey, checkpoint = "banner.rds")  # or choose the location
-```
-
-Each question is saved as it finishes, so re-running the identical call after a
-crash or an interrupt carries on from where it stopped. The managed file is
-named after the run's own fingerprint, so a call finds its own interrupted run,
-and a call on different data or different arguments never sees it: a stale file
-cannot quietly corrupt a table. Nothing is written unless you ask, and the file
-is yours to delete.
-
-Weights are worked out once per dataset and scheme and reused, rather than
-re-running the raking loop for every cell; `clear_weights_cache()` empties that.
-
-## Branding
-
-Point ezrsurvey at your organisation's PowerPoint (or Word) template once, and
-everything downstream matches it:
-
-```r
-use_brand("brand/org-template.pptx")
-```
-
-This extracts the template's theme colours and fonts, so `plot_bars()` fills
-with your primary accent, `pal_brand()` / `scale_fill_brand()` expose the full
-accent palette, `theme_ezrsurvey()` uses your body font (only when it is
-installed on the machine), and the template file becomes the default reference
-document for `report_new()`, `report_deck()` and `scaffold_report()`. No
-template handy? `use_brand(colors = c("#0B5394", "#E69138"), fonts = "Georgia")`
-sets the same options directly, and they can live in your `.ezrsurvey.yml`
-profile. `clear_brand()` returns to the neutral look. The semantic palettes
-(`pal_rating`, `pal_nps`) keep their red-amber-green meaning regardless of
-brand.
-
-## Reporting
-
-```r
-# Build a PowerPoint deck directly from R, on your org template
-use_brand("brand/org-template.pptx")
-report_deck(
-  list(
-    "Gender" = plot_bars(calc_percentage(podracing_survey, demo_gender)),
-    "NPS"    = calc_nps(podracing_survey, nps_value)
-  ),
-  path = "overview.pptx",
-  title = "Q2 Customer Survey"
-)
-
-# ...or build it a slide at a time -- one line per slide, each title the
-# survey question it answers, single-word section dividers between chapters
-report_new("pptx") %>%
-  report_title_slide("Pod-Racing Fan Survey",
-                     subtitle = "1,000 fans | Fieldwork 2026") %>%
-  report_section("RECOMMENDATION") %>%
-  report_slide("How likely are you to recommend pod racing?",
-               plot_nps(podracing_survey, nps_value)) %>%
-  report_section("RATINGS") %>%
-  report_slide("Which aspects matter most, and which fall short?",
-               plot_ipm(ipm_model(podracing_survey, nps_value, "ratings_"))) %>%
-  report_save("deck.pptx")
-
-# ...or scaffold a Quarto report you can render to pptx / html / pdf / docx
-scaffold_report("html", path = "report.qmd", title = "Q2 Customer Survey")
-scaffold_report("pptx", title = "Q2 Customer Survey",
-                reference_doc = "brand/org-template.pptx")
-```
-
-`report_slide()` dispatches on its content: a ggplot becomes a chart, a data
-frame a table (sized to fill the slide), a character vector a bullet list. The
-summary slide's paired gauge -- Net Promoter Score over the average feature
-quality rating -- is `plot_gauges(c("Net Promoter Score" = nps, "Quality" =
-avg))`.
-
-Without a brand template, decks default to the package's own **styled 16:9
-template**: a navy/gold identity with a full-bleed navy cover (large title,
-gold accent rule, subtitle strapline), full-bleed navy section dividers, and
-content slides with a left-aligned navy title over one slim rule plus a live
-slide number in the corner. Pass `style = "plain"` for the same palette with no
-decoration, or `slide_numbers = FALSE` to drop the numbering. The same files
-back the Quarto pptx scaffold, so both routes look consistent out of the box.
-
-```r
-report_deck(items, path = "deck.pptx")                   # styled (default)
-report_deck(items, path = "deck.pptx", style = "plain")  # plain white
-```
-
-Charts are drawn to a **constant bar thickness** whatever the answer count, so
-a three-answer chart and a ten-answer chart sit together in a deck instead of
-the first one's bars turning into slabs (`bar_width` / `bar_ref_items` in
-`ezrsurvey_options()`).
-
-The officer path (`report_new()` / `report_deck()`) works with **any**
-corporate template: layouts are chosen by inspecting their placeholders (not
-their names), charts are rendered at the exact size of the content
-placeholder, and `report_layouts()` shows what a template offers. The Quarto
-scaffolds take your own data as a parameter (`-P data:my-survey.csv`) and ship
-with placeholder narrative and a precision appendix.
-
-For a finished, fully worked report on the bundled data -- every chart type,
-real narrative, plus the matching deck script -- copy the example into your
-project and adapt it:
-
-```r
-example_report()   # writes ezrsurvey-example/podracing-report.qmd + -deck.R
-```
-
-> Quarto's `reference-doc` requires the *standard* layout names ("Title
-> Slide", "Title and Content", ...). If your organisation's template renamed
-> its layouts, build the deck with `report_deck()` instead.
-
-## Google Slides
-
-Google Slides imports PowerPoint natively, so the branded-pptx route above is
-also the Google Slides route: build the deck with `report_deck()` (or render
-the Quarto pptx scaffold), then in Slides use **File > Import slides** (into
-an existing deck) or open the `.pptx` directly from Drive. What survives the
-import: chart images, text boxes, bullets, speaker notes and theme
-colours. What to watch: fonts that are not available in Google's
-catalogue get substituted -- if Slides is the destination, brand with a
-Google-available font (`use_brand(..., fonts = "Roboto")`) -- and intricate
-table borders may simplify. Chart images are transparent-background PNGs, so
-they sit cleanly on any Slides background.
+| Article | What it covers |
+| --- | --- |
+| [Getting started](https://mashud37.github.io/ezr-research/ezr-survey/articles/ezrsurvey.html) | A whole analysis end to end on the bundled data |
+| [Banner tables](https://mashud37.github.io/ezr-research/ezr-survey/articles/banner-tables.html) | The client's working table: cell types, weighting, automatic variable choice, checkpointed runs |
+| [Countries, regions and currency](https://mashud37.github.io/ezr-research/ezr-survey/articles/countries-and-currency.html) | Free-text country columns, ISO 3166-1 in and out, converting money people answered in their own currency |
+| [PowerPoint decks](https://mashud37.github.io/ezr-research/ezr-survey/articles/powerpoint-decks.html) | One-call decks, slide-at-a-time decks, your org template, Google Slides |
+| [Quarto reports](https://mashud37.github.io/ezr-research/ezr-survey/articles/quarto-reports.html) | A report you edit and re-render each wave, in html, pdf, docx or pptx |
 
 ## License
 

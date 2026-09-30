@@ -13,7 +13,7 @@ Simplifies the day-to-day work of research and insights professionals who analys
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://mashud37.github.io/ezr-research/ezr-survey}
+  \item \url{https://mashud37.github.io/ezr-research/ezr-survey/}
   \item \url{https://github.com/mashud37/ezr-research}
   \item Report bugs at \url{https://github.com/mashud37/ezr-research/issues}
 }

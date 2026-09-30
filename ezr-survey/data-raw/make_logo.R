@@ -1,16 +1,20 @@
 # Draws the package logo: man/figures/logo.png
 #
-# A pointy-top hexagon, the shape the R community uses for package stickers, in
-# the navy and gold the bundled deck template already carries. The name is set
-# as type rather than as a picture: EZR in letterspaced capitals, a gold rule,
-# then survey beneath it. Base graphics only, so this needs nothing the package
-# does not already depend on.
+# A pointy-top hexagon, the shape the R community uses for package stickers,
+# styled the way Google styles its developer tools: a white surface, a hairline
+# grey border, the name set in blue over a four-colour rule, and the qualifier
+# in the grey Material reserves for secondary text. Base graphics only, so this
+# needs nothing the package does not already depend on.
 #
 # Run from the package root: Rscript data-raw/make_logo.R
 
-NAVY <- "#12314E"
-GOLD <- "#C9A227"
+BLUE <- "#1A73E8"
+GREY <- "#5F6368"
+LINE <- "#BDC1C6"
 PAPER <- "#FFFFFF"
+
+# The four Material accents, in the order Google sets them.
+ACCENTS <- c("#4285F4", "#EA4335", "#FBBC04", "#34A853")
 
 hexagon <- function(x, y, radius) {
   angles <- (seq(0, 5) * 60 + 90) * pi / 180
@@ -45,6 +49,16 @@ cex_for_width <- function(label, target, font, tracking) {
   target / at_one
 }
 
+# The rule under the name, split into the four accents.
+draw_accent_rule <- function(x, y, width, height) {
+  segment <- width / length(ACCENTS)
+  left <- x - width / 2
+  for (i in seq_along(ACCENTS)) {
+    rect(left, y, left + segment, y + height, col = ACCENTS[[i]], border = NA)
+    left <- left + segment
+  }
+}
+
 build_logo <- function(path, px_wide = 480) {
   radius <- 1
   wide <- radius * sqrt(3)
@@ -59,18 +73,18 @@ build_logo <- function(path, px_wide = 480) {
               asp = 1)
 
   outer <- hexagon(0, 0, radius)
-  polygon(outer$x, outer$y, col = GOLD, border = NA)
-  inner <- hexagon(0, 0, radius * 0.93)
-  polygon(inner$x, inner$y, col = NAVY, border = NA)
+  polygon(outer$x, outer$y, col = LINE, border = NA)
+  inner <- hexagon(0, 0, radius * 0.94)
+  polygon(inner$x, inner$y, col = PAPER, border = NA)
 
-  big <- cex_for_width("EZR", target = 0.92, font = 2, tracking = 0.16)
-  small <- cex_for_width("survey", target = 0.86, font = 1, tracking = 0.34)
+  big <- cex_for_width("EZR", target = 0.92, font = 2, tracking = 0.10)
+  small <- cex_for_width("survey", target = 0.82, font = 1, tracking = 0.30)
 
-  draw_tracked("EZR", 0, 0.20, cex = big, colour = PAPER, font = 2,
-               tracking = 0.16)
-  rect(-0.46, -0.055, 0.46, -0.03, col = GOLD, border = NA)
-  draw_tracked("survey", 0, -0.26, cex = small, colour = GOLD, font = 1,
-               tracking = 0.34)
+  draw_tracked("EZR", 0, 0.21, cex = big, colour = BLUE, font = 2,
+               tracking = 0.10)
+  draw_accent_rule(0, -0.05, width = 0.92, height = 0.035)
+  draw_tracked("survey", 0, -0.27, cex = small, colour = GREY, font = 1,
+               tracking = 0.30)
 
   invisible(path)
 }

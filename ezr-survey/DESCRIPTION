@@ -16,7 +16,7 @@ Description: Simplifies the day-to-day work of research and insights
     presentation-ready charts and reports. A simulated consumer-survey dataset
     is included for learning and examples.
 License: MIT + file LICENSE
-URL: https://mashud37.github.io/ezr-research/ezr-survey,
+URL: https://mashud37.github.io/ezr-research/ezr-survey/,
     https://github.com/mashud37/ezr-research
 BugReports: https://github.com/mashud37/ezr-research/issues
 Encoding: UTF-8

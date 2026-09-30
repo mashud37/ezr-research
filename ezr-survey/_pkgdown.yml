@@ -71,3 +71,10 @@ articles:
 - title: Get started
   contents:
   - ezrsurvey
+- title: Going further
+  desc: The parts of the package that need more than a paragraph.
+  contents:
+  - banner-tables
+  - countries-and-currency
+  - powerpoint-decks
+  - quarto-reports
