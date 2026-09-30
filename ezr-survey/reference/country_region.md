@@ -70,12 +70,12 @@ head(country_region)
 #> # A tibble: 6 × 5
 #>   country      iso2  iso3  region subregion
 #>   <chr>        <chr> <chr> <chr>  <chr>    
-#> 1 Angola       AO    AGO   Africa Africa   
-#> 2 Benin        BJ    BEN   Africa Africa   
-#> 3 Botswana     BW    BWA   Africa Africa   
-#> 4 Burkina Faso BF    BFA   Africa Africa   
-#> 5 Burundi      BI    BDI   Africa Africa   
-#> 6 Cameroon     CM    CMR   Africa Africa   
+#> 1 Algeria      DZ    DZA   Africa Africa   
+#> 2 Angola       AO    AGO   Africa Africa   
+#> 3 Benin        BJ    BEN   Africa Africa   
+#> 4 Botswana     BW    BWA   Africa Africa   
+#> 5 Burkina Faso BF    BFA   Africa Africa   
+#> 6 Burundi      BI    BDI   Africa Africa   
 recode_region("Germany")
 #> [1] "Europe"
 ```
