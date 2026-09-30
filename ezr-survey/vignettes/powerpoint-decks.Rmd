@@ -12,7 +12,14 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
+# Every suggested package the chunks below reach. A deck that carries a table
+# goes through flextable, and the driver model through rwa, so officer alone
+# is not enough to know a chunk can run.
 has_officer <- requireNamespace("officer", quietly = TRUE)
+has_flextable <- requireNamespace("flextable", quietly = TRUE)
+has_rwa <- requireNamespace("rwa", quietly = TRUE)
+can_table <- has_officer && has_flextable
+can_model <- can_table && has_rwa
 ```
 
 ```{r setup}
@@ -37,7 +44,7 @@ deck_dir <- tempdir()
 Give `report_deck()` a named list. The names become slide titles, and each
 item becomes the slide's content.
 
-```{r, eval = has_officer}
+```{r, eval = can_table}
 report_deck(
   list(
     "Who follows pod racing?" = plot_bars(
@@ -59,7 +66,7 @@ slide, and a character vector becomes a bullet list.
 A deck with chapters, dividers and commentary is assembled step by step. Each
 call returns the document, so the whole deck is one pipe.
 
-```{r, eval = has_officer}
+```{r, eval = can_model}
 drivers <- ipm_model(podracing_survey, nps_value, "ratings_")
 
 report_new("pptx") %>%
@@ -89,7 +96,7 @@ than one element.
 The same calls produce a Word document. Sections become headings rather than
 dividers:
 
-```{r, eval = has_officer}
+```{r, eval = can_model}
 report_new("docx") %>%
   report_section("Pod-Racing Fan Survey") %>%
   report_add_text("Net Promoter Score and the drivers behind it.") %>%
