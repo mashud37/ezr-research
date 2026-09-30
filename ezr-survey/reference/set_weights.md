@@ -72,10 +72,10 @@ calc_percentage(podracing_survey, satis_return)   # gains a wpct column
 #> # A tibble: 5 × 4
 #>   satis_return      n   pct  wpct
 #>   <ord>         <int> <dbl> <dbl>
-#> 1 Likely          270    27    27
-#> 2 Not sure        238    24    24
-#> 3 Unlikely        162    16    16
-#> 4 Very likely     255    26    25
-#> 5 Very unlikely    75     8     8
+#> 1 Very unlikely    75     8     8
+#> 2 Unlikely        162    16    16
+#> 3 Not sure        238    24    24
+#> 4 Likely          270    27    27
+#> 5 Very likely     255    26    25
 clear_weights()
 ```

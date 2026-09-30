@@ -16,8 +16,9 @@ country_region
 
 ## Format
 
-A [tibble](https://tibble.tidyverse.org/reference/tibble.html) with 180
-rows and 5 columns:
+A [tibble](https://tibble.tidyverse.org/reference/tibble.html) with 255
+rows and 5 columns, one per entry in ISO 3166-1 that has a UN M49
+grouping, plus Kosovo:
 
 - country:
 
@@ -46,7 +47,10 @@ missing value, which is worth knowing before filtering on the column.
 
 ## Source
 
-Regions are the package's own grouping. Codes are ISO 3166-1. See
+Countries and codes are ISO 3166-1. The regions are the package's own
+grouping, which follows the UN M49 sub-regions but treats the Middle
+East as a region and splits the Americas north and south, because that
+is how consumer research reports them. See
 `data-raw/make_country_region.R`.
 
 ## See also
@@ -64,14 +68,14 @@ Other data:
 ``` r
 head(country_region)
 #> # A tibble: 6 × 5
-#>   country                           iso2  iso3  region subregion
-#>   <chr>                             <chr> <chr> <chr>  <chr>    
-#> 1 Angola                            AO    AGO   Africa Africa   
-#> 2 Burkina Faso                      BF    BFA   Africa Africa   
-#> 3 Cameroon                          CM    CMR   Africa Africa   
-#> 4 Cape Verde                        CV    CPV   Africa Africa   
-#> 5 Congo, Democratic Republic of the CD    COD   Africa Africa   
-#> 6 Cote d'Ivoire                     CI    CIV   Africa Africa   
+#>   country      iso2  iso3  region subregion
+#>   <chr>        <chr> <chr> <chr>  <chr>    
+#> 1 Angola       AO    AGO   Africa Africa   
+#> 2 Benin        BJ    BEN   Africa Africa   
+#> 3 Botswana     BW    BWA   Africa Africa   
+#> 4 Burkina Faso BF    BFA   Africa Africa   
+#> 5 Burundi      BI    BDI   Africa Africa   
+#> 6 Cameroon     CM    CMR   Africa Africa   
 recode_region("Germany")
 #> [1] "Europe"
 ```

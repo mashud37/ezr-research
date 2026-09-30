@@ -51,7 +51,8 @@ reach it.
 
 Other decisions:
 [`annotate_bands()`](https://mashud37.github.io/ezr-research/ezr-survey/reference/annotate_bands.md),
-[`mark_value()`](https://mashud37.github.io/ezr-research/ezr-survey/reference/mark_value.md)
+[`mark_value()`](https://mashud37.github.io/ezr-research/ezr-survey/reference/mark_value.md),
+[`rescale_bands()`](https://mashud37.github.io/ezr-research/ezr-survey/reference/rescale_bands.md)
 
 ## Examples
 

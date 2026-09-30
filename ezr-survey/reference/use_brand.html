@@ -99,6 +99,12 @@ but only when that font is actually installed on this machine, so charts
 never render with substituted glyph boxes. Set
 <code>ezrsurvey_options(brand_fonts_enabled = FALSE)</code> to keep brand colours but
 ignore brand fonts.</p>
+<p>A brand font also needs a graphics device that reads the machine's fonts.
+The <code>pdf</code> and <code>postscript</code> devices do not: they carry their own short list of
+families, and a chart printed to one fails with "invalid font type". That is
+the default device in a plain <code>Rscript</code> run, so <code>use_brand()</code> says so when it
+sets a font there. Charts written with <code><a href="save_plot.html">save_plot()</a></code> are unaffected, because
+it saves through a device that does read system fonts.</p>
 <p>Everything lands in ordinary <code><a href="ezrsurvey_options.html">ezrsurvey_options()</a></code> (<code>brand_*</code> keys), so you
 can equally set the values by hand or persist them in a YAML profile; a
 later <code>use_brand()</code> call simply overwrites them. Semantic palettes
@@ -126,7 +132,7 @@ and are not rebranded. Use <code><a href="clear_brand.html">clear_brand()</a></c
 <span class="r-out co"><span class="r-pr">#&gt;</span>   colors:   #4F81BD #C0504D #9BBB59 #8064A2 #4BACC6 #F79646</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   primary:  #4F81BD</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   fonts:    Calibri / Calibri</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   pptx ref: /tmp/Rtmp4yafqr/file1c3772a9841b.pptx</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   pptx ref: /tmp/RtmpVirCIV/file1aff4dccd2f5.pptx</span>
 <span class="r-in"><span><span class="fu"><a href="clear_brand.html">clear_brand</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="co"># Or set brand values directly, no template needed:</span></span></span>
 <span class="r-in"><span><span class="fu">use_brand</span><span class="op">(</span>colors <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"#0B5394"</span>, <span class="st">"#E69138"</span><span class="op">)</span>, fonts <span class="op">=</span> <span class="st">"Georgia"</span>, quiet <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>

@@ -54,7 +54,8 @@ result can be reported against the standard.</p>
 
     <div class="section level2">
     <h2 id="format">Format<a class="anchor" aria-label="anchor" href="#format"></a></h2>
-    <p>A <a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a> with 180 rows and 5 columns:</p><dl><dt>country</dt>
+    <p>A <a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a> with 255 rows and 5 columns, one per
+entry in ISO 3166-1 that has a UN M49 grouping, plus Kosovo:</p><dl><dt>country</dt>
 <dd><p>Country name.</p></dd>
 
 <dt>iso2</dt>
@@ -77,8 +78,10 @@ value, which is worth knowing before filtering on the column.</p>
     </div>
     <div class="section level2">
     <h2 id="source">Source<a class="anchor" aria-label="anchor" href="#source"></a></h2>
-    <p>Regions are the package's own grouping. Codes are ISO 3166-1. See
-<code>data-raw/make_country_region.R</code>.</p>
+    <p>Countries and codes are ISO 3166-1. The regions are the package's
+own grouping, which follows the UN M49 sub-regions but treats the Middle
+East as a region and splits the Americas north and south, because that is
+how consumer research reports them. See <code>data-raw/make_country_region.R</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -93,14 +96,14 @@ value, which is worth knowing before filtering on the column.</p>
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">country_region</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 6 × 5</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   country                           iso2  iso3  region subregion</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                             <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Angola                            AO    AGO   Africa Africa   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> Burkina Faso                      BF    BFA   Africa Africa   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> Cameroon                          CM    CMR   Africa Africa   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> Cape Verde                        CV    CPV   Africa Africa   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> Congo, Democratic Republic of the CD    COD   Africa Africa   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span> Cote d'Ivoire                     CI    CIV   Africa Africa   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   country      iso2  iso3  region subregion</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Angola       AO    AGO   Africa Africa   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> Benin        BJ    BEN   Africa Africa   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> Botswana     BW    BWA   Africa Africa   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> Burkina Faso BF    BFA   Africa Africa   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> Burundi      BI    BDI   Africa Africa   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span> Cameroon     CM    CMR   Africa Africa   </span>
 <span class="r-in"><span><span class="fu"><a href="recode_region.html">recode_region</a></span><span class="op">(</span><span class="st">"Germany"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Europe"</span>
 </code></pre></div>

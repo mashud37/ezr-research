@@ -37,6 +37,104 @@ resolved 49% of the column.
   rows the corrections exposed are gone, which takes the table from 182
   rows to 180.
 
+### Decision bands on a scale that is not 1 to 5
+
+Satisfaction is often collected on 0 to 100, and seven-point agreement
+scales are common. The band presets are written on 1-5, 0-10 and
+-100..100, so until now a chart on any other scale meant dividing the
+data to meet the thresholds, which left the axis showing a scale nobody
+had been asked about.
+
+- **[`rescale_bands()`](https://mashud37.github.io/ezr-research/ezr-survey/reference/rescale_bands.md)**
+  stretches any band specification onto the scale the chart actually
+  uses: `bands_rating_3() %>% rescale_bands(to = c(0, 100))`. The
+  mapping is proportional, and labels and colours are untouched. It
+  works on a hand-built band data frame as well as on the presets.
+
+### A registered answer order now reaches the table
+
+[`register_order()`](https://mashud37.github.io/ezr-research/ezr-survey/reference/register_order.md)
+set the levels of the answer column and stopped there. The levels are
+what a chart reads, so charts were right; a table printed to the console
+or written to CSV carries no levels with it, so every number anybody
+actually read came back in alphabetical order. On a recency scale that
+puts “In the past month” above “In the past week”.
+
+- **[`calc_percentage()`](https://mashud37.github.io/ezr-research/ezr-survey/reference/calc_percentage.md)**
+  sorts its rows into the registered order. A `by =` breakdown keeps its
+  groups together and orders within each one.
+- **[`crosstab()`](https://mashud37.github.io/ezr-research/ezr-survey/reference/crosstab.md)**
+  does the same on both margins. Column order was affected too, because
+  tidyr names new columns in order of first appearance rather than by
+  factor level.
+- A margin with no registered order keeps the order it already had, so
+  putting the rows right does not scramble the columns.
+
+### Charts that were drawn on the wrong axis
+
+- **[`plot_ipm()`](https://mashud37.github.io/ezr-research/ezr-survey/reference/plot_ipm.md)**
+  pinned its performance axis to 1-5 whatever bands it was given. A
+  study rated on 0-100 or on a seven-point scale came back as an empty
+  panel with the bands still drawn across it, and ggplot2’s only
+  complaint was that some rows had been removed. The axis now runs over
+  whatever scale the bands describe, and a feature that really does fall
+  outside them is named in a message rather than dropped in silence.
+
+### Countries the lookup could never reach
+
+Three separate faults kept
+[`recode_region()`](https://mashud37.github.io/ezr-research/ezr-survey/reference/recode_region.md)
+from matching countries that were spelled perfectly. On the Stack
+Overflow Developer Survey, whose country column is coded to ISO 3166-1,
+3,126 of 87,973 answers came back `NA`. They now resolve to 99.93%, and
+the only thing left unmatched is the answer “Nomadic”.
+
+- **The two sides of the lookup were folded differently.** The answer
+  had its punctuation stripped and its accents transliterated; the table
+  was only lower-cased. Every country whose name carries a hyphen, an
+  apostrophe, a comma or brackets was therefore unreachable however it
+  was typed: `"Timor-Leste"`, `"Guinea-Bissau"`, `"Cote d'Ivoire"`,
+  `"Korea, North"`, `"Gambia, The"` and some thirty more.
+- **`country_region` held 180 of the 249 entries in ISO 3166-1.** What
+  was missing was not obscure: Ghana, Ethiopia, Senegal, Rwanda, Yemen,
+  Benin, Botswana, Haiti, Mali, Sierra Leone and South Sudan all
+  returned `NA`. The table is now complete at 255 rows, grouped the way
+  the package groups countries rather than the way the UN does, so no
+  answer already built on it changes.
+- **The official ISO names did not match.** `"Viet Nam"`,
+  `"Syrian Arab Republic"`, `"Lao People's Democratic Republic"`,
+  `"Brunei Darussalam"`, `"Cabo Verde"`, `"Eswatini"`,
+  `"North Macedonia"` and the rest are what a questionnaire built on the
+  standard shows a respondent. They match now, in ISO’s inverted order
+  (`"Moldova, Republic of"`) and in the order the name is actually said
+  (`"Republic of Moldova"`).
+
+### A country column folded the same way on every machine
+
+- **[`recode_region()`](https://mashud37.github.io/ezr-research/ezr-survey/reference/recode_region.md),
+  [`recode_subregion()`](https://mashud37.github.io/ezr-research/ezr-survey/reference/recode_region.md)
+  and
+  [`add_region()`](https://mashud37.github.io/ezr-research/ezr-survey/reference/add_region.md)**
+  spelled a German sharp s, a Nordic slashed o and five other letters
+  out by hand before transliterating. Windows renders those as a
+  question mark where Linux writes the two-letter form, so a German
+  respondent’s spelling of Great Britain matched on a CI runner and
+  missed on the analyst’s laptop.
+- The endonyms of the two most answered countries were missing while
+  smaller countries had theirs: `"Estados Unidos"`, `"Etats-Unis"`,
+  `"Vereinigte Staaten"`, `"Stati Uniti"`, `"Reino Unido"` and
+  `"Royaume-Uni"` now match.
+
+### Brand fonts and the device that has to draw them
+
+- **[`use_brand()`](https://mashud37.github.io/ezr-research/ezr-survey/reference/use_brand.md)**
+  says so when it sets a typeface in a session whose default device is
+  `pdf`, which is what a plain `Rscript` run gets. That device carries
+  its own short list of font families and fails at drawing time with
+  “invalid font type” rather than substituting. Charts written with
+  [`save_plot()`](https://mashud37.github.io/ezr-research/ezr-survey/reference/save_plot.md)
+  were never affected.
+
 ### Errors that name what went wrong
 
 - A **mistyped column name** now says which name failed and offers the

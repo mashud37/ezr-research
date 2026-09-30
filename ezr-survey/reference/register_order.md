@@ -96,12 +96,12 @@ calc_percentage(podracing_survey, demo_edu)   # rows now in education order
 #> # A tibble: 7 × 3
 #>   demo_edu                   n   pct
 #>   <ord>                  <int> <dbl>
-#> 1 Bachelor or equivalent   244    25
-#> 2 Doctoral or equivalent    35     4
-#> 3 Lower secondary          111    11
-#> 4 Master or equivalent     122    13
-#> 5 Primary or less           42     4
-#> 6 Short-cycle tertiary     123    13
-#> 7 Upper secondary          295    30
+#> 1 Primary or less           42     4
+#> 2 Lower secondary          111    11
+#> 3 Upper secondary          295    30
+#> 4 Short-cycle tertiary     123    13
+#> 5 Bachelor or equivalent   244    25
+#> 6 Master or equivalent     122    13
+#> 7 Doctoral or equivalent    35     4
 remove_order("education")
 ```

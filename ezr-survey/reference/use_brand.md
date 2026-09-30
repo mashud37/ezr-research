@@ -60,6 +60,15 @@ charts never render with substituted glyph boxes. Set
 `ezrsurvey_options(brand_fonts_enabled = FALSE)` to keep brand colours
 but ignore brand fonts.
 
+A brand font also needs a graphics device that reads the machine's
+fonts. The `pdf` and `postscript` devices do not: they carry their own
+short list of families, and a chart printed to one fails with "invalid
+font type". That is the default device in a plain `Rscript` run, so
+`use_brand()` says so when it sets a font there. Charts written with
+[`save_plot()`](https://mashud37.github.io/ezr-research/ezr-survey/reference/save_plot.md)
+are unaffected, because it saves through a device that does read system
+fonts.
+
 Everything lands in ordinary
 [`ezrsurvey_options()`](https://mashud37.github.io/ezr-research/ezr-survey/reference/ezrsurvey_options.md)
 (`brand_*` keys), so you can equally set the values by hand or persist
@@ -98,7 +107,7 @@ brand_info()
 #>   colors:   #4F81BD #C0504D #9BBB59 #8064A2 #4BACC6 #F79646
 #>   primary:  #4F81BD
 #>   fonts:    Calibri / Calibri
-#>   pptx ref: /tmp/Rtmp4yafqr/file1c3772a9841b.pptx
+#>   pptx ref: /tmp/RtmpVirCIV/file1aff4dccd2f5.pptx
 clear_brand()
 # Or set brand values directly, no template needed:
 use_brand(colors = c("#0B5394", "#E69138"), fonts = "Georgia", quiet = TRUE)

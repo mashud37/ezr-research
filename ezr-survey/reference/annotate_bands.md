@@ -90,7 +90,8 @@ to add a single "you are here" marker.
 
 Other decisions:
 [`bands_rating_3()`](https://mashud37.github.io/ezr-research/ezr-survey/reference/band_presets.md),
-[`mark_value()`](https://mashud37.github.io/ezr-research/ezr-survey/reference/mark_value.md)
+[`mark_value()`](https://mashud37.github.io/ezr-research/ezr-survey/reference/mark_value.md),
+[`rescale_bands()`](https://mashud37.github.io/ezr-research/ezr-survey/reference/rescale_bands.md)
 
 ## Examples
 

@@ -46,6 +46,47 @@
 <li>Three countries in that table were misspelled and so could never match an answer: <code>"Ise of Man"</code>, <code>"America Samoa"</code> and <code>"Kazakstan"</code>. Bermuda was missing altogether. All four are fixed, and the duplicate rows the corrections exposed are gone, which takes the table from 182 rows to 180.</li>
 </ul></div>
 <div class="section level3">
+<h3 id="decision-bands-on-a-scale-that-is-not-to-0-7-0">Decision bands on a scale that is not 1 to 5<a class="anchor" aria-label="anchor" href="#decision-bands-on-a-scale-that-is-not-to-0-7-0"></a></h3>
+<p>Satisfaction is often collected on 0 to 100, and seven-point agreement scales are common. The band presets are written on 1-5, 0-10 and -100..100, so until now a chart on any other scale meant dividing the data to meet the thresholds, which left the axis showing a scale nobody had been asked about.</p>
+<ul><li>
+<strong><code><a href="../reference/rescale_bands.html">rescale_bands()</a></code></strong> stretches any band specification onto the scale the chart actually uses: <code>bands_rating_3() %&gt;% rescale_bands(to = c(0, 100))</code>. The mapping is proportional, and labels and colours are untouched. It works on a hand-built band data frame as well as on the presets.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="a-registered-answer-order-now-reaches-the-table-0-7-0">A registered answer order now reaches the table<a class="anchor" aria-label="anchor" href="#a-registered-answer-order-now-reaches-the-table-0-7-0"></a></h3>
+<p><code><a href="../reference/register_order.html">register_order()</a></code> set the levels of the answer column and stopped there. The levels are what a chart reads, so charts were right; a table printed to the console or written to CSV carries no levels with it, so every number anybody actually read came back in alphabetical order. On a recency scale that puts “In the past month” above “In the past week”.</p>
+<ul><li>
+<strong><code><a href="../reference/calc_percentage.html">calc_percentage()</a></code></strong> sorts its rows into the registered order. A <code>by =</code> breakdown keeps its groups together and orders within each one.</li>
+<li>
+<strong><code><a href="../reference/crosstab.html">crosstab()</a></code></strong> does the same on both margins. Column order was affected too, because tidyr names new columns in order of first appearance rather than by factor level.</li>
+<li>A margin with no registered order keeps the order it already had, so putting the rows right does not scramble the columns.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="charts-that-were-drawn-on-the-wrong-axis-0-7-0">Charts that were drawn on the wrong axis<a class="anchor" aria-label="anchor" href="#charts-that-were-drawn-on-the-wrong-axis-0-7-0"></a></h3>
+<ul><li>
+<strong><code><a href="../reference/plot_ipm.html">plot_ipm()</a></code></strong> pinned its performance axis to 1-5 whatever bands it was given. A study rated on 0-100 or on a seven-point scale came back as an empty panel with the bands still drawn across it, and ggplot2’s only complaint was that some rows had been removed. The axis now runs over whatever scale the bands describe, and a feature that really does fall outside them is named in a message rather than dropped in silence.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="countries-the-lookup-could-never-reach-0-7-0">Countries the lookup could never reach<a class="anchor" aria-label="anchor" href="#countries-the-lookup-could-never-reach-0-7-0"></a></h3>
+<p>Three separate faults kept <code><a href="../reference/recode_region.html">recode_region()</a></code> from matching countries that were spelled perfectly. On the Stack Overflow Developer Survey, whose country column is coded to ISO 3166-1, 3,126 of 87,973 answers came back <code>NA</code>. They now resolve to 99.93%, and the only thing left unmatched is the answer “Nomadic”.</p>
+<ul><li>
+<strong>The two sides of the lookup were folded differently.</strong> The answer had its punctuation stripped and its accents transliterated; the table was only lower-cased. Every country whose name carries a hyphen, an apostrophe, a comma or brackets was therefore unreachable however it was typed: <code>"Timor-Leste"</code>, <code>"Guinea-Bissau"</code>, <code>"Cote d'Ivoire"</code>, <code>"Korea, North"</code>, <code>"Gambia, The"</code> and some thirty more.</li>
+<li>
+<strong><code>country_region</code> held 180 of the 249 entries in ISO 3166-1.</strong> What was missing was not obscure: Ghana, Ethiopia, Senegal, Rwanda, Yemen, Benin, Botswana, Haiti, Mali, Sierra Leone and South Sudan all returned <code>NA</code>. The table is now complete at 255 rows, grouped the way the package groups countries rather than the way the UN does, so no answer already built on it changes.</li>
+<li>
+<strong>The official ISO names did not match.</strong> <code>"Viet Nam"</code>, <code>"Syrian Arab Republic"</code>, <code>"Lao People's Democratic Republic"</code>, <code>"Brunei Darussalam"</code>, <code>"Cabo Verde"</code>, <code>"Eswatini"</code>, <code>"North Macedonia"</code> and the rest are what a questionnaire built on the standard shows a respondent. They match now, in ISO’s inverted order (<code>"Moldova, Republic of"</code>) and in the order the name is actually said (<code>"Republic of Moldova"</code>).</li>
+</ul></div>
+<div class="section level3">
+<h3 id="a-country-column-folded-the-same-way-on-every-machine-0-7-0">A country column folded the same way on every machine<a class="anchor" aria-label="anchor" href="#a-country-column-folded-the-same-way-on-every-machine-0-7-0"></a></h3>
+<ul><li>
+<strong><code><a href="../reference/recode_region.html">recode_region()</a></code>, <code><a href="../reference/recode_region.html">recode_subregion()</a></code> and <code><a href="../reference/add_region.html">add_region()</a></code></strong> spelled a German sharp s, a Nordic slashed o and five other letters out by hand before transliterating. Windows renders those as a question mark where Linux writes the two-letter form, so a German respondent’s spelling of Great Britain matched on a CI runner and missed on the analyst’s laptop.</li>
+<li>The endonyms of the two most answered countries were missing while smaller countries had theirs: <code>"Estados Unidos"</code>, <code>"Etats-Unis"</code>, <code>"Vereinigte Staaten"</code>, <code>"Stati Uniti"</code>, <code>"Reino Unido"</code> and <code>"Royaume-Uni"</code> now match.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="brand-fonts-and-the-device-that-has-to-draw-them-0-7-0">Brand fonts and the device that has to draw them<a class="anchor" aria-label="anchor" href="#brand-fonts-and-the-device-that-has-to-draw-them-0-7-0"></a></h3>
+<ul><li>
+<strong><code><a href="../reference/use_brand.html">use_brand()</a></code></strong> says so when it sets a typeface in a session whose default device is <code>pdf</code>, which is what a plain <code>Rscript</code> run gets. That device carries its own short list of font families and fails at drawing time with “invalid font type” rather than substituting. Charts written with <code><a href="../reference/save_plot.html">save_plot()</a></code> were never affected.</li>
+</ul></div>
+<div class="section level3">
 <h3 id="errors-that-name-what-went-wrong-0-7-0">Errors that name what went wrong<a class="anchor" aria-label="anchor" href="#errors-that-name-what-went-wrong-0-7-0"></a></h3>
 <ul><li>A <strong>mistyped column name</strong> now says which name failed and offers the nearest one the data has. <code>calc_percentage(d, gendr)</code> reported <code>replacement has 0 rows, data has 3</code>, which describes an assignment the caller never made; it now says <code>Column `gendr` not found in the data. Did you mean `gender`?</code>. The same applies to <code><a href="../reference/calc_summary.html">calc_summary()</a></code>, <code><a href="../reference/calc_nps.html">calc_nps()</a></code>, <code><a href="../reference/crosstab.html">crosstab()</a></code>, <code><a href="../reference/plot_nps.html">plot_nps()</a></code> and <code><a href="../reference/split_multi.html">split_multi()</a></code>.</li>
 <li>

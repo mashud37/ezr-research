@@ -222,6 +222,8 @@ Visual identity and decision-band annotations.
   : Built-in decision-band presets
 - [`mark_value()`](https://mashud37.github.io/ezr-research/ezr-survey/reference/mark_value.md)
   : Mark a single value on a plot
+- [`rescale_bands()`](https://mashud37.github.io/ezr-research/ezr-survey/reference/rescale_bands.md)
+  : Move a band specification onto another scale
 - [`label_pct()`](https://mashud37.github.io/ezr-research/ezr-survey/reference/label_pct.md)
   : Percent label formatter
 - [`nice_max()`](https://mashud37.github.io/ezr-research/ezr-survey/reference/nice_max.md)
