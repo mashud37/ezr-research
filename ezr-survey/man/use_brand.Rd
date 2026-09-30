@@ -43,6 +43,13 @@ never render with substituted glyph boxes. Set
 \code{ezrsurvey_options(brand_fonts_enabled = FALSE)} to keep brand colours but
 ignore brand fonts.
 
+A brand font also needs a graphics device that reads the machine's fonts.
+The \code{pdf} and \code{postscript} devices do not: they carry their own short list of
+families, and a chart printed to one fails with "invalid font type". That is
+the default device in a plain \code{Rscript} run, so \code{use_brand()} says so when it
+sets a font there. Charts written with \code{\link[=save_plot]{save_plot()}} are unaffected, because
+it saves through a device that does read system fonts.
+
 Everything lands in ordinary \code{\link[=ezrsurvey_options]{ezrsurvey_options()}} (\verb{brand_*} keys), so you
 can equally set the values by hand or persist them in a YAML profile; a
 later \code{use_brand()} call simply overwrites them. Semantic palettes

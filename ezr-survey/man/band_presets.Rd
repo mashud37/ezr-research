@@ -51,6 +51,7 @@ bands_nps_score()
 \seealso{
 Other decisions:
 \code{\link[=annotate_bands]{annotate_bands()}},
-\code{\link[=mark_value]{mark_value()}}
+\code{\link[=mark_value]{mark_value()}},
+\code{\link[=rescale_bands]{rescale_bands()}}
 }
 \concept{decisions}

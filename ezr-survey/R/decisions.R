@@ -292,3 +292,59 @@ clip_bands <- function(bands, from = NULL, to = NULL) {
   }
   bands
 }
+
+#' Move a band specification onto another scale
+#'
+#' The band presets are written on the scales survey work uses most: 1-5 for a
+#' rating, 0-10 for the Net Promoter answer, -100 to 100 for the score. Plenty
+#' of real questionnaires do not use those. Satisfaction is often collected on
+#' 0-100, and a seven-point agreement scale is common. `rescale_bands()`
+#' stretches a band specification onto the scale the chart is actually drawn on,
+#' so the thresholds can stay where they are instead of the data being divided
+#' to meet them.
+#'
+#' @param bands A band specification: one of [bands_rating_3()] and friends, or
+#'   any data frame with `from` and `to` columns.
+#' @param to Length-2 numeric: the scale the chart uses, as `c(min, max)`.
+#' @param from Length-2 numeric: the scale `bands` is written on. Read from the
+#'   band edges themselves when omitted, which is what you want for the presets.
+#'
+#' @return `bands` with `from` and `to` moved onto the new scale. Labels and
+#'   colours are untouched.
+#' @family decisions
+#'
+#' @details
+#' The mapping is linear and proportional: a band covering the top fifth of its
+#' own scale covers the top fifth of the new one. Rescale rather than divide the
+#' data, so the axis a reader sees is still the scale the question was asked on.
+#'
+#' @examples
+#' # satisfaction collected 0-100, thresholds still where they belong
+#' bands_rating_3() %>% rescale_bands(to = c(0, 100))
+#'
+#' # a seven-point agreement scale
+#' bands_rating_3() %>% rescale_bands(to = c(1, 7))
+#' @export
+rescale_bands <- function(bands, to, from = NULL) {
+  bands <- normalize_bands(bands)
+  if (!is.numeric(to) || length(to) != 2L || anyNA(to)) {
+    stop("`to` must be two numbers, the low and high end of the scale the ",
+         "chart uses, such as `c(0, 100)`.", call. = FALSE)
+  }
+  from <- from %||% range(c(bands$from, bands$to), na.rm = TRUE)
+  if (!is.numeric(from) || length(from) != 2L || anyNA(from)) {
+    stop("`from` must be two numbers, the low and high end of the scale the ",
+         "bands are written on.", call. = FALSE)
+  }
+  if (diff(range(from)) == 0) {
+    stop("The bands cover no range, so there is nothing to rescale from.",
+         call. = FALSE)
+  }
+
+  move <- function(x) {
+    to[1] + (x - from[1]) * diff(to) / diff(from)
+  }
+  bands$from <- move(bands$from)
+  bands$to <- move(bands$to)
+  bands
+}

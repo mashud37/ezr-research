@@ -772,6 +772,20 @@ plot_ipm <- function(model, title = NULL, repel = TRUE,
   # in the amber bucket while the band behind it said BAD.
   model[[".band"]] <- band_colour(model$performance, bands)
 
+  # The performance axis runs over whatever scale the bands describe. It was
+  # pinned to 1-5, which dropped every point of a study rated on 0-100 or on
+  # 1-7: the chart came back empty with the bands still drawn across it.
+  span <- range(c(bands$from, bands$to), na.rm = TRUE)
+  outside <- model$feature[!is.na(model$performance) &
+                             (model$performance < span[[1]] |
+                                model$performance > span[[2]])]
+  if (length(outside)) {
+    message("plot_ipm: ", paste(outside, collapse = ", "), " fall outside the ",
+            span[[1]], " to ", span[[2]], " performance scale these bands ",
+            "describe, so they are not drawn. rescale_bands() moves the bands ",
+            "onto the scale the answers were collected on.")
+  }
+
   p <- ggplot2::ggplot(model, ggplot2::aes(.data$performance, .data$importance)) +
     ggplot2::geom_point(ggplot2::aes(colour = .data$.band),
                         size = 6, shape = 15) +
@@ -779,7 +793,7 @@ plot_ipm <- function(model, title = NULL, repel = TRUE,
     ggplot2::labs(title = title, x = "\nperformance", y = "importance\n") +
     ggplot2::scale_colour_identity() +
     ggplot2::scale_y_continuous(limits = c(0, ymax), labels = label_pct()) +
-    ggplot2::scale_x_continuous(limits = c(1, 5), breaks = 1:5) +
+    ggplot2::scale_x_continuous(limits = span) +
     theme_ezrsurvey_xy(transparent = TRUE)
 
   if (repel && requireNamespace("ggrepel", quietly = TRUE)) {

@@ -28,6 +28,62 @@ wrote "USA"; the bundled table matched the first and missed the second, so
   missing altogether. All four are fixed, and the duplicate rows the
   corrections exposed are gone, which takes the table from 182 rows to 180.
 
+## Decision bands on a scale that is not 1 to 5
+
+Satisfaction is often collected on 0 to 100, and seven-point agreement scales
+are common. The band presets are written on 1-5, 0-10 and -100..100, so until
+now a chart on any other scale meant dividing the data to meet the thresholds,
+which left the axis showing a scale nobody had been asked about.
+
+* **`rescale_bands()`** stretches any band specification onto the scale the
+  chart actually uses: `bands_rating_3() %>% rescale_bands(to = c(0, 100))`.
+  The mapping is proportional, and labels and colours are untouched. It works
+  on a hand-built band data frame as well as on the presets.
+
+## A registered answer order now reaches the table
+
+`register_order()` set the levels of the answer column and stopped there. The
+levels are what a chart reads, so charts were right; a table printed to the
+console or written to CSV carries no levels with it, so every number anybody
+actually read came back in alphabetical order. On a recency scale that puts
+"In the past month" above "In the past week".
+
+* **`calc_percentage()`** sorts its rows into the registered order. A `by =`
+  breakdown keeps its groups together and orders within each one.
+* **`crosstab()`** does the same on both margins. Column order was affected
+  too, because tidyr names new columns in order of first appearance rather
+  than by factor level.
+* A margin with no registered order keeps the order it already had, so putting
+  the rows right does not scramble the columns.
+
+## Charts that were drawn on the wrong axis
+
+* **`plot_ipm()`** pinned its performance axis to 1-5 whatever bands it was
+  given. A study rated on 0-100 or on a seven-point scale came back as an empty
+  panel with the bands still drawn across it, and ggplot2's only complaint was
+  that some rows had been removed. The axis now runs over whatever scale the
+  bands describe, and a feature that really does fall outside them is named in
+  a message rather than dropped in silence.
+
+## A country column folded the same way on every machine
+
+* **`recode_region()`, `recode_subregion()` and `add_region()`** spelled a
+  German sharp s, a Nordic slashed o and five other letters out by hand before
+  transliterating. Windows renders those as a question mark where Linux writes
+  the two-letter form, so a German respondent's spelling of Great
+  Britain matched on a CI runner and missed on the analyst's laptop.
+* The endonyms of the two most answered countries were missing while smaller
+  countries had theirs: `"Estados Unidos"`, `"Etats-Unis"`, `"Vereinigte
+  Staaten"`, `"Stati Uniti"`, `"Reino Unido"` and `"Royaume-Uni"` now match.
+
+## Brand fonts and the device that has to draw them
+
+* **`use_brand()`** says so when it sets a typeface in a session whose default
+  device is `pdf`, which is what a plain `Rscript` run gets. That device carries
+  its own short list of font families and fails at drawing time with "invalid
+  font type" rather than substituting. Charts written with `save_plot()` were
+  never affected.
+
 ## Errors that name what went wrong
 
 * A **mistyped column name** now says which name failed and offers the nearest

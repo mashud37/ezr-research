@@ -90,3 +90,28 @@ test_that("a leading 'the' and stray punctuation do not matter", {
   expect_equal(recode_region(c("The Netherlands", "U.K.", "U S A")),
                c("Europe", "Europe", "North America"))
 })
+
+test_that("the country fold does not depend on the platform's transliteration", {
+  # Windows renders a sharp s as "?" under iconv TRANSLIT where glibc writes
+  # "ss", which made the match depend on whose machine ran the script.
+  expect_equal(normalise_country("Gro\u00dfbritannien"), "grossbritannien")
+  expect_equal(normalise_country("Wei\u00dfrussland"), "weissrussland")
+  expect_equal(normalise_country("Malm\u00f8"), "malmo")
+  expect_equal(normalise_country("\u00c6R\u00d8"), "aero")
+  expect_equal(normalise_country("\u0141\u00f3dz"), "lodz")
+
+  expect_equal(recode_region("Gro\u00dfbritannien", quiet = TRUE), "Europe")
+})
+
+test_that("the endonyms of the two most answered countries match", {
+  expect_equal(
+    recode_region(c("Estados Unidos", "Etats-Unis", "Vereinigte Staaten",
+                    "Stati Uniti"), quiet = TRUE),
+    rep("North America", 4)
+  )
+  expect_equal(
+    recode_region(c("Reino Unido", "Royaume-Uni", "Gro\u00dfbritannien"),
+                  quiet = TRUE),
+    rep("Europe", 3)
+  )
+})

@@ -67,3 +67,52 @@ test_that("orders round-trip through a YAML profile", {
   load_ezrsurvey_profile(path)
   expect_equal(order_for("x"), c("one", "two"))
 })
+
+test_that("a registered order reaches the rows, not only the levels", {
+  # A recency scale whose alphabetical order is nothing like its real one, so
+  # a table left in count order is visibly wrong.
+  answers <- c(rep("In the past week", 3), rep("In the past month", 5),
+               rep("In the past year", 4), rep("Never", 2))
+  d <- data.frame(seen = answers, arm = rep(c("a", "b"), length.out = 14),
+                  stringsAsFactors = FALSE)
+  register_order("seen_order",
+                 levels = c("In the past week", "In the past month",
+                            "In the past year", "Never"),
+                 vars = "seen")
+  on.exit(remove_order("seen_order"), add = TRUE)
+
+  out <- calc_percentage(d, seen)
+  expect_equal(as.character(out$seen), get_order("seen_order"))
+
+  # A breakdown keeps its groups together and orders inside each one.
+  grouped <- calc_percentage(d, seen, by = arm)
+  expect_equal(as.character(grouped$arm), rep(c("a", "b"), each = 4))
+  expect_equal(as.character(grouped$seen[grouped$arm == "a"]),
+               get_order("seen_order"))
+})
+
+test_that("a registered order reaches both margins of a crosstab", {
+  d <- data.frame(
+    seen = rep(c("In the past week", "In the past month", "Never"), each = 4),
+    band = rep(c("Under 18", "18-24"), 6),
+    stringsAsFactors = FALSE
+  )
+  register_order("seen_order",
+                 levels = c("In the past week", "In the past month", "Never"),
+                 vars = "seen")
+  register_order("band_order", levels = c("Under 18", "18-24"), vars = "band")
+  on.exit({
+    remove_order("seen_order")
+    remove_order("band_order")
+  }, add = TRUE)
+
+  wide <- crosstab(d, seen, band, cell = "col_pct")
+  expect_equal(as.character(wide$seen), get_order("seen_order"))
+  # "Under 18" sorts after "18-24" as text, so the column order is the test.
+  expect_equal(names(wide)[-1], get_order("band_order"))
+
+  # An unregistered margin keeps the order it already had.
+  remove_order("band_order")
+  expect_equal(as.character(crosstab(d, seen, band, cell = "count")$seen),
+               get_order("seen_order"))
+})

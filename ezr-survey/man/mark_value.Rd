@@ -46,6 +46,7 @@ calc_percentage(podracing_survey, demo_gender) \%>\%
 \seealso{
 Other decisions:
 \code{\link[=annotate_bands]{annotate_bands()}},
-\code{\link[=bands_rating_3]{bands_rating_3()}}
+\code{\link[=bands_rating_3]{bands_rating_3()}},
+\code{\link[=rescale_bands]{rescale_bands()}}
 }
 \concept{decisions}

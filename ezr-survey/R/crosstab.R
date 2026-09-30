@@ -16,6 +16,14 @@ summarise_cell_wtd <- function(x, w, na_rm) {
   stats::weighted.mean(x, w)
 }
 
+# Internal: where each value sits in the order the table should use. A margin
+# with a registered order sorts by it; one without keeps the order it already
+# had, so putting the rows right does not scramble the columns.
+order_rank <- function(values, levels = NULL) {
+  values <- as.character(values)
+  match(values, levels %||% unique(values))
+}
+
 #' Cross-tabulate two survey questions
 #'
 #' Builds a crosstab from two categorical columns: `x` forms the rows and `y` the
@@ -144,6 +152,13 @@ crosstab <- function(data = NULL, x, y, cell = c("count", "row_pct", "col_pct",
   y_levels <- order_for(y_name)
   if (!is.null(x_levels)) out[[x_name]] <- factor(out[[x_name]], levels = x_levels)
   if (!is.null(y_levels)) out[[y_name]] <- factor(out[[y_name]], levels = y_levels)
+  # Levels alone reach the charts and nothing else: a printed or exported table
+  # carries none, and tidyr names new columns in order of first appearance, so
+  # both margins came out alphabetical however the order was registered.
+  if (!is.null(x_levels) || !is.null(y_levels)) {
+    out <- out[order(order_rank(out[[x_name]], x_levels),
+                     order_rank(out[[y_name]], y_levels)), , drop = FALSE]
+  }
 
   if (wide) {
     out <- tidyr::pivot_wider(out, names_from = dplyr::all_of(y_name),

@@ -1,57 +1,48 @@
 # Draws the package logo: man/figures/logo.png
 #
 # A pointy-top hexagon, the shape the R community uses for package stickers, in
-# the navy and gold the bundled deck template already carries. Inside it a
-# questionnaire with a face, drawn from a character grid the way the pepa and
-# kopi mascots are, so the family looks related. Base graphics only, so this
-# needs nothing the package does not already depend on.
+# the navy and gold the bundled deck template already carries. The name is set
+# as type rather than as a picture: EZR in letterspaced capitals, a gold rule,
+# then survey beneath it. Base graphics only, so this needs nothing the package
+# does not already depend on.
 #
 # Run from the package root: Rscript data-raw/make_logo.R
 
 NAVY <- "#12314E"
 GOLD <- "#C9A227"
 PAPER <- "#FFFFFF"
-STEEL <- "#8FA3B8"
-
-# One character per pixel, rows top to bottom.
-#   .  nothing   o  board   w  paper   E  eye   m  mouth   g  a filled answer
-MASCOT <- c(
-  ".....oooooo.....",
-  "...oooooooooo...",
-  "...owwwwwwwwo...",
-  "...owEwwwwEwo...",
-  "...owwwwwwwwo...",
-  "...owmwwwwmwo...",
-  "...owwmmmmwwo...",
-  "...owwwwwwwwo...",
-  "...ogggggggwo...",
-  "...owwwwwwwwo...",
-  "...oggggwwwwo...",
-  "...owwwwwwwwo...",
-  "...oggggggwwo...",
-  "...oooooooooo...",
-  "....o......o....",
-  "...oo......oo..."
-)
-
-INK <- c(o = STEEL, w = PAPER, E = NAVY, m = NAVY, g = GOLD)
 
 hexagon <- function(x, y, radius) {
   angles <- (seq(0, 5) * 60 + 90) * pi / 180
   list(x = x + radius * cos(angles), y = y + radius * sin(angles))
 }
 
-draw_grid <- function(grid, left, bottom, cell) {
-  rows <- length(grid)
-  for (r in seq_len(rows)) {
-    chars <- strsplit(grid[[r]], "")[[1]]
-    for (c in seq_along(chars)) {
-      if (!chars[[c]] %in% names(INK)) next
-      x <- left + (c - 1) * cell
-      y <- bottom + (rows - r) * cell
-      rect(x, y, x + cell, y + cell, col = INK[[chars[[c]]]], border = NA)
-    }
+# Base graphics has no letterspacing, so each character is placed by hand.
+# Tracking is given as a share of the font size, the way a type designer would
+# quote it, and the whole run is centred on x.
+draw_tracked <- function(label, x, y, cex, colour, font, tracking) {
+  chars <- strsplit(label, "")[[1]]
+  widths <- strwidth(chars, cex = cex, font = font, family = "sans")
+  gap <- tracking * strwidth("M", cex = cex, font = font, family = "sans")
+  total <- sum(widths) + gap * (length(chars) - 1)
+
+  left <- x - total / 2
+  for (i in seq_along(chars)) {
+    text(left + widths[[i]] / 2, y, chars[[i]], col = colour, cex = cex,
+         font = font, family = "sans", adj = c(0.5, 0.5))
+    left <- left + widths[[i]] + gap
   }
+  invisible(total)
+}
+
+# Picks the cex that makes a tracked run come out the width asked for. Text
+# scales linearly with cex, so one measurement at cex 1 settles it.
+cex_for_width <- function(label, target, font, tracking) {
+  chars <- strsplit(label, "")[[1]]
+  at_one <- sum(strwidth(chars, cex = 1, font = font, family = "sans")) +
+    tracking * strwidth("M", cex = 1, font = font, family = "sans") *
+      (length(chars) - 1)
+  target / at_one
 }
 
 build_logo <- function(path, px_wide = 480) {
@@ -60,7 +51,7 @@ build_logo <- function(path, px_wide = 480) {
   px_tall <- round(px_wide * 2 * radius / wide)
 
   grDevices::png(path, width = px_wide, height = px_tall, bg = "transparent",
-                 res = 300)
+                 res = 300, type = "cairo-png", antialias = "default")
   on.exit(grDevices::dev.off(), add = TRUE)
   par(mar = c(0, 0, 0, 0), xaxs = "i", yaxs = "i")
   plot.new()
@@ -69,20 +60,17 @@ build_logo <- function(path, px_wide = 480) {
 
   outer <- hexagon(0, 0, radius)
   polygon(outer$x, outer$y, col = GOLD, border = NA)
-  inner <- hexagon(0, 0, radius * 0.94)
+  inner <- hexagon(0, 0, radius * 0.93)
   polygon(inner$x, inner$y, col = NAVY, border = NA)
 
-  # The hexagon tapers above y = 0.5, so the grid has to clear that point:
-  # at height y its half-width is sqrt(3) * (1 - y).
-  cell <- wide / 28
-  columns <- nchar(MASCOT[[1]])
-  draw_grid(MASCOT,
-            left = -columns * cell / 2,
-            bottom = -0.33,
-            cell = cell)
+  big <- cex_for_width("EZR", target = 0.92, font = 2, tracking = 0.16)
+  small <- cex_for_width("survey", target = 0.86, font = 1, tracking = 0.34)
 
-  text(0, -0.60, "ezrsurvey", col = PAPER, cex = 0.82, font = 2,
-       family = "sans")
+  draw_tracked("EZR", 0, 0.20, cex = big, colour = PAPER, font = 2,
+               tracking = 0.16)
+  rect(-0.46, -0.055, 0.46, -0.03, col = GOLD, border = NA)
+  draw_tracked("survey", 0, -0.26, cex = small, colour = GOLD, font = 1,
+               tracking = 0.34)
 
   invisible(path)
 }

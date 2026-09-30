@@ -76,3 +76,30 @@ test_that("bands_nps_score covers the -100..100 score axis", {
   # bands_nps() is the 0-10 answer scale and is a different thing
   expect_equal(max(bands_nps()$to), 10.5)
 })
+
+test_that("rescale_bands moves a preset onto another scale", {
+  wide <- rescale_bands(bands_rating_3(), to = c(0, 100))
+  expect_equal(min(wide$from), 0)
+  expect_equal(max(wide$to), 100)
+  # BAD covers 1-3 of 1-5, which is half the scale, so half of 0-100 too
+  expect_equal(wide$to[[1]], 50)
+  expect_equal(wide$label, bands_rating_3()$label)
+  expect_equal(wide$colour, bands_rating_3()$colour)
+
+  seven <- rescale_bands(bands_rating_3(), to = c(1, 7))
+  expect_equal(min(seven$from), 1)
+  expect_equal(max(seven$to), 7)
+
+  # the scale the bands are written on can be stated when it is not their span
+  stated <- rescale_bands(bands_rating_3(), to = c(0, 10), from = c(0, 5))
+  expect_equal(stated$from[[1]], 2)
+})
+
+test_that("rescale_bands rejects a scale it cannot use", {
+  expect_error(rescale_bands(bands_rating_3(), to = 100), "two numbers")
+  expect_error(rescale_bands(bands_rating_3(), to = c(0, NA)), "two numbers")
+  expect_error(
+    rescale_bands(bands_rating_3(), to = c(0, 100), from = c(2, 2)),
+    "no range"
+  )
+})

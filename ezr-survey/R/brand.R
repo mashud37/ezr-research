@@ -97,6 +97,13 @@ parse_ooxml_theme <- function(xml_file) {
 #' `ezrsurvey_options(brand_fonts_enabled = FALSE)` to keep brand colours but
 #' ignore brand fonts.
 #'
+#' A brand font also needs a graphics device that reads the machine's fonts.
+#' The `pdf` and `postscript` devices do not: they carry their own short list of
+#' families, and a chart printed to one fails with "invalid font type". That is
+#' the default device in a plain `Rscript` run, so `use_brand()` says so when it
+#' sets a font there. Charts written with [save_plot()] are unaffected, because
+#' it saves through a device that does read system fonts.
+#'
 #' Everything lands in ordinary [ezrsurvey_options()] (`brand_*` keys), so you
 #' can equally set the values by hand or persist them in a YAML profile; a
 #' later `use_brand()` call simply overwrites them. Semantic palettes
@@ -174,9 +181,36 @@ use_brand <- function(template = NULL, colors = NULL, fonts = NULL,
   opts <- opts[!vapply(opts, is.null, logical(1))]
   if (length(opts)) do.call(ezrsurvey_options, opts)
 
+  if (!is.null(font_minor)) warn_core_font_device(font_minor)
+
   info <- brand_info()
   if (!quiet) print(info)
   invisible(info)
+}
+
+# Internal: the pdf and postscript devices carry their own short list of font
+# families and ignore what the machine has installed, so printing a chart
+# straight to one fails at drawing time with "invalid font type" rather than
+# substituting. That is the default device under Rscript, so a script that
+# prints a chart hits it while the same script's save_plot() calls are fine.
+# Say so once, when the font is set, which is where the reader can act on it.
+warn_core_font_device <- function(family) {
+  nxt <- getOption("device")
+  core <- if (is.character(nxt)) {
+    nxt %in% c("pdf", "postscript")
+  } else {
+    is.function(nxt) &&
+      (identical(nxt, grDevices::pdf) || identical(nxt, grDevices::postscript))
+  }
+  if (!core) {
+    return(invisible(FALSE))
+  }
+  message("Brand font '", family, "' is set, but this session draws to the ",
+          "pdf device, which cannot use it. Charts saved with save_plot() ",
+          "are unaffected; printing one to the screen will fail. Set ",
+          "ezrsurvey_options(brand_fonts_enabled = FALSE) to report without ",
+          "the brand typeface.")
+  invisible(TRUE)
 }
 
 #' Show the active brand settings

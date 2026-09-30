@@ -14,6 +14,10 @@ country_aliases <- c(
   "america" = "United States",
   "united states of america" = "United States",
   "states" = "United States",
+  "estados unidos" = "United States",
+  "etats unis" = "United States",
+  "vereinigte staaten" = "United States",
+  "stati uniti" = "United States",
   "uk" = "United Kingdom",
   "gb" = "United Kingdom",
   "gbr" = "United Kingdom",
@@ -24,6 +28,9 @@ country_aliases <- c(
   "wales" = "United Kingdom",
   "northern ireland" = "United Kingdom",
   "united kingdom of great britain and northern ireland" = "United Kingdom",
+  "reino unido" = "United Kingdom",
+  "royaume uni" = "United Kingdom",
+  "grossbritannien" = "United Kingdom",
   # endonyms, which arrive whenever a survey runs in more than one language
   "deutschland" = "Germany",
   "de" = "Germany", "deu" = "Germany", "ger" = "Germany",
@@ -85,10 +92,30 @@ country_aliases <- c(
   "are" = "United Arab Emirates"
 )
 
+# Internal: letters whose transliteration differs between platforms. Windows
+# turns a German sharp s into a question mark where glibc writes "ss", so
+# "Grossbritannien" matched or missed depending on whose machine ran the
+# script. Spelling them out first makes the fold the same everywhere; iconv is
+# left with the plain accents, which it does agree on.
+letter_spellings <- c(
+  "\u00df" = "ss",
+  "\u00e6" = "ae",
+  "\u0153" = "oe",
+  "\u00f8" = "o",
+  "\u00e5" = "a",
+  "\u00f0" = "d",
+  "\u00fe" = "th",
+  "\u0142" = "l",
+  "\u0111" = "d"
+)
+
 # Internal: fold a typed country down to something matchable. Case, stray
 # punctuation, accents and a leading "the" are all noise here.
 normalise_country <- function(x) {
   out <- tolower(trimws(as.character(x)))
+  for (letter in names(letter_spellings)) {
+    out <- gsub(letter, letter_spellings[[letter]], out, fixed = TRUE)
+  }
   out <- iconv(out, to = "ASCII//TRANSLIT")
   out <- gsub("[.,'`]", "", out)
   out <- gsub("[^a-z ]", " ", out)

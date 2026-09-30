@@ -92,7 +92,14 @@ order_factor <- function(df, key, sort = c("none", "desc", "asc"),
     # An explicit / registered order is intentional and ordinal: mark it ordered
     # so downstream helpers (e.g. plot_bars) leave it alone instead of resorting.
     df[[key]] <- factor(df[[key]], levels = levels, ordered = TRUE)
-    return(df)
+    # Setting the levels is only half of it. A table printed, written to CSV or
+    # read by eye carries no levels with it, so leaving the rows alone sent the
+    # registered order to the charts and alphabetical order to everyone reading
+    # the numbers. Group columns sort first, so a `by =` breakdown stays in its
+    # groups.
+    group_cols <- setdiff(names(df), c(key, "n", "pct", "wpct"))
+    keys <- c(unname(as.list(df[group_cols])), list(df[[key]]))
+    return(df[do.call(order, keys), , drop = FALSE])
   }
   if (sort == "none") {
     return(df)

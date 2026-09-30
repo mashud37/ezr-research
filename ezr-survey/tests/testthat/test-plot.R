@@ -197,3 +197,26 @@ test_that("plot_rating_grid reports two answers landing on one rank", {
                                 "Agree", "Strongly agree"))
   )
 })
+
+test_that("plot_ipm draws on the scale its bands describe", {
+  skip_if_not_installed("rwa")
+  model <- ipm_model(podracing_survey, nps_value, "ratings_")
+
+  # Performance on 0-100, with bands moved to match: every point must be
+  # inside the panel, not clipped away by a hardcoded 1-5 axis.
+  wide <- model
+  wide$performance <- (wide$performance - 1) / 4 * 100
+  p <- plot_ipm(wide, bands = rescale_bands(bands_rating_3(), to = c(0, 100)))
+  rng <- ggplot2::ggplot_build(p)$layout$panel_params[[1]]$x.range
+  expect_lte(rng[[1]], min(wide$performance))
+  expect_gte(rng[[2]], max(wide$performance))
+
+  # The default 1-5 bands cannot hold those values, and saying so beats
+  # returning an empty chart.
+  expect_message(plot_ipm(wide), "fall outside")
+
+  # The ordinary 1-5 case is unchanged. The panel carries ggplot's usual 5%
+  # expansion either side, so the scale's own limits are what to check.
+  plain <- ggplot2::ggplot_build(plot_ipm(model))
+  expect_equal(plain$layout$panel_scales_x[[1]]$get_limits(), c(1, 5))
+})

@@ -75,6 +75,7 @@ ipm_model(podracing_survey, nps_value, "ratings_") \%>\%
 
 Other decisions:
 \code{\link[=bands_rating_3]{bands_rating_3()}},
-\code{\link[=mark_value]{mark_value()}}
+\code{\link[=mark_value]{mark_value()}},
+\code{\link[=rescale_bands]{rescale_bands()}}
 }
 \concept{decisions}
