@@ -101,7 +101,8 @@
 #' column into regions. Each country also carries its ISO 3166-1 codes, so a
 #' result can be reported against the standard.
 #'
-#' @format A [tibble][tibble::tibble] with 180 rows and 5 columns:
+#' @format A [tibble][tibble::tibble] with 255 rows and 5 columns, one per
+#'   entry in ISO 3166-1 that has a UN M49 grouping, plus Kosovo:
 #' \describe{
 #'   \item{country}{Country name.}
 #'   \item{iso2}{ISO 3166-1 alpha-2 code (e.g. `"DE"`). `NA` for Kosovo, which
@@ -114,8 +115,10 @@
 #' Note that Namibia's alpha-2 code is the two letters `"NA"`, not a missing
 #' value, which is worth knowing before filtering on the column.
 #' @family data
-#' @source Regions are the package's own grouping. Codes are ISO 3166-1. See
-#'   `data-raw/make_country_region.R`.
+#' @source Countries and codes are ISO 3166-1. The regions are the package's
+#'   own grouping, which follows the UN M49 sub-regions but treats the Middle
+#'   East as a region and splits the Americas north and south, because that is
+#'   how consumer research reports them. See `data-raw/make_country_region.R`.
 #' @seealso [recode_region()], [add_region()].
 #' @examples
 #' head(country_region)

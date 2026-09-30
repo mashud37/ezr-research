@@ -81,6 +81,111 @@ idx <- ifelse(is.na(by_name), by_code, by_name)
 country_region$iso2 <- iso$iso2[idx]
 country_region$iso3 <- iso$iso3[idx]
 
+# ---- the countries the table never had -----------------------------------
+
+# The table shipped with 180 of the 249 entries in ISO 3166-1, and the ones it
+# was missing were not obscure: Ghana, Ethiopia, Senegal, Rwanda and Yemen all
+# came back NA from a correctly spelled answer. The rest of the standard is
+# added here, grouped the way the package groups countries rather than the way
+# the UN does, because the existing 180 rows use that vocabulary and changing
+# it would change every answer already built on it.
+#
+# Middle East is a region of its own here, and the Americas are split north and
+# south, so ISO's five regions do not carry over. These two tables say how the
+# UN M49 groupings map onto the package's.
+by_sub_region <- data.frame(
+  sub_region = c(
+    "Australia and New Zealand",
+    "Melanesia",
+    "Micronesia",
+    "Polynesia",
+    "Central Asia",
+    "Eastern Asia",
+    "South-eastern Asia",
+    "Southern Asia",
+    "Western Asia",
+    "Eastern Europe",
+    "Northern Europe",
+    "Southern Europe",
+    "Western Europe",
+    "Northern Africa",
+    "Sub-Saharan Africa",
+    "Northern America"
+  ),
+  new_region = c(
+    "Oceania",
+    "Oceania",
+    "Oceania",
+    "Oceania",
+    "Asia",
+    "Asia",
+    "Asia",
+    "Asia",
+    "Middle East",
+    "Europe",
+    "Europe",
+    "Europe",
+    "Europe",
+    "Africa",
+    "Africa",
+    "North America"
+  ),
+  new_subregion = c(
+    "Australia New Zealand",
+    "Pacific Islands",
+    "Pacific Islands",
+    "Pacific Islands",
+    "Central Asia",
+    "East Asia",
+    "South East Asia",
+    "South Asia",
+    "Middle East",
+    "Eastern Europe",
+    "Northern Europe",
+    "Western Europe",
+    "Western Europe",
+    "Africa",
+    "Africa",
+    "North America"
+  ),
+  stringsAsFactors = FALSE
+)
+
+# ISO puts the whole of Latin America and the Caribbean in one sub-region,
+# which this package splits three ways, so those rows are read from the finer
+# intermediate region instead.
+by_intermediate <- data.frame(
+  intermediate = c("Caribbean", "Central America", "South America"),
+  new_region = c("North America", "North America", "South America"),
+  new_subregion = c("Caribbean", "North America", "South America"),
+  stringsAsFactors = FALSE
+)
+
+# A code already in the table means the standard simply spells that country
+# differently, which is a job for the alias list in R/region.R, not a new row.
+absent <- iso[!iso$iso3 %in% country_region$iso3, ]
+absent <- absent[!is.na(absent$sub.region), ]
+
+added <- merge(absent, by_sub_region, by.x = "sub.region",
+               by.y = "sub_region", all.x = TRUE)
+finer <- match(added$intermediate.region, by_intermediate$intermediate)
+added$new_region <- ifelse(is.na(finer), added$new_region,
+                           by_intermediate$new_region[finer])
+added$new_subregion <- ifelse(is.na(finer), added$new_subregion,
+                              by_intermediate$new_subregion[finer])
+
+unplaced <- added$iso_name[is.na(added$new_region)]
+if (length(unplaced)) {
+  stop("No region mapping for: ", paste(unplaced, collapse = ", "))
+}
+
+country_region <- rbind(
+  country_region[, c("country", "iso2", "iso3", "region", "subregion")],
+  data.frame(country = added$iso_name, iso2 = added$iso2, iso3 = added$iso3,
+             region = added$new_region, subregion = added$new_subregion,
+             stringsAsFactors = FALSE)
+)
+
 country_region <- country_region %>%
   select(country, iso2, iso3, region, subregion) %>%
   arrange(region, subregion, country) %>%

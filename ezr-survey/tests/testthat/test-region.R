@@ -115,3 +115,43 @@ test_that("the endonyms of the two most answered countries match", {
     rep("Europe", 3)
   )
 })
+
+test_that("a country whose name carries punctuation can be matched", {
+  # The lookup lower-cased the table while folding the answer all the way
+  # down, so every name with a hyphen, an apostrophe, a comma or brackets was
+  # unreachable however it was typed.
+  expect_equal(recode_region("Timor-Leste", quiet = TRUE), "Asia")
+  expect_equal(recode_region("Guinea-Bissau", quiet = TRUE), "Africa")
+  expect_equal(recode_region("Cote d'Ivoire", quiet = TRUE), "Africa")
+  expect_equal(recode_region("Côte d'Ivoire", quiet = TRUE), "Africa")
+  expect_equal(recode_region("Korea, North", quiet = TRUE), "Asia")
+  expect_equal(recode_region("Gambia, The", quiet = TRUE), "Africa")
+})
+
+test_that("the table covers ISO 3166-1, not a subset of it", {
+  # These are ordinary, correctly spelled countries that used to come back NA.
+  plain <- c("Ghana", "Ethiopia", "Senegal", "Rwanda", "Yemen", "Benin",
+             "Botswana", "Haiti", "Samoa", "San Marino", "Monaco",
+             "Suriname", "Barbados", "Turkmenistan", "Papua New Guinea",
+             "South Sudan", "Sierra Leone", "Mali")
+  expect_false(any(is.na(recode_region(plain, quiet = TRUE))))
+
+  expect_gte(nrow(country_region), 249)
+  expect_equal(sum(duplicated(country_region$country)), 0)
+  # Every row but Kosovo carries both codes.
+  expect_equal(sum(is.na(country_region$iso3)), 1)
+})
+
+test_that("the official ISO names match, in either word order", {
+  iso_order <- c("Viet Nam", "Syrian Arab Republic", "Moldova, Republic of",
+                 "Iran, Islamic Republic of", "Lao People's Democratic Republic",
+                 "Brunei Darussalam", "Cabo Verde", "Eswatini",
+                 "North Macedonia", "Taiwan, Province of China")
+  expect_false(any(is.na(recode_region(iso_order, quiet = TRUE))))
+
+  # A questionnaire prints them the way they are said, not inverted.
+  said <- c("Republic of Moldova", "United Republic of Tanzania",
+            "Islamic Republic of Iran", "Democratic Republic of the Congo",
+            "Democratic People's Republic of Korea")
+  expect_false(any(is.na(recode_region(said, quiet = TRUE))))
+})

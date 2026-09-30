@@ -65,6 +65,32 @@ actually read came back in alphabetical order. On a recency scale that puts
   bands describe, and a feature that really does fall outside them is named in
   a message rather than dropped in silence.
 
+## Countries the lookup could never reach
+
+Three separate faults kept `recode_region()` from matching countries that were
+spelled perfectly. On the Stack Overflow Developer Survey, whose country column
+is coded to ISO 3166-1, 3,126 of 87,973 answers came back `NA`. They now resolve
+to 99.93%, and the only thing left unmatched is the answer "Nomadic".
+
+* **The two sides of the lookup were folded differently.** The answer had its
+  punctuation stripped and its accents transliterated; the table was only
+  lower-cased. Every country whose name carries a hyphen, an apostrophe, a
+  comma or brackets was therefore unreachable however it was typed:
+  `"Timor-Leste"`, `"Guinea-Bissau"`, `"Cote d'Ivoire"`, `"Korea, North"`,
+  `"Gambia, The"` and some thirty more.
+* **`country_region` held 180 of the 249 entries in ISO 3166-1.** What was
+  missing was not obscure: Ghana, Ethiopia, Senegal, Rwanda, Yemen, Benin,
+  Botswana, Haiti, Mali, Sierra Leone and South Sudan all returned `NA`. The
+  table is now complete at 255 rows, grouped the way the package groups
+  countries rather than the way the UN does, so no answer already built on it
+  changes.
+* **The official ISO names did not match.** `"Viet Nam"`, `"Syrian Arab
+  Republic"`, `"Lao People's Democratic Republic"`, `"Brunei Darussalam"`,
+  `"Cabo Verde"`, `"Eswatini"`, `"North Macedonia"` and the rest are what a
+  questionnaire built on the standard shows a respondent. They match now, in
+  ISO's inverted order (`"Moldova, Republic of"`) and in the order the name is
+  actually said (`"Republic of Moldova"`).
+
 ## A country column folded the same way on every machine
 
 * **`recode_region()`, `recode_subregion()` and `add_region()`** spelled a

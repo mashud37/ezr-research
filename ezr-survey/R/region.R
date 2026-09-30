@@ -89,7 +89,53 @@ country_aliases <- c(
   "kr" = "South Korea", "kor" = "South Korea",
   "korea" = "South Korea", "republic of korea" = "South Korea",
   "uae" = "United Arab Emirates", "ae" = "United Arab Emirates",
-  "are" = "United Arab Emirates"
+  "are" = "United Arab Emirates",
+  # The official ISO 3166-1 names, which is what a questionnaire built on the
+  # standard puts in front of a respondent. The table itself carries the short
+  # names people say out loud, so the long ones have to be bridged.
+  "bolivia plurinational state of" = "Bolivia",
+  "brunei darussalam" = "Brunei",
+  "cabo verde" = "Cape Verde",
+  "eswatini" = "Swaziland",
+  "gambia" = "Gambia, The",
+  "holy see" = "Holy See (Vatican City)",
+  "iran islamic republic of" = "Iran",
+  "korea democratic peoples republic of" = "Korea, North",
+  "korea republic of" = "Korea",
+  "lao peoples democratic republic" = "Laos",
+  "macao" = "Macau",
+  "moldova republic of" = "Moldova",
+  "netherlands kingdom of the" = "Netherlands",
+  "north macedonia" = "Macedonia",
+  "palestine state of" = "Gaza Strip",
+  "pitcairn" = "Pitcairn Islands",
+  "syrian arab republic" = "Syria",
+  "taiwan province of china" = "Taiwan",
+  "venezuela bolivarian republic of" = "Venezuela",
+  "viet nam" = "Vietnam",
+  "virgin islands british" = "British Virgin Islands",
+  "virgin islands us" = "Virgin Islands",
+  # And the spellings that are nobody's standard but turn up anyway: a former
+  # official name, a truncation, a plain-English short form.
+  "hong kong sar" = "Hong Kong",
+  "former yugoslav republic of macedonia" = "Macedonia",
+  "palestine" = "Gaza Strip",
+  "north korea" = "Korea, North",
+  "democratic republic of the congo" = "Congo, Democratic Republic of the",
+  "congo republic of the" = "Congo",
+  "libyan arab jamahiriya" = "Libya",
+  "tanzania" = "Tanzania, United Republic of",
+  "united republic of tanzania" = "Tanzania, United Republic of",
+  # ISO inverts the long names so they alphabetise by country; questionnaires
+  # print them the way they are said. Both orders have to match.
+  "republic of moldova" = "Moldova",
+  "democratic peoples republic of korea" = "Korea, North",
+  "islamic republic of iran" = "Iran",
+  "plurinational state of bolivia" = "Bolivia",
+  "bolivarian republic of venezuela" = "Venezuela",
+  "state of palestine" = "Gaza Strip",
+  "kingdom of the netherlands" = "Netherlands",
+  "province of china taiwan" = "Taiwan"
 )
 
 # Internal: letters whose transliteration differs between platforms. Windows
@@ -198,7 +244,11 @@ recode_region <- function(x, which = c("region", "subregion"), quiet = FALSE) {
   which <- match.arg(which)
   lut <- country_region
   raw <- na_blank(as.character(x))
-  idx <- match(canonical_country(raw), tolower(trimws(lut$country)))
+  # Both sides have to be folded the same way. Lower-casing the table while
+  # the answer had its punctuation and accents stripped made every country
+  # whose name carries either unmatchable: "Timor-Leste", "Cote d'Ivoire",
+  # "Korea, North" and thirty more could not be found however they were typed.
+  idx <- match(canonical_country(raw), normalise_country(lut$country))
   out <- lut[[which]][idx]
 
   if (!quiet) {
