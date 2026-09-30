@@ -63,7 +63,7 @@ Other reporting:
 ``` r
 dir <- file.path(tempdir(), "ezrsurvey-example")
 example_report(dir)
-#> Example written to /tmp/RtmpH0ZA5s/ezrsurvey-example/ -- start with podracing-report.qmd.
+#> Example written to /tmp/RtmpFKswEB/ezrsurvey-example/ -- start with podracing-report.qmd.
 list.files(dir)
 #> [1] "podracing-deck.R"     "podracing-report.qmd"
 
