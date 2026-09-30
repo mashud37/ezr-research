@@ -62,6 +62,9 @@ jobs:
       - name: Write the index that lists the packages
         run: |
           mkdir -p root
+          # Without this at the root of the branch, Pages runs the output
+          # through Jekyll, which drops any path beginning with an underscore.
+          touch root/.nojekyll
           cat > root/index.html <<'HTML'
           <!doctype html>
           <html lang="en">

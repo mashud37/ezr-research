@@ -41,6 +41,34 @@ if (!"Bermuda" %in% country_region$country) {
   )
 }
 
+# ---- countries filed under the wrong region ------------------------------
+
+# Four rows disagreed with every grouping scheme rather than with one of them.
+# Algeria sat in Eastern Europe and Laos in Africa, which are transcription
+# slips; Mauritius and Reunion sat in South Asia, which is an old way of
+# grouping the Indian Ocean that no scheme now uses.
+#
+# The other differences from UN M49 are deliberate and are left alone: Egypt,
+# Iran, Afghanistan, Pakistan, Djibouti, Kazakhstan and Uzbekistan are
+# reported as Middle East, and Turkey, Cyprus, Georgia, Armenia and Azerbaijan
+# as Europe, because that is how consumer research buys and reports those
+# markets.
+region_fixes <- list(
+  "Algeria" = c("Africa", "Africa"),
+  "Laos" = c("Asia", "South East Asia"),
+  "Mauritius" = c("Africa", "Africa"),
+  "Reunion" = c("Africa", "Africa")
+)
+
+for (name in names(region_fixes)) {
+  row <- match(name, country_region$country)
+  if (is.na(row)) {
+    stop("Cannot correct the region of '", name, "': it is not in the table.")
+  }
+  country_region$region[row] <- region_fixes[[name]][[1]]
+  country_region$subregion[row] <- region_fixes[[name]][[2]]
+}
+
 # ---- ISO 3166-1 codes ----------------------------------------------------
 
 # na.strings = "" matters: Namibia's alpha-2 code is "NA", which the default

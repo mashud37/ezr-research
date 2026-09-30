@@ -138,21 +138,35 @@ country_aliases <- c(
   "province of china taiwan" = "Taiwan"
 )
 
-# Internal: letters whose transliteration differs between platforms. Windows
-# turns a German sharp s into a question mark where glibc writes "ss", so
-# "Grossbritannien" matched or missed depending on whose machine ran the
-# script. Spelling them out first makes the fold the same everywhere; iconv is
-# left with the plain accents, which it does agree on.
+# Internal: the letters a country name can carry, folded to plain ASCII by
+# hand. iconv's "ASCII//TRANSLIT" was doing this until three platforms
+# turned out to disagree: Windows writes a German sharp s as "?", macOS
+# leaves a circumflex where it found one, and glibc spells both out. That
+# made a match depend on whose machine ran the script, so the fold is
+# spelled out here, and iconv is left only as a backstop for anything
+# outside this range.
 letter_spellings <- c(
   "\u00df" = "ss",
   "\u00e6" = "ae",
   "\u0153" = "oe",
-  "\u00f8" = "o",
-  "\u00e5" = "a",
-  "\u00f0" = "d",
-  "\u00fe" = "th",
-  "\u0142" = "l",
-  "\u0111" = "d"
+  "\u00fe" = "th"
+)
+
+accented_letters <- paste0(
+  "\u00e0\u00e1\u00e2\u00e3\u00e4\u00e5\u0101\u0103\u0105\u00e7",
+  "\u0107\u0109\u010b\u010d\u00f0\u010f\u0111\u00e8\u00e9\u00ea",
+  "\u00eb\u0113\u0115\u0117\u0119\u011b\u011d\u011f\u0121\u0123",
+  "\u0125\u0127\u00ec\u00ed\u00ee\u00ef\u0129\u012b\u012d\u012f",
+  "\u0131\u0135\u0137\u013a\u013c\u013e\u0140\u0142\u00f1\u0144",
+  "\u0146\u0148\u00f2\u00f3\u00f4\u00f5\u00f6\u00f8\u014d\u014f",
+  "\u0151\u0155\u0157\u0159\u015b\u015d\u015f\u0161\u0163\u0165",
+  "\u0167\u00f9\u00fa\u00fb\u00fc\u0169\u016b\u016d\u016f\u0171",
+  "\u0173\u0175\u00fd\u00ff\u0177\u017a\u017c\u017e"
+)
+
+plain_letters <- paste0(
+  "aaaaaaaaacccccdddeeeeeeeeegggghhiiiiiiiiijklllllnnnnoooooooo",
+  "orrrsssstttuuuuuuuuuuwyyyzzz"
 )
 
 # Internal: fold a typed country down to something matchable. Case, stray
@@ -162,6 +176,7 @@ normalise_country <- function(x) {
   for (letter in names(letter_spellings)) {
     out <- gsub(letter, letter_spellings[[letter]], out, fixed = TRUE)
   }
+  out <- chartr(accented_letters, plain_letters, out)
   out <- iconv(out, to = "ASCII//TRANSLIT")
   out <- gsub("[.,'`]", "", out)
   out <- gsub("[^a-z ]", " ", out)

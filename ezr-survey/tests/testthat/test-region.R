@@ -155,3 +155,42 @@ test_that("the official ISO names match, in either word order", {
             "Democratic People's Republic of Korea")
   expect_false(any(is.na(recode_region(said, quiet = TRUE))))
 })
+
+test_that("the fold does not lean on the platform's transliteration", {
+  # Windows renders a sharp s as "?", macOS leaves a circumflex where it found
+  # one, glibc spells both out. The fold is done by hand so that a country
+  # matches the same way wherever the script runs.
+  expect_equal(normalise_country("Côte d'Ivoire"), "cote divoire")
+  expect_equal(normalise_country("Großbritannien"), "grossbritannien")
+  expect_equal(normalise_country("Réunion"), "reunion")
+  expect_equal(normalise_country("Curaçao"), "curacao")
+  expect_equal(normalise_country("Türkiye"), "turkiye")
+  expect_equal(normalise_country("Malmø"), "malmo")
+  expect_equal(normalise_country("Łódz"), "lodz")
+  expect_equal(normalise_country("São Tomé"), "sao tome")
+
+  # Nothing accented may survive the explicit fold, or iconv is still deciding
+  # the answer and the platform still matters.
+  accented <- strsplit(accented_letters, "")[[1]]
+  expect_false(any(grepl("[^ -~]", chartr(accented_letters, plain_letters,
+                                          accented))))
+
+  expect_equal(recode_region("Côte d'Ivoire", quiet = TRUE), "Africa")
+})
+
+test_that("countries sit in the region every scheme agrees on", {
+  place <- function(x) {
+    recode_region(x, quiet = TRUE)
+  }
+  # These four were filed against no scheme at all: Algeria in Eastern Europe,
+  # Laos in Africa, Mauritius and Reunion in South Asia.
+  expect_equal(place("Algeria"), "Africa")
+  expect_equal(place("Laos"), "Asia")
+  expect_equal(recode_subregion("Laos", quiet = TRUE), "South East Asia")
+  expect_equal(place("Mauritius"), "Africa")
+  expect_equal(place("Reunion"), "Africa")
+
+  # The deliberate departures from UN M49 stay as they are.
+  expect_equal(place("Egypt"), "Middle East")
+  expect_equal(place("Turkey"), "Europe")
+})

@@ -93,11 +93,24 @@ to 99.93%, and the only thing left unmatched is the answer "Nomadic".
 
 ## A country column folded the same way on every machine
 
-* **`recode_region()`, `recode_subregion()` and `add_region()`** spelled a
-  German sharp s, a Nordic slashed o and five other letters out by hand before
-  transliterating. Windows renders those as a question mark where Linux writes
-  the two-letter form, so a German respondent's spelling of Great
-  Britain matched on a CI runner and missed on the analyst's laptop.
+Matching a country meant stripping its accents, and that was left to
+`iconv(to = "ASCII//TRANSLIT")`, which three platforms turned out to do
+differently. Windows writes a German sharp s as `?`; macOS leaves a circumflex
+where it found one, so `"Cote d'Ivoire"` typed with its accent matched on Linux
+and came back `NA` on a Mac. A published figure changed with the machine that
+produced it.
+
+* **`recode_region()`, `recode_subregion()` and `add_region()`** now fold the
+  eighty-eight accented letters and four ligatures a country name can carry by
+  hand, and reach `iconv` only for anything outside that range. The answer is
+  the same on every platform.
+* Four countries were filed against no grouping scheme at all: **Algeria** sat
+  in Eastern Europe, **Laos** in Africa, and **Mauritius** and **Reunion** in
+  South Asia. They are now in Africa, South East Asia and Africa. The
+  deliberate departures from UN M49 are unchanged: Egypt, Iran, Afghanistan,
+  Pakistan, Djibouti, Kazakhstan and Uzbekistan report as Middle East, and
+  Turkey, Cyprus, Georgia, Armenia and Azerbaijan as Europe, because that is
+  how consumer research buys those markets.
 * The endonyms of the two most answered countries were missing while smaller
   countries had theirs: `"Estados Unidos"`, `"Etats-Unis"`, `"Vereinigte
   Staaten"`, `"Stati Uniti"`, `"Reino Unido"` and `"Royaume-Uni"` now match.

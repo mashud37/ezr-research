@@ -20,6 +20,7 @@ URL: https://mashud37.github.io/ezr-research/ezr-survey,
     https://github.com/mashud37/ezr-research
 BugReports: https://github.com/mashud37/ezr-research/issues
 Encoding: UTF-8
+Language: en-GB
 LazyData: true
 Depends:
     R (>= 4.1.0),
