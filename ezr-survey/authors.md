@@ -7,7 +7,7 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/mashud37/ezr-research/blob/main/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/mashud37/ezr-research/blob/HEAD/ezr-survey/DESCRIPTION)
 
 Schellewald A (2026). *ezrsurvey: Single-Line Helpers for Consumer
 Survey Analysis*. R package version 0.7.0,
