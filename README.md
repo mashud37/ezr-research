@@ -40,7 +40,8 @@ See each package's own `README.md` for usage and a function tour
 (e.g. [`ezr-survey/README.md`](ezr-survey/README.md)). ezrsurvey also has a
 rendered reference site at
 <https://mashud37.github.io/ezr-research/ezr-survey>, built from the package
-sources on every push.
+sources on every push. Its Python port, [`ezr-survey-py`](https://github.com/mashud37/ezr-survey-py),
+has its own site at <https://mashud37.github.io/ezr-survey-py/>.
 
 > The version numbers above are written by hand and each package's
 > `DESCRIPTION` is the authority. Check there before quoting one.
