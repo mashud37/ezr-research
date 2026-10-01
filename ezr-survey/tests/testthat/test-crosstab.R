@@ -36,3 +36,36 @@ test_that("calc_percentage_batch stacks several questions", {
   expect_true(all(c("variable", "answer", "n", "pct") %in% names(out)))
   expect_setequal(unique(out$variable), c("demo_gender", "demo_job"))
 })
+
+test_that("crosstab copes with questions called value or n", {
+  d <- data.frame(
+    value = c("Low", "High", "High", "Low", "High"),
+    n = c("A", "A", "B", "B", "B")
+  )
+  ct <- crosstab(d, value, n)
+  expect_equal(names(ct), c("value", "A", "B"))
+  expect_equal(ct$value, c("High", "Low"))
+  expect_equal(ct$A, c(1, 1))
+  expect_equal(ct$B, c(2, 1))
+
+  flipped <- crosstab(d, n, value, cell = "row_pct")
+  expect_equal(names(flipped), c("n", "High", "Low"))
+  expect_equal(flipped$High, c(50, 67))
+
+  long <- crosstab(d, n, n, wide = FALSE)
+  expect_equal(long$value, c(2, 3))
+  expect_error(crosstab(d, value, n, wide = FALSE), "Rename that column")
+})
+
+test_that("crosstab keeps a factor's own answer order", {
+  d <- data.frame(
+    agree = factor(c("Disagree", "Agree", "Strongly agree", "Agree"),
+                   levels = c("Strongly disagree", "Disagree", "Agree",
+                              "Strongly agree")),
+    group = factor(c("Old", "Young", "Old", "Young"),
+                   levels = c("Young", "Old"))
+  )
+  ct <- crosstab(d, agree, group)
+  expect_equal(as.character(ct$agree), c("Disagree", "Agree", "Strongly agree"))
+  expect_equal(names(ct), c("agree", "Young", "Old"))
+})

@@ -20,12 +20,12 @@ breaks. Use \code{Inf} for an open-ended top band.}
 \item{quiet}{If \code{TRUE}, do not report values that fell outside \code{breaks}.}
 }
 \value{
-A character vector of group labels (values outside the range or \code{NA}
-become \code{NA}).
+A factor whose levels are \code{labels} in the order given (values
+outside the range or \code{NA} become \code{NA}).
 }
 \description{
-A thin, survey-friendly wrapper around \code{\link[base:cut]{base::cut()}} that returns a character
-vector (not a factor) and uses left-closed, right-open intervals by default
+A thin, survey-friendly wrapper around \code{\link[base:cut]{base::cut()}} that returns a factor in
+band order and uses left-closed, right-open intervals by default
 so that age bands like 18-21 behave intuitively. Generalises the
 \code{case_when(age \%in\% seq(...))} age-grouping pattern.
 }
@@ -34,10 +34,10 @@ Bands are built with \code{\link[base:cut]{base::cut()}} using \code{include.low
 lowest break is included. With \code{right = FALSE} (the default) a band runs from
 its lower break up to \emph{but not including} the next -- i.e. \verb{[18, 25)} -- which
 is what you want for age groups like "18 to 24". Text input is salvaged with
-\code{\link[=ensure_numeric]{ensure_numeric()}}, so \code{"27 years"} bins correctly. The result is a plain
-character vector (not a factor); apply an order later with \code{\link[=register_order]{register_order()}}
-or pass \verb{levels =} to \code{\link[=calc_percentage]{calc_percentage()}} if you need a specific display
-order.
+\code{\link[=ensure_numeric]{ensure_numeric()}}, so \code{"27 years"} bins correctly. The result is a factor
+whose levels follow \code{labels}, so tables and charts built from it list the
+bands low to high ("40-70k" before "100-150k") rather than alphabetically.
+Wrap it in \code{\link[=as.character]{as.character()}} if you need plain text.
 
 A value below the first break or above the last becomes \code{NA} and drops out of
 every chart built from the result, so the function says how many did and what

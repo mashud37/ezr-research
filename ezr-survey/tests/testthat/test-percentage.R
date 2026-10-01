@@ -144,3 +144,14 @@ test_that("calc_percentage_batch names match ipm_model's, so the two can join", 
                                prefix = "ratings_")
   expect_true(all(model$feature %in% unique(tab$variable)))
 })
+
+test_that("calc_percentage keeps a factor's own answer order", {
+  lv <- c("Strongly disagree", "Disagree", "Agree", "Strongly agree")
+  d <- data.frame(
+    agree = factor(c("Agree", "Strongly disagree", "Disagree", "Agree",
+                     "Strongly agree", ""),
+                   levels = c(lv, ""))
+  )
+  out <- calc_percentage(d, agree)
+  expect_equal(as.character(out$agree), lv)
+})

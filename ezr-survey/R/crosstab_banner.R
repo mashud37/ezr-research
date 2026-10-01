@@ -60,19 +60,18 @@ banner_block_cat <- function(data, d_all, v, col_vars, cell, na_rm, drop,
   for (g in groups) {
     if (g != ".overall" && g == v) next
     gg <- if (g == ".overall") ".all" else g
-    ct <- crosstab(d_all, !!rlang::sym(v), !!rlang::sym(gg), cell = cmode,
-                   wide = FALSE, na_rm = na_rm, drop = drop, weights = weights,
-                   digits = digits)
+    ct <- crosstab_long(d_all, v, gg, cmode, NULL, mean, digits, na_rm, drop,
+                        weights)
     if (is.null(item_levels)) {
-      item_levels <- if (is.factor(ct[[v]])) levels(ct[[v]]) else
-        unique(as.character(ct[[v]]))
+      item_levels <- if (is.factor(ct$.x)) levels(ct$.x) else
+        unique(as.character(ct$.x))
     }
     lv <- if (g == ".overall") "Overall" else group_levels[[g]]
     grid <- tidyr::expand_grid(item = item_levels, group_item = lv)
-    seen <- tibble::tibble(item = as.character(ct[[v]]),
+    seen <- tibble::tibble(item = as.character(ct$.x),
                            group_item = if (g == ".overall") "Overall" else
-                             as.character(ct[[gg]]),
-                           value = ct$value)
+                             as.character(ct$.y),
+                           value = ct$.value)
     filled <- dplyr::left_join(grid, seen, by = c("item", "group_item"))
     filled$value[is.na(filled$value)] <- 0
     filled$variable <- v
@@ -526,9 +525,9 @@ crosstab_banner <- function(data = NULL, rows, cols,
   d_all[[".all"]] <- rep("Overall", nrow(d_all))
 
   group_levels <- stats::setNames(lapply(col_vars, function(g) {
-    gp <- crosstab(d_all, !!rlang::sym(g), !!rlang::sym(".all"),
-                   cell = "count", wide = FALSE, na_rm = na_rm, drop = drop)
-    if (is.factor(gp[[g]])) levels(gp[[g]]) else unique(as.character(gp[[g]]))
+    gp <- crosstab_long(d_all, g, ".all", "count", NULL, mean, 0, na_rm, drop,
+                        weights)
+    if (is.factor(gp$.x)) levels(gp$.x) else unique(as.character(gp$.x))
   }), col_vars)
 
   # Stub questions, kept in column order: single variables and multi-select

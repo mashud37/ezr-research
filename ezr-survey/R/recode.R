@@ -86,8 +86,8 @@ drop_items <- function(x, items, trim = TRUE) {
 
 #' Bin a numeric vector into labelled groups
 #'
-#' A thin, survey-friendly wrapper around [base::cut()] that returns a character
-#' vector (not a factor) and uses left-closed, right-open intervals by default
+#' A thin, survey-friendly wrapper around [base::cut()] that returns a factor in
+#' band order and uses left-closed, right-open intervals by default
 #' so that age bands like 18-21 behave intuitively. Generalises the
 #' `case_when(age %in% seq(...))` age-grouping pattern.
 #'
@@ -99,18 +99,18 @@ drop_items <- function(x, items, trim = TRUE) {
 #'   (default) closed on the left. Left-closed matches "18 to 21" style bands.
 #' @param quiet If `TRUE`, do not report values that fell outside `breaks`.
 #'
-#' @return A character vector of group labels (values outside the range or `NA`
-#'   become `NA`).
+#' @return A factor whose levels are `labels` in the order given (values
+#'   outside the range or `NA` become `NA`).
 #'
 #' @details
 #' Bands are built with [base::cut()] using `include.lowest = TRUE`, so the very
 #' lowest break is included. With `right = FALSE` (the default) a band runs from
 #' its lower break up to *but not including* the next -- i.e. `[18, 25)` -- which
 #' is what you want for age groups like "18 to 24". Text input is salvaged with
-#' [ensure_numeric()], so `"27 years"` bins correctly. The result is a plain
-#' character vector (not a factor); apply an order later with [register_order()]
-#' or pass `levels =` to [calc_percentage()] if you need a specific display
-#' order.
+#' [ensure_numeric()], so `"27 years"` bins correctly. The result is a factor
+#' whose levels follow `labels`, so tables and charts built from it list the
+#' bands low to high ("40-70k" before "100-150k") rather than alphabetically.
+#' Wrap it in [as.character()] if you need plain text.
 #'
 #' A value below the first break or above the last becomes `NA` and drops out of
 #' every chart built from the result, so the function says how many did and what
@@ -143,7 +143,7 @@ bin_numeric <- function(x, breaks, labels, right = FALSE, quiet = FALSE) {
             "and became NA (range ", outside[1], " to ", outside[2],
             "). Widen `breaks`, e.g. with -Inf / Inf at the ends.")
   }
-  as.character(out)
+  out
 }
 
 #' Recode age into standard survey bands
@@ -158,7 +158,7 @@ bin_numeric <- function(x, breaks, labels, right = FALSE, quiet = FALSE) {
 #' @param quiet If `FALSE` (default), report answers that held no number and
 #'   answers that fell outside the bands. Set `TRUE` to silence both.
 #'
-#' @return A character vector of age-band labels.
+#' @return A factor of age-band labels, levels in band order.
 #'
 #' @details
 #' Ages are first passed through [ensure_numeric()], so messy entries like

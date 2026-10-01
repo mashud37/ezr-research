@@ -49,8 +49,8 @@ generation_scheme <- function(scheme = c("pew")) {
 #'   from the `generation_scheme` option) or your own data frame with `from` and
 #'   `label` columns.
 #'
-#' @return A character vector of cohort labels; values outside the scheme's range
-#'   become `NA`.
+#' @return A factor of cohort labels, levels from the oldest cohort to the
+#'   youngest; values outside the scheme's range become `NA`.
 #'
 #' @details
 #' When `input = "age"`, the birth year is `year - age`, where `year` defaults to
@@ -93,7 +93,6 @@ recode_generation <- function(x, input = c("age", "year"), year = NULL,
     birth <- vals
   }
 
-  out <- cut(birth, breaks = c(sch$from, Inf), labels = sch$label,
-             right = FALSE, include.lowest = TRUE)
-  as.character(out)
+  cut(birth, breaks = c(sch$from, Inf), labels = sch$label,
+      right = FALSE, include.lowest = TRUE)
 }

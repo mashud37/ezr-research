@@ -53,14 +53,16 @@ counts, weighted percentages, or (for a numeric \code{value}) the weighted mean.
 }
 \value{
 A \link[tibble:tibble]{tibble}: wide (x plus one column per y level) or
-long (\code{x}, \code{y}, \code{value}).
+long (\code{x}, \code{y}, \code{value}). The long form refuses an \code{x} or \code{y} that is itself
+called \code{value}, since the two columns would share a name.
 }
 \description{
 Builds a crosstab from two categorical columns: \code{x} forms the rows and \code{y} the
 columns. The cell contents are chosen with \code{cell} -- counts or row/column/total
 percentages -- or, when a numeric \code{value} column is supplied, an aggregate of
 that column (e.g. the mean spend) for each \code{x} by \code{y} combination. Registered
-orders (see \code{\link[=register_order]{register_order()}}) are applied to \code{x} and \code{y} automatically.
+orders (see \code{\link[=register_order]{register_order()}}) are applied to \code{x} and \code{y} automatically, and
+a factor column keeps its own level order when no order is registered.
 }
 \details{
 Choose what the cells mean with \code{cell}: \code{"row_pct"} makes each \strong{row} sum to
@@ -69,8 +71,10 @@ Choose what the cells mean with \code{cell}: \code{"row_pct"} makes each \strong
 \code{"count"} is the raw frequency. Supplying a numeric \code{value} switches the cells
 to an aggregate of that column -- by default the mean -- which answers
 questions like "what is the average NPS for each region by gender?". Blanks
-and non-answers in \code{x}/\code{y} are dropped when \code{na_rm = TRUE}, and any registered
-orders (\code{\link[=register_order]{register_order()}}) set the row/column ordering automatically.
+and non-answers in \code{x}/\code{y} are dropped when \code{na_rm = TRUE}. Any registered
+orders (\code{\link[=register_order]{register_order()}}) set the row/column ordering automatically; a
+factor without one keeps its own level order; anything else stays in data
+order.
 }
 \examples{
 # counts

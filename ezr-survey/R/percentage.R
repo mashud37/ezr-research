@@ -130,7 +130,8 @@ order_factor <- function(df, key, sort = c("none", "desc", "asc"),
 #' @param levels Optional character vector giving an explicit level order for
 #'   `column` (the "custom" ordering mode). Overrides `sort`. If omitted and
 #'   `sort = "none"`, a registered order for this variable is applied
-#'   automatically (see [register_order()]).
+#'   automatically (see [register_order()]), and failing that a factor keeps its
+#'   own level order.
 #' @param digits Decimal places for the percentage. Defaults to `0`.
 #' @param wide If `TRUE`, pivot to one row per `by` group and one column per
 #'   answer (dropping `n`), the shape a wide summary table needs. Defaults to
@@ -156,7 +157,7 @@ order_factor <- function(df, key, sort = c("none", "desc", "asc"),
 #' group (subject to rounding). The level order of `column` is decided in this
 #' order of precedence: an explicit `levels` argument; then a non-`"none"`
 #' `sort`; then a registered order for the variable (see [register_order()]);
-#' otherwise data order. When `by` is omitted, the `default_by` option is used if
+#' then the column's own levels, when it is a factor; otherwise data order. When `by` is omitted, the `default_by` option is used if
 #' set (see [ezrsurvey_options()]), so you can apply a standard breakdown without
 #' repeating it. `wide = TRUE` pivots to one row per group with a column per
 #' answer -- the shape you want for a slide table or an Excel tab.
@@ -228,9 +229,10 @@ calc_percentage <- function(data = NULL, column, by = NULL,
   }
 
   # If the caller didn't request an ordering, apply a registered order for this
-  # variable (see register_order()), when one exists.
+  # variable (see register_order()), or else the factor's own level order.
   if (is.null(levels) && sort == "none") {
-    levels <- order_for(col_name)
+    levels <- order_for(col_name) %||%
+      factor_order(data[[col_name]], out[[col_name]])
   }
   out <- order_factor(out, col_name, sort = sort, levels = levels)
 

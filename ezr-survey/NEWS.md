@@ -1,3 +1,32 @@
+# ezrsurvey (development version)
+
+## Answer order that survives into the table
+
+* **`crosstab()` and `crosstab_banner()`** no longer break on a question called
+  `value` or `n`. Both used those names for their own counting, so such a
+  column came back as a table of the wrong shape without a word: percentages
+  for headings, a list-column, a banner group of zeros. The counting now runs
+  under names no survey uses. The long form of `crosstab()` still puts its
+  cells in a column called `value`, so it refuses a question of that name and
+  says so; the wide form and the banner handle it.
+* **`calc_percentage()` and `crosstab()` keep a factor's own level order.**
+  Without a registered order, a factor came back as text in alphabetical order,
+  so PISA's "Strongly disagree" to "Strongly agree" read Agree, Disagree,
+  Strongly agree, Strongly disagree. A registered order or `levels =` still
+  wins; a factor's levels now come next, and only then data order.
+* **`crosstab()` puts its columns in level order** whenever the column
+  variable has one. tidyr names new columns by first appearance, so a
+  registered order could still come out scrambled when the first row lacked
+  the first answer.
+* **`bin_numeric()`, `recode_age()` and `recode_generation()` return factors**
+  whose levels follow the bands, where they used to return text. Text sorted
+  "100-150k" before "40-70k" in every table built from it. Code comparing the
+  result to a string is unaffected; wrap it in `as.character()` where plain
+  text is needed.
+* The banner tables vignette said a finished run deletes any checkpoint. It
+  deletes only the one `checkpoint = TRUE` made; a path you chose is kept, as
+  the help page already said.
+
 # ezrsurvey 0.7.0
 
 ## A country column people typed themselves

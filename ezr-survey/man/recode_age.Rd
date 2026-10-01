@@ -21,7 +21,7 @@ from the \code{age_breaks} / \code{age_labels} options (see \code{\link[=ezrsurv
 answers that fell outside the bands. Set \code{TRUE} to silence both.}
 }
 \value{
-A character vector of age-band labels.
+A factor of age-band labels, levels in band order.
 }
 \description{
 Convenience wrapper over \code{\link[=bin_numeric]{bin_numeric()}} using the standard survey age

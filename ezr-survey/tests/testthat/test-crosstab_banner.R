@@ -265,3 +265,15 @@ test_that("crosstab_banner refuses a frame with no rows, in words", {
   expect_error(crosstab_banner(empty, rows = demo_gender, cols = region),
                "needs at least one row")
 })
+
+test_that("crosstab_banner copes with questions called value or n", {
+  d <- data.frame(
+    value = c("Low", "High", "High", "Low", "High", "Low"),
+    n = c("A", "A", "B", "B", "B", "A")
+  )
+  b <- crosstab_banner(d, rows = value, cols = n, cell = "count")
+  expect_equal(names(b), c("variable", "item", "Overall", "A", "B"))
+  expect_equal(b$item, c("High", "Low"))
+  expect_equal(b$A, c(1, 2))
+  expect_equal(b$B, c(2, 1))
+})

@@ -24,13 +24,103 @@ order_rank <- function(values, levels = NULL) {
   match(values, levels %||% unique(values))
 }
 
+# Internal: the answer order a factor column carries, or NULL when the column is
+# not a factor. Only answers still present are kept, so a level that was blanked
+# or dropped does not come back as an empty row, and an answer the levels do not
+# list goes at the end rather than turning into NA.
+factor_order <- function(column, answers) {
+  if (!is.factor(column)) {
+    return(NULL)
+  }
+  present <- unique(stats::na.omit(as.character(answers)))
+  in_order <- levels(column)[levels(column) %in% present]
+  c(in_order, setdiff(present, in_order))
+}
+
+# Internal: the crosstab cells in long form, under the fixed names `.x`, `.y`
+# and `.value`. The counting runs on a frame built here from only the columns it
+# needs, so a survey column that happens to be called `value` or `n` cannot
+# collide with the names the counting uses. crosstab_banner() reads this
+# directly for the same reason.
+crosstab_long <- function(data, x_name, y_name, cell, value_name, fn, digits,
+                          na_rm, drop, weights) {
+  w <- resolve_weights(data, weights)
+  weighted <- !is.null(w)
+
+  d <- tibble::tibble(.x = data[[x_name]], .y = data[[y_name]])
+  if (!is.null(value_name)) d$.v <- data[[value_name]]
+  if (weighted) d$.w <- w
+  if (na_rm) {
+    d$.x <- na_blank(d$.x)
+    d$.y <- na_blank(d$.y)
+    d <- d[!is.na(d$.x) & !is.na(d$.y), , drop = FALSE]
+  }
+  d <- drop_rows(d, ".x", drop)
+  d <- drop_rows(d, ".y", drop)
+
+  if (!is.null(value_name)) {
+    if (weighted && !identical(fn, mean)) {
+      warning("Weighted crosstab aggregates `value` with the weighted mean; ",
+              "`fn` is ignored.", call. = FALSE)
+    }
+    out <- d %>%
+      dplyr::group_by(.data$.x, .data$.y) %>%
+      dplyr::summarise(
+        .value = if (weighted) {
+          round(summarise_cell_wtd(.data$.v, .data$.w, na_rm), digits)
+        } else {
+          round(summarise_cell(.data$.v, fn, na_rm), digits)
+        },
+        .groups = "drop"
+      )
+  } else {
+    counts <- if (weighted) {
+      d %>%
+        dplyr::group_by(.data$.x, .data$.y) %>%
+        dplyr::summarise(.n = sum(.data$.w), .groups = "drop")
+    } else {
+      dplyr::count(d, .data$.x, .data$.y, name = ".n")
+    }
+    out <- switch(
+      cell,
+      count = dplyr::mutate(counts, .value = round(.data$.n)),
+      row_pct = counts %>%
+        dplyr::group_by(.data$.x) %>%
+        dplyr::mutate(.value = round(.data$.n / sum(.data$.n) * 100, digits)) %>%
+        dplyr::ungroup(),
+      col_pct = counts %>%
+        dplyr::group_by(.data$.y) %>%
+        dplyr::mutate(.value = round(.data$.n / sum(.data$.n) * 100, digits)) %>%
+        dplyr::ungroup(),
+      total_pct = dplyr::mutate(
+        counts, .value = round(.data$.n / sum(.data$.n) * 100, digits))
+    )
+    out <- out[c(".x", ".y", ".value")]
+  }
+
+  # A registered order wins; a factor's own levels come next.
+  x_levels <- order_for(x_name) %||% factor_order(data[[x_name]], out$.x)
+  y_levels <- order_for(y_name) %||% factor_order(data[[y_name]], out$.y)
+  if (!is.null(x_levels)) out$.x <- factor(out$.x, levels = x_levels)
+  if (!is.null(y_levels)) out$.y <- factor(out$.y, levels = y_levels)
+  # Levels alone reach the charts and nothing else: a printed or exported table
+  # carries none, and tidyr names new columns in order of first appearance, so
+  # the rows are sorted too.
+  if (!is.null(x_levels) || !is.null(y_levels)) {
+    out <- out[order(order_rank(out$.x, x_levels),
+                     order_rank(out$.y, y_levels)), , drop = FALSE]
+  }
+  tibble::as_tibble(out)
+}
+
 #' Cross-tabulate two survey questions
 #'
 #' Builds a crosstab from two categorical columns: `x` forms the rows and `y` the
 #' columns. The cell contents are chosen with `cell` -- counts or row/column/total
 #' percentages -- or, when a numeric `value` column is supplied, an aggregate of
 #' that column (e.g. the mean spend) for each `x` by `y` combination. Registered
-#' orders (see [register_order()]) are applied to `x` and `y` automatically.
+#' orders (see [register_order()]) are applied to `x` and `y` automatically, and
+#' a factor column keeps its own level order when no order is registered.
 #'
 #' @param data A data frame.
 #' @param x Row variable (unquoted).
@@ -55,7 +145,8 @@ order_rank <- function(values, levels = NULL) {
 #'   counts, weighted percentages, or (for a numeric `value`) the weighted mean.
 #'
 #' @return A [tibble][tibble::tibble]: wide (x plus one column per y level) or
-#'   long (`x`, `y`, `value`).
+#'   long (`x`, `y`, `value`). The long form refuses an `x` or `y` that is itself
+#'   called `value`, since the two columns would share a name.
 #'
 #' @details
 #' Choose what the cells mean with `cell`: `"row_pct"` makes each **row** sum to
@@ -64,8 +155,10 @@ order_rank <- function(values, levels = NULL) {
 #' `"count"` is the raw frequency. Supplying a numeric `value` switches the cells
 #' to an aggregate of that column -- by default the mean -- which answers
 #' questions like "what is the average NPS for each region by gender?". Blanks
-#' and non-answers in `x`/`y` are dropped when `na_rm = TRUE`, and any registered
-#' orders ([register_order()]) set the row/column ordering automatically.
+#' and non-answers in `x`/`y` are dropped when `na_rm = TRUE`. Any registered
+#' orders ([register_order()]) set the row/column ordering automatically; a
+#' factor without one keeps its own level order; anything else stays in data
+#' order.
 #'
 #' @family summaries
 #' @seealso [calc_percentage()], [compare_values()], [register_order()].
@@ -89,80 +182,28 @@ crosstab <- function(data = NULL, x, y, cell = c("count", "row_pct", "col_pct",
   cell <- match.arg(cell)
   x_name <- col_label(r$cols[[1]], data)
   y_name <- col_label(r$cols[[2]], data)
-  value_q <- rlang::enquo(value)
-  has_value <- !rlang::quo_is_null(value_q)
-  if (is.null(digits)) digits <- if (has_value) 2 else 0
-
-  w <- resolve_weights(data, weights)
-  weighted <- !is.null(w)
-
-  d <- tibble::as_tibble(data)
-  if (weighted) d[[".w"]] <- w
-  if (na_rm) {
-    d[[x_name]] <- na_blank(d[[x_name]])
-    d[[y_name]] <- na_blank(d[[y_name]])
-    d <- d[!is.na(d[[x_name]]) & !is.na(d[[y_name]]), , drop = FALSE]
-  }
-  d <- drop_rows(d, x_name, drop)
-  d <- drop_rows(d, y_name, drop)
-
-  if (has_value) {
+  value_name <- NULL
+  if (!rlang::quo_is_null(rlang::enquo(value))) {
     value_name <- rlang::as_name(rlang::ensym(value))
-    if (weighted && !identical(fn, mean)) {
-      warning("Weighted crosstab aggregates `value` with the weighted mean; ",
-              "`fn` is ignored.", call. = FALSE)
-    }
-    out <- d %>%
-      dplyr::group_by(.data[[x_name]], .data[[y_name]]) %>%
-      dplyr::summarise(
-        value = if (weighted) {
-          round(summarise_cell_wtd(.data[[value_name]], .data$.w, na_rm), digits)
-        } else {
-          round(summarise_cell(.data[[value_name]], fn, na_rm), digits)
-        },
-        .groups = "drop"
-      )
-  } else {
-    counts <- if (weighted) {
-      d %>%
-        dplyr::group_by(.data[[x_name]], .data[[y_name]]) %>%
-        dplyr::summarise(n = sum(.data$.w), .groups = "drop")
-    } else {
-      dplyr::count(d, .data[[x_name]], .data[[y_name]], name = "n")
-    }
-    out <- switch(
-      cell,
-      count = dplyr::mutate(counts, value = round(.data$n)),
-      row_pct = counts %>%
-        dplyr::group_by(.data[[x_name]]) %>%
-        dplyr::mutate(value = round(.data$n / sum(.data$n) * 100, digits)) %>%
-        dplyr::ungroup(),
-      col_pct = counts %>%
-        dplyr::group_by(.data[[y_name]]) %>%
-        dplyr::mutate(value = round(.data$n / sum(.data$n) * 100, digits)) %>%
-        dplyr::ungroup(),
-      total_pct = dplyr::mutate(
-        counts, value = round(.data$n / sum(.data$n) * 100, digits))
-    )
-    out <- dplyr::select(out, dplyr::all_of(c(x_name, y_name)), "value")
   }
+  if (is.null(digits)) digits <- if (is.null(value_name)) 0 else 2
 
-  # Apply registered orders to row/column variables, if any.
-  x_levels <- order_for(x_name)
-  y_levels <- order_for(y_name)
-  if (!is.null(x_levels)) out[[x_name]] <- factor(out[[x_name]], levels = x_levels)
-  if (!is.null(y_levels)) out[[y_name]] <- factor(out[[y_name]], levels = y_levels)
-  # Levels alone reach the charts and nothing else: a printed or exported table
-  # carries none, and tidyr names new columns in order of first appearance, so
-  # both margins came out alphabetical however the order was registered.
-  if (!is.null(x_levels) || !is.null(y_levels)) {
-    out <- out[order(order_rank(out[[x_name]], x_levels),
-                     order_rank(out[[y_name]], y_levels)), , drop = FALSE]
-  }
+  out <- crosstab_long(data, x_name, y_name, cell, value_name, fn, digits,
+                       na_rm, drop, weights)
 
   if (wide) {
-    out <- tidyr::pivot_wider(out, names_from = dplyr::all_of(y_name),
-                              values_from = "value")
+    # A `y` with an order is a factor by now, and its columns follow the levels;
+    # one without keeps the order its answers first appear in.
+    out <- tidyr::pivot_wider(out, names_from = ".y", values_from = ".value",
+                              names_sort = is.factor(out$.y))
+    names(out)[names(out) == ".x"] <- x_name
+    return(out)
   }
-  tibble::as_tibble(out)
+  if ("value" %in% c(x_name, y_name)) {
+    stop("crosstab(wide = FALSE) puts the cells in a column called `value`, ",
+         "which is also the name of a question here. Rename that column, or ",
+         "use wide = TRUE.", call. = FALSE)
+  }
+  names(out) <- c(x_name, y_name, "value")
+  out
 }

@@ -20,8 +20,8 @@ from the \code{generation_scheme} option) or your own data frame with \code{from
 \code{label} columns.}
 }
 \value{
-A character vector of cohort labels; values outside the scheme's range
-become \code{NA}.
+A factor of cohort labels, levels from the oldest cohort to the
+youngest; values outside the scheme's range become \code{NA}.
 }
 \description{
 Maps either an \strong{age} (converted to a birth year using a reference year) or a

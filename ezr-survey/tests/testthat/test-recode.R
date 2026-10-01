@@ -11,12 +11,22 @@ test_that("bin_numeric assigns left-closed bands", {
   out <- bin_numeric(c(15, 18, 24, 25, 41),
                      breaks = c(0, 18, 25, Inf),
                      labels = c("<18", "18-24", "25+"))
-  expect_equal(out, c("<18", "18-24", "18-24", "25+", "25+"))
+  expect_equal(as.character(out), c("<18", "18-24", "18-24", "25+", "25+"))
   expect_error(bin_numeric(1, breaks = c(0, 1, 2), labels = "one"))
 })
 
+test_that("bin_numeric keeps its bands in order, not alphabetical", {
+  out <- bin_numeric(c(45, 120, 60),
+                     breaks = c(40, 70, 100, 150),
+                     labels = c("40-70k", "70-100k", "100-150k"))
+  expect_s3_class(out, "factor")
+  expect_equal(levels(out), c("40-70k", "70-100k", "100-150k"))
+  pct <- calc_percentage(data.frame(band = out), band)
+  expect_equal(as.character(pct$band), c("40-70k", "100-150k"))
+})
+
 test_that("recode_age extracts digits and bands", {
-  expect_equal(recode_age(c("17", "22 years", "31", "47")),
+  expect_equal(as.character(recode_age(c("17", "22 years", "31", "47"))),
                c("17 or younger", "22 to 25", "30 to 34", "35+"))
 })
 
@@ -124,5 +134,5 @@ test_that("detect_delimiter prefers a semicolon over a comma", {
 test_that("recode_age reports answers that held no number", {
   expect_message(recode_age(c("young", "old", "31")), "held no number")
   expect_silent(recode_age(c("young", "31"), quiet = TRUE))
-  expect_equal(recode_age(c("young", "31"), quiet = TRUE)[[1]], NA_character_)
+  expect_true(is.na(recode_age(c("young", "31"), quiet = TRUE)[[1]]))
 })

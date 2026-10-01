@@ -33,7 +33,8 @@ several with \code{c()} (\code{by = c(year, game)}).}
 \item{levels}{Optional character vector giving an explicit level order for
 \code{column} (the "custom" ordering mode). Overrides \code{sort}. If omitted and
 \code{sort = "none"}, a registered order for this variable is applied
-automatically (see \code{\link[=register_order]{register_order()}}).}
+automatically (see \code{\link[=register_order]{register_order()}}), and failing that a factor keeps its
+own level order.}
 
 \item{digits}{Decimal places for the percentage. Defaults to \code{0}.}
 
@@ -72,7 +73,7 @@ Percentages are computed \emph{within} each group, so they sum to about 100 per
 group (subject to rounding). The level order of \code{column} is decided in this
 order of precedence: an explicit \code{levels} argument; then a non-\code{"none"}
 \code{sort}; then a registered order for the variable (see \code{\link[=register_order]{register_order()}});
-otherwise data order. When \code{by} is omitted, the \code{default_by} option is used if
+then the column's own levels, when it is a factor; otherwise data order. When \code{by} is omitted, the \code{default_by} option is used if
 set (see \code{\link[=ezrsurvey_options]{ezrsurvey_options()}}), so you can apply a standard breakdown without
 repeating it. \code{wide = TRUE} pivots to one row per group with a column per
 answer -- the shape you want for a slide table or an Excel tab.
