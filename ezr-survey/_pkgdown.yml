@@ -1,5 +1,11 @@
 url: https://mashud37.github.io/ezr-research/ezr-survey
 
+repo:
+  url:
+    home: https://github.com/mashud37/ezr-research/
+    source: https://github.com/mashud37/ezr-research/blob/HEAD/ezr-survey/
+    issue: https://github.com/mashud37/ezr-research/issues/
+
 template:
   bootstrap: 5
 

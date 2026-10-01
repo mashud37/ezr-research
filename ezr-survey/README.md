@@ -16,7 +16,7 @@ Edwardian shopping survey) -- so every example runs out of the box.
 
 ```r
 # install.packages("pak")
-pak::pak("mashud37/ezrsurvey")
+pak::pak("mashud37/ezr-research/ezr-survey")
 ```
 
 The analysis core depends only on dplyr, ggplot2, tidyr, tibble, readr, stringr
