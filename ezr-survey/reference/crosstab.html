@@ -3,11 +3,13 @@
 columns. The cell contents are chosen with cell – counts or row/column/total
 percentages – or, when a numeric value column is supplied, an aggregate of
 that column (e.g. the mean spend) for each x by y combination. Registered
-orders (see register_order()) are applied to x and y automatically."><meta property="og:description" content="Builds a crosstab from two categorical columns: x forms the rows and y the
+orders (see register_order()) are applied to x and y automatically, and
+a factor column keeps its own level order when no order is registered."><meta property="og:description" content="Builds a crosstab from two categorical columns: x forms the rows and y the
 columns. The cell contents are chosen with cell – counts or row/column/total
 percentages – or, when a numeric value column is supplied, an aggregate of
 that column (e.g. the mean spend) for each x by y combination. Registered
-orders (see register_order()) are applied to x and y automatically."><meta property="og:image" content="https://mashud37.github.io/ezr-research/ezr-survey/logo.png"></head><body>
+orders (see register_order()) are applied to x and y automatically, and
+a factor column keeps its own level order when no order is registered."><meta property="og:image" content="https://mashud37.github.io/ezr-research/ezr-survey/logo.png"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -47,7 +49,8 @@ orders (see register_order()) are applied to x and y automatically."><meta prope
 columns. The cell contents are chosen with <code>cell</code> – counts or row/column/total
 percentages – or, when a numeric <code>value</code> column is supplied, an aggregate of
 that column (e.g. the mean spend) for each <code>x</code> by <code>y</code> combination. Registered
-orders (see <code><a href="register_order.html">register_order()</a></code>) are applied to <code>x</code> and <code>y</code> automatically.</p>
+orders (see <code><a href="register_order.html">register_order()</a></code>) are applied to <code>x</code> and <code>y</code> automatically, and
+a factor column keeps its own level order when no order is registered.</p>
     </div>
 
     <div class="section level2">
@@ -128,7 +131,8 @@ counts, weighted percentages, or (for a numeric <code>value</code>) the weighted
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A <a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a>: wide (x plus one column per y level) or
-long (<code>x</code>, <code>y</code>, <code>value</code>).</p>
+long (<code>x</code>, <code>y</code>, <code>value</code>). The long form refuses an <code>x</code> or <code>y</code> that is itself
+called <code>value</code>, since the two columns would share a name.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -138,8 +142,10 @@ long (<code>x</code>, <code>y</code>, <code>value</code>).</p>
 <code>"count"</code> is the raw frequency. Supplying a numeric <code>value</code> switches the cells
 to an aggregate of that column – by default the mean – which answers
 questions like "what is the average NPS for each region by gender?". Blanks
-and non-answers in <code>x</code>/<code>y</code> are dropped when <code>na_rm = TRUE</code>, and any registered
-orders (<code><a href="register_order.html">register_order()</a></code>) set the row/column ordering automatically.</p>
+and non-answers in <code>x</code>/<code>y</code> are dropped when <code>na_rm = TRUE</code>. Any registered
+orders (<code><a href="register_order.html">register_order()</a></code>) set the row/column ordering automatically; a
+factor without one keeps its own level order; anything else stays in data
+order.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

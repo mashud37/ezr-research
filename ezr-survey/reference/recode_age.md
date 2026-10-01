@@ -35,7 +35,7 @@ recode_age(
 
 ## Value
 
-A character vector of age-band labels.
+A factor of age-band labels, levels in band order.
 
 ## Details
 
@@ -79,5 +79,6 @@ Other recode:
 
 ``` r
 recode_age(c("17", "22 years", "31", "47"))
-#> [1] "17 or younger" "22 to 25"      "30 to 34"      "35+"          
+#> [1] 17 or younger 22 to 25      30 to 34      35+          
+#> Levels: 17 or younger 18 to 21 22 to 25 26 to 29 30 to 34 35+
 ```

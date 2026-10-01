@@ -37,8 +37,8 @@ recode_generation(x, input = c("age", "year"), year = NULL, scheme = NULL)
 
 ## Value
 
-A character vector of cohort labels; values outside the scheme's range
-become `NA`.
+A factor of cohort labels, levels from the oldest cohort to the
+youngest; values outside the scheme's range become `NA`.
 
 ## Details
 
@@ -76,9 +76,11 @@ Other recode:
 
 ``` r
 recode_generation(c(1990, 2001, 1968), input = "year")
-#> [1] "Millennial" "Gen Z"      "Gen X"     
+#> [1] Millennial Gen Z      Gen X     
+#> Levels: Silent Baby Boomer Gen X Millennial Gen Z Gen Alpha
 
 # from age, with an explicit reference year
 recode_generation(c(36, 25), input = "age", year = 2026)
-#> [1] "Millennial" "Gen Z"     
+#> [1] Millennial Gen Z     
+#> Levels: Silent Baby Boomer Gen X Millennial Gen Z Gen Alpha
 ```

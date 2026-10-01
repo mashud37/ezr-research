@@ -34,6 +34,21 @@
     </div>
 
     <div class="section level2">
+<h2 class="pkg-version" data-toc-text="development version" id="ezrsurvey-development-version">ezrsurvey (development version)<a class="anchor" aria-label="anchor" href="#ezrsurvey-development-version"></a></h2>
+<div class="section level3">
+<h3 id="answer-order-that-survives-into-the-table-development-version">Answer order that survives into the table<a class="anchor" aria-label="anchor" href="#answer-order-that-survives-into-the-table-development-version"></a></h3>
+<ul><li>
+<strong><code><a href="../reference/crosstab.html">crosstab()</a></code> and <code><a href="../reference/crosstab_banner.html">crosstab_banner()</a></code></strong> no longer break on a question called <code>value</code> or <code>n</code>. Both used those names for their own counting, so such a column came back as a table of the wrong shape without a word: percentages for headings, a list-column, a banner group of zeros. The counting now runs under names no survey uses. The long form of <code><a href="../reference/crosstab.html">crosstab()</a></code> still puts its cells in a column called <code>value</code>, so it refuses a question of that name and says so; the wide form and the banner handle it.</li>
+<li>
+<strong><code><a href="../reference/calc_percentage.html">calc_percentage()</a></code> and <code><a href="../reference/crosstab.html">crosstab()</a></code> keep a factor’s own level order.</strong> Without a registered order, a factor came back as text in alphabetical order, so PISA’s “Strongly disagree” to “Strongly agree” read Agree, Disagree, Strongly agree, Strongly disagree. A registered order or <code>levels =</code> still wins; a factor’s levels now come next, and only then data order.</li>
+<li>
+<strong><code><a href="../reference/crosstab.html">crosstab()</a></code> puts its columns in level order</strong> whenever the column variable has one. tidyr names new columns by first appearance, so a registered order could still come out scrambled when the first row lacked the first answer.</li>
+<li>
+<strong><code><a href="../reference/bin_numeric.html">bin_numeric()</a></code>, <code><a href="../reference/recode_age.html">recode_age()</a></code> and <code><a href="../reference/recode_generation.html">recode_generation()</a></code> return factors</strong> whose levels follow the bands, where they used to return text. Text sorted “100-150k” before “40-70k” in every table built from it. Code comparing the result to a string is unaffected; wrap it in <code><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character()</a></code> where plain text is needed.</li>
+<li>The banner tables vignette said a finished run deletes any checkpoint. It deletes only the one <code>checkpoint = TRUE</code> made; a path you chose is kept, as the help page already said.</li>
+</ul></div>
+</div>
+    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.7.0" id="ezrsurvey-070">ezrsurvey 0.7.0<a class="anchor" aria-label="anchor" href="#ezrsurvey-070"></a></h2>
 <div class="section level3">
 <h3 id="a-country-column-people-typed-themselves-0-7-0">A country column people typed themselves<a class="anchor" aria-label="anchor" href="#a-country-column-people-typed-themselves-0-7-0"></a></h3>

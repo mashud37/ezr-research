@@ -53,7 +53,8 @@ calc_percentage(
   (the "custom" ordering mode). Overrides `sort`. If omitted and
   `sort = "none"`, a registered order for this variable is applied
   automatically (see
-  [`register_order()`](https://mashud37.github.io/ezr-research/ezr-survey/reference/register_order.md)).
+  [`register_order()`](https://mashud37.github.io/ezr-research/ezr-survey/reference/register_order.md)),
+  and failing that a factor keeps its own level order.
 
 - digits:
 
@@ -104,8 +105,8 @@ per group (subject to rounding). The level order of `column` is decided
 in this order of precedence: an explicit `levels` argument; then a
 non-`"none"` `sort`; then a registered order for the variable (see
 [`register_order()`](https://mashud37.github.io/ezr-research/ezr-survey/reference/register_order.md));
-otherwise data order. When `by` is omitted, the `default_by` option is
-used if set (see
+then the column's own levels, when it is a factor; otherwise data order.
+When `by` is omitted, the `default_by` option is used if set (see
 [`ezrsurvey_options()`](https://mashud37.github.io/ezr-research/ezr-survey/reference/ezrsurvey_options.md)),
 so you can apply a standard breakdown without repeating it.
 `wide = TRUE` pivots to one row per group with a column per answer – the

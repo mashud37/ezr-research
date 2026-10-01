@@ -154,7 +154,7 @@ placeholders, and the matching deck script beside it:
 
 example_dir <- file.path(report_dir, "ezrsurvey-example")
 example_report(example_dir, overwrite = TRUE)
-#> Example written to /tmp/RtmpGbNltv/ezrsurvey-example/ -- start with podracing-report.qmd.
+#> Example written to /tmp/RtmpGG0XWC/ezrsurvey-example/ -- start with podracing-report.qmd.
 
 list.files(example_dir)
 #> [1] "podracing-deck.R"     "podracing-report.qmd"

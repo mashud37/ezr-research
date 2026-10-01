@@ -1,5 +1,47 @@
 # Changelog
 
+## ezrsurvey (development version)
+
+### Answer order that survives into the table
+
+- **[`crosstab()`](https://mashud37.github.io/ezr-research/ezr-survey/reference/crosstab.md)
+  and
+  [`crosstab_banner()`](https://mashud37.github.io/ezr-research/ezr-survey/reference/crosstab_banner.md)**
+  no longer break on a question called `value` or `n`. Both used those
+  names for their own counting, so such a column came back as a table of
+  the wrong shape without a word: percentages for headings, a
+  list-column, a banner group of zeros. The counting now runs under
+  names no survey uses. The long form of
+  [`crosstab()`](https://mashud37.github.io/ezr-research/ezr-survey/reference/crosstab.md)
+  still puts its cells in a column called `value`, so it refuses a
+  question of that name and says so; the wide form and the banner handle
+  it.
+- **[`calc_percentage()`](https://mashud37.github.io/ezr-research/ezr-survey/reference/calc_percentage.md)
+  and
+  [`crosstab()`](https://mashud37.github.io/ezr-research/ezr-survey/reference/crosstab.md)
+  keep a factor’s own level order.** Without a registered order, a
+  factor came back as text in alphabetical order, so PISA’s “Strongly
+  disagree” to “Strongly agree” read Agree, Disagree, Strongly agree,
+  Strongly disagree. A registered order or `levels =` still wins; a
+  factor’s levels now come next, and only then data order.
+- **[`crosstab()`](https://mashud37.github.io/ezr-research/ezr-survey/reference/crosstab.md)
+  puts its columns in level order** whenever the column variable has
+  one. tidyr names new columns by first appearance, so a registered
+  order could still come out scrambled when the first row lacked the
+  first answer.
+- **[`bin_numeric()`](https://mashud37.github.io/ezr-research/ezr-survey/reference/bin_numeric.md),
+  [`recode_age()`](https://mashud37.github.io/ezr-research/ezr-survey/reference/recode_age.md)
+  and
+  [`recode_generation()`](https://mashud37.github.io/ezr-research/ezr-survey/reference/recode_generation.md)
+  return factors** whose levels follow the bands, where they used to
+  return text. Text sorted “100-150k” before “40-70k” in every table
+  built from it. Code comparing the result to a string is unaffected;
+  wrap it in [`as.character()`](https://rdrr.io/r/base/character.html)
+  where plain text is needed.
+- The banner tables vignette said a finished run deletes any checkpoint.
+  It deletes only the one `checkpoint = TRUE` made; a path you chose is
+  kept, as the help page already said.
+
 ## ezrsurvey 0.7.0
 
 ### A country column people typed themselves

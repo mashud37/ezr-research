@@ -222,9 +222,11 @@ after a crash carries on from where it stopped. The managed file is
 named after the run’s own fingerprint, so a call finds its own
 interrupted run and never sees one belonging to different data or
 different arguments: a stale file cannot quietly corrupt a table. A
-finished run deletes its own checkpoint, and
+finished run deletes the file `checkpoint = TRUE` made for it, and
 [`clear_checkpoints()`](https://mashud37.github.io/ezr-research/ezr-survey/reference/clear_checkpoints.md)
-clears anything left behind by a run that was never repeated.
+clears anything left behind by a run that was never repeated. A path you
+chose yourself is your file: the package leaves it in place when the run
+finishes, so delete it when you no longer need it.
 
 ## Getting it out
 

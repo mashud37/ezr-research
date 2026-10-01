@@ -1,10 +1,10 @@
 # Bin a numeric vector into labelled groups
 
 A thin, survey-friendly wrapper around
-[`base::cut()`](https://rdrr.io/r/base/cut.html) that returns a
-character vector (not a factor) and uses left-closed, right-open
-intervals by default so that age bands like 18-21 behave intuitively.
-Generalises the `case_when(age %in% seq(...))` age-grouping pattern.
+[`base::cut()`](https://rdrr.io/r/base/cut.html) that returns a factor
+in band order and uses left-closed, right-open intervals by default so
+that age bands like 18-21 behave intuitively. Generalises the
+`case_when(age %in% seq(...))` age-grouping pattern.
 
 ## Usage
 
@@ -38,8 +38,8 @@ bin_numeric(x, breaks, labels, right = FALSE, quiet = FALSE)
 
 ## Value
 
-A character vector of group labels (values outside the range or `NA`
-become `NA`).
+A factor whose levels are `labels` in the order given (values outside
+the range or `NA` become `NA`).
 
 ## Details
 
@@ -49,12 +49,11 @@ With `right = FALSE` (the default) a band runs from its lower break up
 to *but not including* the next – i.e. `[18, 25)` – which is what you
 want for age groups like "18 to 24". Text input is salvaged with
 [`ensure_numeric()`](https://mashud37.github.io/ezr-research/ezr-survey/reference/ensure_numeric.md),
-so `"27 years"` bins correctly. The result is a plain character vector
-(not a factor); apply an order later with
-[`register_order()`](https://mashud37.github.io/ezr-research/ezr-survey/reference/register_order.md)
-or pass `levels =` to
-[`calc_percentage()`](https://mashud37.github.io/ezr-research/ezr-survey/reference/calc_percentage.md)
-if you need a specific display order.
+so `"27 years"` bins correctly. The result is a factor whose levels
+follow `labels`, so tables and charts built from it list the bands low
+to high ("40-70k" before "100-150k") rather than alphabetically. Wrap it
+in [`as.character()`](https://rdrr.io/r/base/character.html) if you need
+plain text.
 
 A value below the first break or above the last becomes `NA` and drops
 out of every chart built from the result, so the function says how many
@@ -88,5 +87,6 @@ Other recode:
 bin_numeric(c(15, 19, 27, 41),
             breaks = c(0, 18, 25, 35, Inf),
             labels = c("<18", "18-24", "25-34", "35+"))
-#> [1] "<18"   "18-24" "25-34" "35+"  
+#> [1] <18   18-24 25-34 35+  
+#> Levels: <18 18-24 25-34 35+
 ```

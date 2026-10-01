@@ -75,8 +75,8 @@ from the <code>generation_scheme</code> option) or your own data frame with <cod
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A character vector of cohort labels; values outside the scheme's range
-become <code>NA</code>.</p>
+    <p>A factor of cohort labels, levels from the oldest cohort to the
+youngest; values outside the scheme's range become <code>NA</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -109,11 +109,13 @@ generational reporting; for simple age bands use <code><a href="recode_age.html"
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">recode_generation</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1990</span>, <span class="fl">2001</span>, <span class="fl">1968</span><span class="op">)</span>, input <span class="op">=</span> <span class="st">"year"</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Millennial" "Gen Z"      "Gen X"     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] Millennial Gen Z      Gen X     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Levels: Silent Baby Boomer Gen X Millennial Gen Z Gen Alpha</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># from age, with an explicit reference year</span></span></span>
 <span class="r-in"><span><span class="fu">recode_generation</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">36</span>, <span class="fl">25</span><span class="op">)</span>, input <span class="op">=</span> <span class="st">"age"</span>, year <span class="op">=</span> <span class="fl">2026</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Millennial" "Gen Z"     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] Millennial Gen Z     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Levels: Silent Baby Boomer Gen X Millennial Gen Z Gen Alpha</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

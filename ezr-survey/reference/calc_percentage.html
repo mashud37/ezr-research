@@ -94,7 +94,8 @@ several with <code><a href="https://rdrr.io/r/base/c.html" class="external-link"
 <dd><p>Optional character vector giving an explicit level order for
 <code>column</code> (the "custom" ordering mode). Overrides <code>sort</code>. If omitted and
 <code>sort = "none"</code>, a registered order for this variable is applied
-automatically (see <code><a href="register_order.html">register_order()</a></code>).</p></dd>
+automatically (see <code><a href="register_order.html">register_order()</a></code>), and failing that a factor keeps its
+own level order.</p></dd>
 
 
 <dt id="arg-digits">digits<a class="anchor" aria-label="anchor" href="#arg-digits"></a></dt>
@@ -139,7 +140,7 @@ column each (wide form).</p>
 group (subject to rounding). The level order of <code>column</code> is decided in this
 order of precedence: an explicit <code>levels</code> argument; then a non-<code>"none"</code>
 <code>sort</code>; then a registered order for the variable (see <code><a href="register_order.html">register_order()</a></code>);
-otherwise data order. When <code>by</code> is omitted, the <code>default_by</code> option is used if
+then the column's own levels, when it is a factor; otherwise data order. When <code>by</code> is omitted, the <code>default_by</code> option is used if
 set (see <code><a href="ezrsurvey_options.html">ezrsurvey_options()</a></code>), so you can apply a standard breakdown without
 repeating it. <code>wide = TRUE</code> pivots to one row per group with a column per
 answer – the shape you want for a slide table or an Excel tab.</p>

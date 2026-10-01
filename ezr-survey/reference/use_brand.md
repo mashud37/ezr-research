@@ -107,7 +107,7 @@ brand_info()
 #>   colors:   #4F81BD #C0504D #9BBB59 #8064A2 #4BACC6 #F79646
 #>   primary:  #4F81BD
 #>   fonts:    Calibri / Calibri
-#>   pptx ref: /tmp/RtmpgWzLIC/file1c5d6ddd861.pptx
+#>   pptx ref: /tmp/RtmpJhxzlX/file1a43103c20ec.pptx
 clear_brand()
 # Or set brand values directly, no template needed:
 use_brand(colors = c("#0B5394", "#E69138"), fonts = "Georgia", quiet = TRUE)

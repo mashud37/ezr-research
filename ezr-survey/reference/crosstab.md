@@ -6,7 +6,8 @@ row/column/total percentages – or, when a numeric `value` column is
 supplied, an aggregate of that column (e.g. the mean spend) for each `x`
 by `y` combination. Registered orders (see
 [`register_order()`](https://mashud37.github.io/ezr-research/ezr-survey/reference/register_order.md))
-are applied to `x` and `y` automatically.
+are applied to `x` and `y` automatically, and a factor column keeps its
+own level order when no order is registered.
 
 ## Usage
 
@@ -89,7 +90,9 @@ crosstab(
 ## Value
 
 A [tibble](https://tibble.tidyverse.org/reference/tibble.html): wide (x
-plus one column per y level) or long (`x`, `y`, `value`).
+plus one column per y level) or long (`x`, `y`, `value`). The long form
+refuses an `x` or `y` that is itself called `value`, since the two
+columns would share a name.
 
 ## Details
 
@@ -100,9 +103,10 @@ table, and `"count"` is the raw frequency. Supplying a numeric `value`
 switches the cells to an aggregate of that column – by default the mean
 – which answers questions like "what is the average NPS for each region
 by gender?". Blanks and non-answers in `x`/`y` are dropped when
-`na_rm = TRUE`, and any registered orders
+`na_rm = TRUE`. Any registered orders
 ([`register_order()`](https://mashud37.github.io/ezr-research/ezr-survey/reference/register_order.md))
-set the row/column ordering automatically.
+set the row/column ordering automatically; a factor without one keeps
+its own level order; anything else stays in data order.
 
 ## See also
 
